@@ -1,0 +1,12 @@
+{
+  "name": "sheetex",
+  "version": "1.0.0",
+  "description": "Classroom simulator: the same formulas in Excel 365, Excel 2013, Google Sheets, CSV/TSV and SQL.",
+  "private": true,
+  "scripts": {
+    "build": "node build.js",
+    "test": "node --test tests/*.test.js",
+    "test:browser": "node build.js && node tests/browser-smoke.js"
+  },
+  "license": "UNLICENSED"
+}
