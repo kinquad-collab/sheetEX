@@ -89,7 +89,7 @@
     })));
 
     // Toolbar
-    var fmtSel = this.fmtSel = h('select.tb-select', { title: 'Number format', 'aria-label': 'Number format', onchange: function () { self.applyFormat(fmtSel.value); fmtSel.blur(); self.focusGrid(); } },
+    var fmtSel = this.fmtSel = h('select.tb-select.fmt-select', { title: 'Number format', 'aria-label': 'Number format', onchange: function () { self.applyFormat(fmtSel.value); fmtSel.blur(); self.focusGrid(); } },
       [['general', plat === 'gs' ? 'Automatic' : 'General'], ['number', 'Number'], ['currency', 'Currency'], ['percent', 'Percent'], ['date', 'Date']].map(function (o) { return h('option', { value: o[0], text: o[1] }); }));
     function tb(label, title, fn, cls) { return h('button.tb-btn' + (cls ? '.' + cls : ''), { title: title, 'aria-label': title, onmousedown: function (e) { e.preventDefault(); }, onclick: fn }, label); }
     this.panelBtns = {};
