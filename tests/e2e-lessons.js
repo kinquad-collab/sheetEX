@@ -171,7 +171,8 @@ async function main() {
       await page.fill('.sql-editor', q);
       await page.click('.sql-editor'); await page.keyboard.press('Control+Enter');
       await page.evaluate((id) => { const c = document.querySelector(`.ch-card[data-id="${id}"]`); c.classList.add('open'); c.querySelector('.btn-primary').click(); }, id);
-      await page.waitForTimeout(50);
+      await page.waitForTimeout(900); // let any level-up celebration open, then clear it before the next query
+      await page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
       const done = await page.evaluate((id) => !!SX.ui.state.done[id], id);
       check(done, 'sql ' + id + (done ? '' : ' — ' + await page.textContent(`.ch-card[data-id="${id}"] .ch-msg`)));
     }

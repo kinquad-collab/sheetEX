@@ -1,7 +1,8 @@
 # SheetEX — Spreadsheet Explorer (v2)
 
-> **v2** adds the **Data Wrangling Lab**, an **Interactive Cheat Sheet**, **8 lessons with certificates**, and an
-> optional **class gradebook + cloud save** through Google Apps Script. v1 is preserved on its own branch.
+> **v2** adds the **Data Wrangling Lab** with an **🤖 AI Readiness Check**, an **Interactive Cheat Sheet**,
+> **8 lessons with guides and certificates**, a **teacher guide with a verified answer key**, and an optional
+> **class gradebook + cloud save** through Google Apps Script. v1 is preserved on its own branch.
 
 A classroom simulator that teaches students **why a formula that works at school breaks at home**.
 The same store data (Peachtree Supply Co. — products, sales, stores) lives in five tools, and each
@@ -26,6 +27,15 @@ and **badges**. Every workspace has a free-play sandbox plus a side panel with:
 
 Other details: students collect all 9 error types (`#NAME?`, `#VALUE!`, `#REF!`, `#DIV/0!`, `#N/A`, `#NUM!`, `#SPILL!`, `#CALC!`, `#ERROR!`) for XP. There is also a **Compare** page with a formula playground, a function-availability matrix, and a spreadsheet → SQL dictionary.
 
+## 🤖 AI Readiness Check (v2)
+
+A tab in the Data Wrangling Lab that "trains" the simplest possible model — average units per order for each
+store — twice: once on the raw feed (the way a careless import would read it) and once on the student's own
+cleaned columns. A dot plot compares both with the true averages. On the raw data the model invents **13 stores
+instead of 5** (`"s04"`, `" S02 "`…), reads 12 messy quantities as 0, and is off by about **5 units per store**.
+As students clean each column, a 0–100 readiness score climbs and their model's dots land on the truth (0.0 off).
+Real models are far more complex, but the lesson is the same: garbage in, garbage out.
+
 ## Lessons and certificates (v2)
 
 | # | Lesson | Workspace |
@@ -39,6 +49,9 @@ Other details: students collect all 9 error types (`#NAME?`, `#VALUE!`, `#REF!`,
 | 7 | SQL for Data Analysts | SQL |
 | 8 | Cross-Platform Translator | Compare |
 
+Every lesson has a **📖 guide** (why it matters, vocabulary with examples, common traps) that opens the first time a
+student enters its workspace and from the challenge panel or home page.
+
 Finishing every challenge in a lesson unlocks its **certificate**: the student's full name, the lesson, the skills
 covered, challenges completed, XP earned, hints used, the date, and a verification ID. Students can turn it in three ways:
 
@@ -47,6 +60,14 @@ covered, challenges completed, XP earned, hints used, the date, and a verificati
 3. **📋 Copy certificate code** (`SXC1-…`) to paste into a Canvas text submission
 
 To check codes, click **?** → *For teachers* and paste a whole class's codes (certificate and progress codes can be mixed).
+
+## Teacher guide (v2)
+
+`npm run build` also writes **`dist/teacher-guide.html`** (and `dist/SheetEX-Teacher-Guide.pdf` is committed):
+pacing (about 10 class periods), objectives, misconceptions, vocabulary, discussion questions, exit tickets, and the
+**answer key for all 71 challenges**. The answer key lives in `src/teacher/solutions.js`; the test suite checks every
+answer against the real auto-checkers (Wrangling answers in both Excel 365 and Google Sheets), so the key cannot drift
+from the app. The answers are never included in the student app — the build fails if they leak.
 
 ## Class gradebook and cloud save (optional, v2)
 
@@ -120,6 +141,7 @@ src/
   js/wrangle.js       v2: the messy order feed (generated from clean "truth" records) + expected answers
   js/lessons.js       v2: lesson list and certificate codes
   js/reference.js     v2: interactive cheat sheet data + live runner
+  teacher/            v2: answer key, discussion/exit tickets, teacher-guide generator (never shipped to students)
   js/ui-*.js          home page, XP/badges, spreadsheet grid, CSV editor, SQL console, Compare page
 build.js              inlines everything into dist/index.html and apps-script/Index.html
 tests/                node:test suites + a Playwright browser smoke test
@@ -129,7 +151,10 @@ tests/                node:test suites + a Playwright browser smoke test
 npm run build          # writes dist/index.html and apps-script/Index.html
 npm test               # engine behaviour, every challenge solvable (wrangling in BOTH Excel 365 and Sheets),
                        # every cheat-sheet example runs, certificate codes, Code.gs against Apps Script mocks
-npm run test:browser   # optional: Playwright smoke test (normal page + locked-down iframe)
+npm run test:browser   # Playwright smoke test (every workspace + a locked-down iframe with no storage)
+npm run test:e2e       # completes EVERY lesson through the real UI (typing formulas, Ctrl+D, Ctrl+Shift+Enter,
+                       # the CSV editor, the SQL console) and confirms each certificate unlocks
+npm run test:monkey    # 1,500 random/hostile actions across all workspaces: no errors, nothing slow
 ```
 
 After editing anything in `src/`, run `npm run build` and paste the new `apps-script/Index.html` into Apps Script.
