@@ -360,6 +360,108 @@ async function main() {
     await page.close();
   }
 
+  // ---- Lessons 11–12: Data Tools Lab, driven only through the menus and dialogs ----
+  for (const [plat, lesson] of [['gs', 'tools1'], ['xl365', 'tools2']]) {
+    console.log('\n== Data Tools Lab: ' + lesson + ' in ' + plat + ' ==');
+    const page = await browser.newPage({ viewport: { width: 1366, height: 860 } });
+    const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(DIST);
+    await page.fill('.modal input.input', 'Dana Ortiz'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in');
+    await page.evaluate((p) => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.dtIntro = true; SX.ui.state.ui.dtPlat = p; SX.ui.quiet = true; }, plat);
+    await page.click('.pc-tools'); await page.waitForSelector('.grid');
+    const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
+    const sel = (r1, c1, r2, c2) => page.evaluate(([a, b, c, d]) => { const v = SX.ui.activeView; v.select(a, b); if (c != null) v.select(c, d, true); }, [r1, c1, r2, c2]);
+    const menu = async (tab, item) => { await clear(); await page.click(`.menu-item:text-is("${tab}")`); await page.click(`.menu-cmd:has-text("${item}")`); await page.waitForSelector('.modal', { timeout: 1500 }).catch(() => {}); await page.waitForTimeout(120); };
+    const tab = async (name) => { await clear(); await page.click(`.sheet-tab:text-is("${name}")`); };
+    const typeAt = async (r, c, text) => { await clear(); await sel(r, c); await page.keyboard.type(text, { delay: 2 }); await page.keyboard.press('Enter'); };
+    const modalSelects = (vals) => page.evaluate((vals) => { const s = document.querySelectorAll('.modal select'); vals.forEach((v, i) => { if (v != null) { s[i].value = String(v); s[i].dispatchEvent(new Event('change')); } }); }, vals);
+    const ok = async () => { await page.click('.modal-overlay:last-of-type .modal .btn-primary'); await page.waitForTimeout(200); };
+    const checkAll = async () => {
+      for (const id of await page.$$eval('.ch-card', (cs) => cs.map((c) => c.dataset.id))) {
+        if (!id.startsWith('dt-')) continue;
+        await clear();
+        await page.evaluate((id) => { const c = document.querySelector(`.ch-card[data-id="${id}"]`); c.classList.add('open');
+          const q = c.querySelectorAll('.quiz-opt'); if (q.length) q[SX.challenges.byId(id).answer].click(); else { const b = c.querySelector('.btn-primary'); if (b) b.click(); } }, id);
+        await page.waitForTimeout(60);
+      }
+    };
+    if (lesson === 'tools1') {
+      // sort by date with the header row (Sheets: Sort range… needs "Data has header row")
+      await sel(1, 1); await menu('Data', 'Sort range');
+      await page.click('.modal .tdlg-check input'); await modalSelects([1, 'asc']); await ok();
+      check(await page.evaluate(() => SX.ui.activeView.wb.value('Orders', 0, 1)) === 'OrderDate', 'tools1: header row stayed on top');
+      // find & replace N/A in the Qty column
+      await sel(1, 5, 39, 5); await menu('Edit', 'Find and replace');
+      await page.fill('.modal .tdlg-field:has-text("Find what") input', 'N/A'); await page.click('.modal .tdlg-check:has-text("entire") input'); await ok();
+      // remove duplicates, trim, remove again
+      const dedupe = async () => { await sel(1, 0); await menu('Data', 'Remove duplicates'); await page.click('.modal .tdlg-check:has-text("header") input'); await ok(); await page.waitForTimeout(150);
+        const msg = await page.textContent('.modal'); await clear(); return msg; };
+      const first = await dedupe();
+      check(/3 duplicate rows found and removed/.test(first), 'tools1: first Remove duplicates removes the 3 exact copies (' + first.slice(0, 60) + ')');
+      await sel(1, 2, 39, 2); await menu('Data', 'Trim whitespace');
+      const second = await dedupe();
+      check(/2 duplicate rows found and removed\. 34 unique rows remain/.test(second), 'tools1: after trimming, 2 hidden duplicates appear and are removed');
+      // split City, State
+      await sel(1, 8, 34, 8); await menu('Data', 'Split text to columns'); await modalSelects(['comma']);
+      await ok();
+      check(await page.evaluate(() => String(SX.ui.activeView.wb.value('Orders', 1, 9)).trim().length === 2), 'tools1: state split into column J');
+      // filter to Online + SUBTOTAL
+      await sel(1, 0); await menu('Data', 'Create a filter');
+      await page.evaluate(() => { SX.ui.activeView.gridWrap.scrollTop = 0; });
+      const hdr = await page.$('td.has-filter[data-c="7"]'); const bb = await hdr.boundingBox();
+      await page.mouse.click(bb.x + bb.width - 8, bb.y + bb.height / 2); await page.waitForSelector('.filter-pop');
+      await page.evaluate(() => { const p = document.querySelector('.filter-pop'); p.querySelectorAll('.filter-list label').forEach((l) => { l.querySelector('input').checked = l.textContent.trim() === 'Online'; });
+        Array.from(p.querySelectorAll('button')).find((x) => x.textContent === 'OK').click(); });
+      check((await page.textContent('.st-filter')).includes('showing'), 'tools1: status bar reports the filtered rows');
+      // validation on Qty (existing -3 gets flagged in Sheets)
+      await sel(1, 5, 34, 5); await menu('Data', 'Data validation'); await modalSelects(['whole']);
+      await page.fill('.modal .tdlg-field:has-text("Minimum") input', '1'); await page.fill('.modal .tdlg-field:has-text("Maximum") input', '100'); await ok();
+      check((await page.$$('td.dv-bad')).length >= 1, 'tools1: Sheets marks the existing impossible quantity');
+      // typing a bad value: Sheets warns but keeps it
+      // conditional formatting: duplicates need a custom formula in Sheets
+      await sel(1, 0, 34, 0); await menu('Format', 'Conditional formatting'); await modalSelects(['formula']);
+      await page.fill('.modal .tdlg-field:has-text("Formula") input', '=COUNTIF($A$2:$A$35,A2)>1');
+      await ok();
+      const cf = await page.evaluate(() => ({ n: Object.keys(SX.tools.cfColors(SX.ui.activeView.wb, 'Orders')).length, rules: SX.ui.activeView.wb.sheet('Orders').meta.cf, rows: SX.ui.activeView.wb.maxRow('Orders') }));
+      check(cf.n === 4, 'tools1: 4 clashing OrderID cells highlighted ' + (cf.n === 4 ? '' : JSON.stringify(cf)));
+      await tab('Scratch'); await typeAt(1, 1, '=SUBTOTAL(9,Orders!F2:F40)');
+      await page.click('.sp-tab[data-id="challenges"]');
+    } else {
+      // three pivot tables from the Orders data (Excel names the sheets Sheet1, Sheet2…)
+      const pivot = async (rows, cols, val, agg) => { await tab('Orders'); await sel(1, 0); await menu('Insert', 'PivotTable'); await modalSelects([rows, cols, val, agg]); await ok(); await page.waitForTimeout(100); };
+      await pivot(3, '', 5, 'SUM'); await pivot(3, 7, 5, 'SUM'); await pivot(7, '', 0, 'COUNT'); await pivot(7, '', 5, 'SUM');
+      check(await page.evaluate(() => SX.ui.activeView.wb.sheets.map((s) => s.name).join(',')) === 'Orders,Monthly,Ads,Scratch,Sheet1,Sheet2,Sheet3,Sheet4', 'tools2: four pivot sheets created');
+      // edit the source, see the stale warning, refresh
+      await tab('Orders'); await typeAt(1, 5, '11');
+      await tab('Sheet1');
+      check((await page.textContent('.pivot-bar')).includes('OLD numbers'), 'tools2: Excel pivot warns it is out of date');
+      await menu('Data', 'Refresh All'); await clear();
+      check(!(await page.textContent('.pivot-bar')).includes('OLD numbers'), 'tools2: Refresh All updates the pivot');
+      // SUMIFS check cell
+      await tab('Scratch'); await typeAt(3, 1, '=SUMIFS(Orders!F2:F40,Orders!D2:D40,"Snacks",Orders!H2:H40,"Online")');
+      // charts
+      const chart = async (sheet, r1, c1, r2, c2, type) => { await tab(sheet); await sel(r1, c1, r2, c2); await menu('Insert', 'Chart'); await modalSelects([type]); await ok(); await page.waitForTimeout(100); };
+      await chart('Sheet1', 2, 0, 6, 1, 'column');
+      await chart('Monthly', 0, 0, 12, 2, 'line');
+      await chart('Sheet4', 2, 0, 4, 1, 'pie');
+      await chart('Ads', 0, 0, 10, 1, 'scatter');
+      check((await page.$$('.chart-card')).length === 4, 'tools2: four charts in the Charts panel');
+      check((await page.$$('.chart-card svg rect, .chart-card svg path, .chart-card svg circle, .chart-card svg polyline')).length > 20, 'tools2: charts are drawn');
+      await page.locator('.chart-card >> nth=0').screenshot({ path: path.join(require('os').tmpdir(), 'sheetex-chart.png') });
+      await page.click('.sp-tab[data-id="challenges"]');
+    }
+    await checkAll();
+    for (const id of await page.evaluate((L) => SX.challenges.forPlat(L).map((c) => c.id), lesson)) {
+      const done = await page.evaluate((id) => !!SX.ui.state.done[id], id);
+      check(done, lesson + ' ' + id + (done ? '' : ' — ' + await page.textContent(`.ch-card[data-id="${id}"] .ch-msg`).catch(() => '?')));
+    }
+    check(await page.evaluate((L) => SX.ui.lessonComplete(L), lesson), lesson + ' practice complete -> test unlocked');
+    check(errors.length === 0, lesson + ' no page errors ' + errors.join(' | '));
+    await page.waitForTimeout(1200);
+    await passTest(page, lesson);
+    await page.close();
+  }
+
   // ---- Lesson 10: ML Data Lab — driven through the page's own controls and consoles ----
   {
     console.log('\n== ML lesson ==');

@@ -39,7 +39,7 @@ async function main() {
   await page.goto(DIST);
   await page.fill('.modal input.input', 'Monkey Tester'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in');
   const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay, #cert-overlay').forEach((m) => m.remove()));
-  const views = ['xl365', 'xl2013', 'gs', 'wrangle', 'csv', 'sql', 'compare', 'reference', 'rdbms', 'ml', 'test'];
+  const views = ['xl365', 'xl2013', 'gs', 'wrangle', 'tools', 'tools', 'csv', 'sql', 'compare', 'reference', 'rdbms', 'ml', 'test'];
   const JUNK = ['=)))(', '=XLOOKUP(', '=1/0', '="', '=A1:A3+', '{=SUM(A1)}', 'DROP TABLE products;', 'SELECT * FROM nope;', "SELECT 1; DELETE FROM sales;", 'BEGIN;',
     'CREATE TABLE x AS SELECT * FROM ml_examples;', '"a,b', 'a\tb\n"', '😀', '', '   ', "=SORT(Products!B2:D25,3,-1)", '=FILTER(Products!B2:B25,Products!C2:C25="Nope")', '=SPLIT(H2,"")'];
   let view = null; const seen = {};
@@ -49,7 +49,7 @@ async function main() {
     try {
       await clear();
       if (!view || rnd() < 0.04) {
-        view = pick(views); action = 'go ' + view;
+        view = pick(views); action = 'go ' + view; seen['go ' + view] = (seen['go ' + view] || 0) + 1;
         await page.evaluate(() => { const o = document.getElementById('test-overlay'); if (o) { o.remove(); document.body.classList.remove('testing'); } });
         if (view === 'test') {
           const L = await page.evaluate(() => { const l = SX.lessons.LIST[Math.floor(Math.random() * SX.lessons.LIST.length)].id;
@@ -61,9 +61,35 @@ async function main() {
         }
         await page.evaluate((v) => SX.ui.go(v), view);
         if (view === 'wrangle') await page.evaluate(() => { SX.ui.state.ui.wrPlat = Math.random() < 0.5 ? 'gs' : 'xl365'; });
+        if (view === 'tools') await page.evaluate(() => { SX.ui.state.ui.dtIntro = true; SX.ui.state.ui.dtPlat = ['xl365', 'xl2013', 'gs'][Math.floor(Math.random() * 3)]; SX.ui.go('tools'); });
         continue;
       }
-      const sheetView = ['xl365', 'xl2013', 'gs', 'wrangle'].includes(view);
+      const sheetView = ['xl365', 'xl2013', 'gs', 'wrangle', 'tools'].includes(view);
+      if (sheetView && rnd() < (view === 'tools' ? 0.35 : 0.08)) {
+        // open a random menu command; fill its dialog with whatever is there and confirm
+        const r1 = Math.floor(rnd() * 40), c1 = Math.floor(rnd() * 10), r2 = r1 + Math.floor(rnd() * 20), c2 = c1 + Math.floor(rnd() * 4);
+        action = 'menu';
+        await page.evaluate(([r1, c1, r2, c2]) => { const v = SX.ui.activeView; v.select(r1, c1); if (Math.random() < 0.7) v.select(r2, c2, true); }, [r1, c1, r2, c2]);
+        const label = await page.evaluate(() => {
+          const tabs = Array.from(document.querySelectorAll('.menu-item.has-menu')); const t = tabs[Math.floor(Math.random() * tabs.length)]; if (!t) return '';
+          t.click(); const cmds = Array.from(document.querySelectorAll('.menu-cmd:not([disabled])')); const c = cmds[Math.floor(Math.random() * cmds.length)];
+          if (!c) return t.textContent; const lbl = t.textContent + ' ▸ ' + c.textContent; c.click(); return lbl;
+        });
+        action += ' ' + label;
+        for (let k = 0; k < 3; k++) {
+          await page.evaluate(() => {
+            const m = document.querySelector('.modal-overlay:last-of-type .modal'); if (!m) return;
+            m.querySelectorAll('select').forEach((s) => { if (Math.random() < 0.5 && s.options.length) { s.selectedIndex = Math.floor(Math.random() * s.options.length); s.dispatchEvent(new Event('change')); } });
+            m.querySelectorAll('input[type="checkbox"]').forEach((c) => { if (Math.random() < 0.3) c.click(); });
+            m.querySelectorAll('input.input-sm:not([type="checkbox"])').forEach((i) => { if (Math.random() < 0.5) i.value = ['1', '100', 'N/A', '=A2>5', ',', 'x', '-3', ''][Math.floor(Math.random() * 8)]; });
+            const b = m.querySelector('.btn-primary'); if (b) b.click();
+          });
+          await page.waitForTimeout(30);
+        }
+        await page.evaluate(() => { document.querySelectorAll('.filter-pop, .menu-pop').forEach((p) => p.remove()); });
+        seen['menu ' + view] = (seen['menu ' + view] || 0) + 1;
+        continue;
+      }
       if (sheetView) {
         const r = Math.floor(rnd() * 40), c = Math.floor(rnd() * 12), roll = rnd();
         if (roll < 0.45) {

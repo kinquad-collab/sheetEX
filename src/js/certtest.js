@@ -26,7 +26,7 @@
   // ---------- spreadsheets ----------
   var books = {};
   // Columns whose numbers are safe to change (never IDs or codes that other tables look up).
-  var BUMP = { Products: [3, 4, 5, 6], Sales: [4], RawOrders: [4], ItemCodes: [3], Targets: [1, 2, 3, 4, 5], Contacts: [4] };
+  var BUMP = { Products: [3, 4, 5, 6], Sales: [4], RawOrders: [4], ItemCodes: [3], Targets: [1, 2, 3, 4, 5], Contacts: [4], Orders: [5, 6], Monthly: [1, 2], Ads: [1] };
   function perturbWb(wb) {
     wb.sheets.forEach(function (s) {
       if (s.name === 'Scratch' || s.name === 'Report') return;
@@ -54,7 +54,7 @@
   function book(kind, plat, variant) {
     var k = kind + '|' + plat + '|' + variant;
     if (!books[k]) {
-      var wb = kind === 'wrangle' ? SX.wrangle.makeWorkbook(plat) : SX.makeStoreWorkbook(plat);
+      var wb = kind === 'wrangle' ? SX.wrangle.makeWorkbook(plat) : kind === 'tools' ? SX.datatools.makeWorkbook(plat) : SX.makeStoreWorkbook(plat);
       if (!wb.sheet('Scratch')) wb.addSheet('Scratch');
       if (variant) perturbWb(wb);
       books[k] = wb;

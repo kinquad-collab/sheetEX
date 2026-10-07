@@ -68,6 +68,15 @@ test('faked answers are rejected', () => {
   assert.ok(!ok('m-nulls', 'SELECT 6 FROM ml_examples LIMIT 1;'), 'SQL constant with a FROM');
   assert.ok(!ok('s-where', 'DELETE FROM products;'), 'only a SELECT counts');
 });
+test('Data Tools banks: the formula has to be the right tool', () => {
+  assert.ok(ok('t1-subtotal', '=SUBTOTAL(109,Orders!F2:F40)'), '109 also skips filtered rows');
+  assert.ok(!ok('t1-subtotal', '=SUM(Orders!F2:F40)'), 'SUM gives the same number here but ignores filters — must use SUBTOTAL');
+  assert.ok(ok('t2-sumifs', '=SUMPRODUCT((Orders!D2:D40="Snacks")*(Orders!H2:H40="Online"),Orders!F2:F40)'));
+  assert.ok(!ok('t2-sumifs', '=SUMIF(Orders!D2:D40,"Snacks",Orders!F2:F40)'), 'only one condition');
+  assert.ok(ok('t1-city', '=TRIM(LEFT(I2,SEARCH(",",I2)-1))'));
+  assert.ok(!ok('t1-state', '=RIGHT(I2,3)'), 'includes the space');
+  assert.ok(!ok('t2-maxifs', '=MAX(Orders!F2:F40)'), 'not just Apparel');
+});
 test('CSV answers must be valid CSV', () => {
   assert.ok(ok('c-comma', 'SKU-302,"Gel Pens, 4-pack",4.5'));
   assert.ok(ok('c-comma', '"SKU-302","Gel Pens, 4-pack","4.5"'), 'extra quotes are allowed');

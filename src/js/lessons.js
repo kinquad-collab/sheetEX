@@ -21,6 +21,10 @@
       skills: ['Tables, rows, columns and data types', 'Primary keys and foreign keys', 'Relationships and JOINs', 'Constraints that refuse bad data', 'Transactions and ACID'] },
     { id: 'ml', n: 10, title: 'Databases for Machine Learning', tool: 'ML Data Lab', workspace: 'ml',
       skills: ['Examples, features and labels', 'Class balance and baselines', 'Missing values', 'Train/test splits and data leakage', 'Grading a model: accuracy and the confusion matrix'] },
+    { id: 'tools1', n: 11, title: 'Sort, Filter & Clean with the Menus', tool: 'Data Tools Lab', workspace: 'tools',
+      skills: ['Sorting without scrambling rows', 'Filters and SUBTOTAL', 'Find & Replace, Trim and Paste Values', 'Remove Duplicates and Text to Columns', 'Data validation and conditional formatting'] },
+    { id: 'tools2', n: 12, title: 'Pivot Tables & Charts', tool: 'Data Tools Lab', workspace: 'tools',
+      skills: ['Pivot tables: rows, columns, values, filters', 'Sum vs Count', 'Refreshing pivots (Excel) vs automatic (Sheets)', 'Checking a pivot with SUMIFS', 'Choosing column, line, pie and scatter charts'] },
     { id: 'compare', n: 8, title: 'Cross-Platform Translator', tool: 'Compare', workspace: 'compare',
       skills: ['Which functions exist where', 'Silent differences between apps', 'Spreadsheet ideas in SQL'] }
   ];
@@ -132,6 +136,34 @@
         ['Confusion matrix', 'Counts of right and wrong guesses for each answer.', 'GROUP BY stockout, predicted']
       ],
       traps: ['High accuracy can be meaningless when one answer is rare — compare with a baseline.', 'If a model looks perfect, look for leakage before celebrating.', 'Never let test rows (or copies of them) into the training table.']
+    },
+    tools1: {
+      why: 'Most real cleanup is done with the menus, not formulas: sort, filter, remove duplicates, split, find & replace. Each one is fast — and each one can silently wreck a dataset if you use it on the wrong range. Excel and Google Sheets also behave differently in ways that matter.',
+      terms: [
+        ['Sort (whole table)', 'Reorders entire rows by one column.', 'Data ▸ Sort, with "My data has headers"'],
+        ['Filter', 'Hides rows that do not match; nothing is deleted.', 'Data ▸ Filter, then the ▾ in a header'],
+        ['SUBTOTAL', 'Totals only the rows you can see.', '=SUBTOTAL(9, F2:F40)'],
+        ['Remove Duplicates', 'Deletes rows whose chosen columns all match an earlier row.', 'Data ▸ Remove Duplicates'],
+        ['Text to Columns / Split', 'Breaks one column into several at a delimiter.', '"Atlanta, GA" → Atlanta | GA'],
+        ['Paste Values', 'Pastes results only — formulas become plain values.', 'Excel Ctrl+Alt+V · Sheets Ctrl+Shift+V'],
+        ['Data validation', 'A rule for what may be TYPED into cells.', 'Whole number between 1 and 100'],
+        ['Conditional formatting', 'Colors cells that meet a rule, so problems stand out.', '=COUNTIF($A$2:$A$40, A2) > 1']
+      ],
+      traps: ['Sorting one column scrambles every record. Excel warns you; Google Sheets "Sort range" does not, and "Sort sheet" moves the header too.', 'SUM counts hidden (filtered) rows; SUBTOTAL does not.', 'Trailing spaces make duplicates invisible: trim first, then remove duplicates.', 'Validation does not check data that is already there or pasted in.']
+    },
+    tools2: {
+      why: 'Pivot tables turn hundreds of rows into a summary in seconds, and charts turn that summary into something a person understands at a glance. Choosing the right summary and the right chart is a core analyst skill — and so is knowing when the numbers are out of date.',
+      terms: [
+        ['Pivot table', 'A summary you build by choosing fields.', 'Rows = Category, Values = Sum of Qty'],
+        ['Rows / Columns', 'The groups down the side and across the top.', 'Category × Channel'],
+        ['Values (Sum / Count)', 'What to calculate for each group.', 'Sum of Qty vs Count of OrderID'],
+        ['Refresh', 'Excel pivots update only when refreshed; Sheets pivots update by themselves.', 'Data ▸ Refresh All'],
+        ['Column / bar chart', 'Compares amounts between categories.', 'Units by category'],
+        ['Line chart', 'Shows change over time.', 'Units per month'],
+        ['Pie chart', 'Shows parts of one whole (few slices).', 'Online vs In-store share'],
+        ['Scatter chart', 'Shows whether two numbers move together.', 'Ad spend vs visitors']
+      ],
+      traps: ['Summing an ID column gives a meaningless number — count it instead.', 'An Excel pivot shows old numbers until you Refresh.', 'Do not chart the Grand Total row next to its parts.', 'Bars should start at 0; a cut-off axis exaggerates differences.']
     },
     compare: {
       why: 'The same formula can work, fail, or silently give a different answer depending on the app. Checking before you share is a professional habit.',

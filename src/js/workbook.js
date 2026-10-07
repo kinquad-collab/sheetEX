@@ -42,6 +42,11 @@
     return null;
   };
   Workbook.prototype.sheetName = function (name) { var s = this.sheet(name); return s ? s.name : null; };
+  // Rows hidden by a filter (SUBTOTAL skips them; SUM does not).
+  Workbook.prototype.rowHidden = function (sheet, r) {
+    var s = this.sheet(sheet), f = s && s.meta && s.meta.filter;
+    return !!(f && f.hidden && f.hidden[r]);
+  };
   Workbook.prototype.getCell = function (sheet, r, c) { var s = this.sheet(sheet); return s ? s.cells[key(r, c)] || null : null; };
 
   Workbook.prototype.maxRow = function (sheet) {
@@ -447,7 +452,9 @@
         if (c.fmt) o.f = c.fmt; if (c.cse) o.a = 1; if (c.perr) o.p = c.perr;
         cells[k] = o;
       });
-      return { name: s.name, cells: cells };
+      var o = { name: s.name, cells: cells };
+      if (s.meta && Object.keys(s.meta).length) o.m = JSON.parse(JSON.stringify(s.meta)); // filter, validation, formatting rules, pivot, charts
+      return o;
     });
   };
   Workbook.prototype.load = function (data) {
@@ -455,9 +462,11 @@
     this.sheets = [];
     data.forEach(function (sd) {
       var s = self.addSheet(sd.name);
+      if (sd.m) s.meta = JSON.parse(JSON.stringify(sd.m));
+      var lock = !!(sd.m && sd.m.pivot);
       Object.keys(sd.cells).forEach(function (k) {
         var o = sd.cells[k], p = k.split(',');
-        self.setCell(s.name, +p[0], +p[1], { input: o.i, fmt: o.f, cse: !!o.a, perr: o.p });
+        self.setCell(s.name, +p[0], +p[1], { input: o.i, fmt: o.f, cse: !!o.a, perr: o.p, lock: lock });
       });
     });
     this.recalc();

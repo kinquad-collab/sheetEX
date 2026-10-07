@@ -724,6 +724,35 @@
   aggr('MIN', 'MIN(number1, [number2], ...)', 'Smallest number.', function (n) { return n.length ? Math.min.apply(null, n) : 0; });
   aggr('MAX', 'MAX(number1, [number2], ...)', 'Largest number.', function (n) { return n.length ? Math.max.apply(null, n) : 0; });
   aggr('PRODUCT', 'PRODUCT(number1, [number2], ...)', 'Multiplies numbers.', function (n) { return n.length ? n.reduce(function (a, b) { return a * b; }, 1) : 0; });
+  // SUBTOTAL: like SUM/AVERAGE/COUNT…, but rows hidden by a filter are left out (SUM keeps counting them).
+  var SUBT = { 1: 'AVERAGE', 2: 'COUNT', 3: 'COUNTA', 4: 'MAX', 5: 'MIN', 9: 'SUM' };
+  def('SUBTOTAL', { min: 2, args: 'vr', rep: 1, cat: 'Math', sig: 'SUBTOTAL(function_num, ref1, [ref2], ...)',
+    desc: 'Totals only the rows you can see after filtering. 9 or 109 = SUM, 1/101 = AVERAGE, 2/102 = COUNT, 3/103 = COUNTA, 4/104 = MAX, 5/105 = MIN.',
+    fn: function (v, ctx) {
+      var code = num(v[0]); if (isErr(code)) return code;
+      var kind = SUBT[Math.floor(code) % 100];
+      if (!kind || code < 1 || (code > 11 && code < 101) || code > 111) return new XErr('#VALUE!', 'SUBTOTAL needs a function number such as 9 (SUM), 1 (AVERAGE) or 2 (COUNT).');
+      var nums = [], filled = 0;
+      for (var i = 1; i < v.length; i++) {
+        var R = v[i];
+        if (!(R instanceof Rng)) return new XErr('#VALUE!', 'SUBTOTAL needs cell references, not typed values.');
+        for (var r = R.r1; r <= R.r2; r++) {
+          if (ctx.wb.rowHidden && ctx.wb.rowHidden(R.sheet, r)) continue;
+          for (var c = R.c1; c <= R.c2; c++) {
+            var x = ctx.wb.getValue(R.sheet, r, c);
+            if (isErr(x)) return x;
+            if (x !== null && x !== '') filled++;
+            if (typeof x === 'number') nums.push(x);
+          }
+        }
+      }
+      if (kind === 'COUNTA') return filled;
+      if (kind === 'COUNT') return nums.length;
+      if (kind === 'SUM') return nums.reduce(function (a, b) { return a + b; }, 0);
+      if (kind === 'AVERAGE') return nums.length ? nums.reduce(function (a, b) { return a + b; }, 0) / nums.length : new XErr('#DIV/0!', 'No visible numbers to average.');
+      if (kind === 'MAX') return nums.length ? Math.max.apply(null, nums) : 0;
+      return nums.length ? Math.min.apply(null, nums) : 0;
+    } });
   aggr('MEDIAN', 'MEDIAN(number1, [number2], ...)', 'Middle value.', function (n) {
     if (!n.length) return new XErr('#NUM!'); n = n.slice().sort(function (a, b) { return a - b; });
     var m = n.length >> 1; return n.length % 2 ? n[m] : (n[m - 1] + n[m]) / 2;

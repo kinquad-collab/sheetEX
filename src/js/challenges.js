@@ -739,6 +739,228 @@
     options: ['The model is great — 75% is a passing grade', 'With rare stockouts, accuracy is misleading: the model is worse than doing nothing', 'The test set is too big', 'Baselines are always 83%'], answer: 1,
     hints: ['Would the "always 0" model ever warn the store about a stockout?'], learn: 'Always compare with a baseline, and look at the confusion matrix. A model that never predicts the rare class can still have high accuracy.' });
 
+  // ===== Lessons 11–12: Data Tools Lab (menus: sort, filter, cleanup, validation, formatting, pivots, charts) =====
+  var DTF = SX.datatools ? SX.datatools.FACTS : null, TL = SX.tools;
+  function dtData(wb) {
+    var out = [], last = wb.maxRow('Orders');
+    for (var r = 1; r <= last; r++) {
+      var row = []; for (var c = 0; c < 10; c++) row.push(wb.value('Orders', r, c));
+      if (row.every(function (x) { return x === null || x === ''; })) continue;
+      out.push({ r: r, v: row });
+    }
+    return out;
+  }
+  function tx(x) { return x === null || x === undefined ? '' : String(x); }
+  function rowKey(v) { return v.slice(0, 9).map(function (x) { return tx(x).toLowerCase(); }).join('|'); }
+  function pivots(wb, src) { return wb.sheets.filter(function (s) { return s.meta && s.meta.pivot && (!src || s.meta.pivot.src.sheet === src); }).map(function (s) { return { name: s.name, P: s.meta.pivot }; }); }
+  function charts(wb) { var out = []; wb.sheets.forEach(function (s) { ((s.meta || {}).charts || []).forEach(function (c) { out.push({ sheet: s.name, ch: c, d: TL.chartData(wb, s.name, c) }); }); }); return out; }
+  function colOf(P, name) { for (var k in P.names) if (P.names[k] === name) return +k; return -1; }
+
+  add({ id: 'dt-quiz-sort', plat: 'tools1', type: 'quiz', title: 'The One-Column Sort', xp: 10, level: 1,
+    task: 'In Google Sheets you select ONLY the Qty column and use <b>Data ▸ Sort range</b>. What happens?',
+    options: ['Every row is sorted by Qty', 'Only the Qty values move — each order now has the wrong quantity', 'Sheets refuses to sort', 'The header row is deleted'], answer: 1,
+    hints: ['Sheets sorts exactly what you selected — nothing more.'], learn: 'Sorting one column scrambles your rows. Excel warns you ("Expand the selection?"); Google Sheets does not. Always select the whole table.' });
+  add({ id: 'dt-sort', plat: 'tools1', title: 'Sort Without Scrambling', xp: 20, level: 1,
+    task: 'Sort the <b>Orders</b> sheet by <b>OrderDate</b>, oldest first — with every row kept together.',
+    hints: ['Click any cell in the OrderDate column, then Data ▸ Sort (Excel: Sort A to Z; Sheets: Sort range… with "Data has header row").', 'In Sheets, select the whole table first (A1 to the last column), or the other columns will not move.', 'If you scrambled it, press Ctrl+Z.'],
+    learn: 'A sort must move whole rows. If one column moves alone, every record is silently wrong — and nothing tells you.',
+    check: function (h) {
+      var rows = dtData(h.wb), keys = DTF.keys;
+      if (tx(h.wb.value('Orders', 0, 0)) !== 'OrderID') return no('Row 1 should still be the header row (OrderID, OrderDate…). Undo with Ctrl+Z and try again — the header got sorted into the data.');
+      for (var i = 1; i < rows.length; i++) if ((rows[i].v[1] || 0) < (rows[i - 1].v[1] || 0)) return no('Row ' + (rows[i].r + 1) + ' has an earlier date than the row above it. Sort by OrderDate, oldest first.');
+      var bad = rows.filter(function (x) { return keys.indexOf([x.v[0], x.v[1], x.v[4], x.v[7]].join('|')) < 0; });
+      return bad.length ? no('Row ' + (bad[0].r + 1) + ' mixes data from different orders — a column was sorted on its own. Undo (Ctrl+Z) and sort the whole table.') : ok();
+    } });
+  add({ id: 'dt-replace', plat: 'tools1', title: 'Find & Replace the Fake Nulls', xp: 15, level: 1,
+    task: 'Two Qty cells say <code>N/A</code>. Use <b>Find & Replace</b> (Ctrl+H) to replace them with nothing, so they become truly blank.',
+    hints: ['Select the Qty column first so you only change that column.', 'Find: N/A · Replace with: (leave empty) · tick "Match entire cell contents" · Replace All.'],
+    learn: 'A word like "N/A" in a number column breaks SUM, AVERAGE and charts. A real blank is honest: it means "no value".',
+    check: function (h) {
+      var rows = dtData(h.wb), left = rows.filter(function (x) { return /^n\/a$/i.test(tx(x.v[5]).trim()); });
+      if (left.length) return no(left.length + ' Qty cell(s) still say N/A.');
+      var blanks = rows.filter(function (x) { return x.v[5] === null || x.v[5] === ''; });
+      return blanks.length >= DTF.naCount ? ok() : no('The N/A cells should now be empty, not 0 or another word.');
+    } });
+  add({ id: 'dt-dedupe', plat: 'tools1', title: 'Remove Duplicate Rows', xp: 20, level: 2,
+    task: 'Some orders were pasted twice. Use <b>Remove Duplicates</b> on the whole Orders table (all columns checked, header row ON).',
+    hints: ['Click inside the table, then Data ▸ Remove Duplicates (Sheets: Data ▸ Data cleanup ▸ Remove duplicates).', 'Keep every column checked — two rows are only duplicates when EVERYTHING matches.', 'Sheets: tick "Data has header row".'],
+    learn: 'Duplicate rows double-count sales. But compare ALL the columns — two different orders can share a date, a customer or even (by mistake) an ID.',
+    check: function (h) {
+      var rows = dtData(h.wb), seen = {};
+      for (var i = 0; i < rows.length; i++) { var k = rowKey(rows[i].v); if (seen[k]) return no('Rows ' + (seen[k] + 1) + ' and ' + (rows[i].r + 1) + ' are still exact duplicates.'); seen[k] = rows[i].r; }
+      var have = {}; rows.forEach(function (x) { have[[x.v[0], x.v[1], x.v[4], x.v[7]].join('|')] = true; });
+      var lost = DTF.keys.filter(function (k) { return !have[k]; });
+      return lost.length ? no(lost.length + ' real order(s) were deleted. Remove Duplicates must compare ALL columns. Undo (Ctrl+Z) and try again.') : ok('Exact duplicates removed.');
+    } });
+  add({ id: 'dt-trim', plat: 'tools1', title: 'Trim the Customer Names', xp: 25, level: 2,
+    task: 'Some Customer names have extra spaces (at the end, or two in the middle). Clean the <b>Customer</b> column so no name has extra spaces.',
+    hints: ['Google Sheets: select column C, then Data ▸ Data cleanup ▸ Trim whitespace.', 'Excel has no Trim button: in an empty column type =TRIM(C2), fill it down, Copy it, then Home ▸ Paste Values over column C. Then delete the helper column.', 'Paste Values (Excel Ctrl+Alt+V, Sheets Ctrl+Shift+V) turns formulas into plain text.'],
+    learn: '"Kim, Taylor" and "Kim, Taylor " look the same to you — but not to Remove Duplicates, lookups or pivot tables.',
+    check: function (h) {
+      var rows = dtData(h.wb), bad = rows.filter(function (x) { var t = tx(x.v[2]); return t !== t.trim().replace(/ {2,}/g, ' '); });
+      if (bad.length) return no(bad.length + ' Customer cell(s) still have extra spaces (e.g. row ' + (bad[0].r + 1) + ').');
+      var fx = rows.filter(function (x) { var c = h.wb.getCell('Orders', x.r, 2); return c && c.input[0] === '='; });
+      return fx.length ? no('Column C still holds formulas. Paste them back as VALUES so the helper column can be deleted.') : ok();
+    } });
+  add({ id: 'dt-dedupe2', plat: 'tools1', title: 'The Duplicates That Hid', xp: 20, level: 2,
+    task: 'Now that the names are trimmed, run <b>Remove Duplicates</b> again. Rows that differed only by a space are now exact copies.',
+    hints: ['Same steps as before: whole table, all columns, header row on.'],
+    learn: 'Clean first, THEN remove duplicates. The order of cleaning steps matters.',
+    check: function (h) {
+      var rows = dtData(h.wb), seen = {};
+      for (var i = 0; i < rows.length; i++) { var k = rowKey(rows[i].v.map(function (x) { return typeof x === 'string' ? x.trim().replace(/ {2,}/g, ' ') : x; })); if (seen[k]) return no('Rows ' + (seen[k] + 1) + ' and ' + (rows[i].r + 1) + ' are the same order (apart from spaces). Trim first, then remove duplicates.'); seen[k] = rows[i].r; }
+      return rows.length === DTF.distinct ? ok(DTF.distinct + ' unique orders remain.') : no('There should be ' + DTF.distinct + ' unique orders; there are ' + rows.length + '.');
+    } });
+  add({ id: 'dt-split', plat: 'tools1', title: 'Split City and State', xp: 20, level: 2,
+    task: 'Column I holds <code>City, ST</code>. Split it so <b>column I = City</b> and <b>column J = State</b>.',
+    hints: ['Select I2 down to the last order (only column I).', 'Excel: Data ▸ Text to Columns ▸ Delimited ▸ Comma. Sheets: Data ▸ Split text to columns, separator: Comma.', 'The state may keep a leading space — that is OK here, or trim it too.'],
+    learn: 'A delimiter splits one text column into many. It works because every value uses the same separator — check that before you trust a split.',
+    check: function (h) {
+      var rows = dtData(h.wb);
+      var bad = rows.filter(function (x) { return tx(x.v[8]).indexOf(',') >= 0 || DTF.states.indexOf(tx(x.v[9]).trim()) < 0; });
+      return bad.length ? no('Row ' + (bad[0].r + 1) + ': column I should be the city only and column J the two-letter state.') : ok();
+    } });
+  add({ id: 'dt-filter', plat: 'tools1', title: 'Filter + SUBTOTAL', xp: 30, level: 3,
+    task: 'Turn on a <b>filter</b> on the Orders table and show only <b>Online</b> orders. Then in <b>Scratch!B2</b> total the visible Qty with <code>SUBTOTAL</code>.',
+    hints: ['Click in the table, then Data ▸ Filter (Sheets: Data ▸ Create a filter). Use the ▾ on the Channel header.', 'In Scratch!B2: =SUBTOTAL(9, Orders!F2:F40) — 9 means SUM.', 'Compare with =SUM(Orders!F2:F40): SUM still counts the hidden rows!'],
+    learn: 'SUM adds hidden rows too. SUBTOTAL(9, …) adds only what the filter shows — that is what a report usually needs.',
+    check: function (h) {
+      var f = (h.wb.sheet('Orders').meta || {}).filter;
+      if (!f) return no('There is no filter on the Orders sheet yet.');
+      var crit = f.crit[7];
+      if (!crit || crit.length !== 1 || crit[0] !== 'Online') return no('Filter the Channel column (H) to show only "Online".');
+      var miss = needFormula(h, 'Scratch!B2'); if (miss) return miss;
+      if (!h.uses('Scratch!B2', 'SUBTOTAL')) return no('Scratch!B2 should use SUBTOTAL.');
+      var vis = 0; dtData(h.wb).forEach(function (x) { if (!h.wb.rowHidden('Orders', x.r) && typeof x.v[5] === 'number') vis += x.v[5]; });
+      return near(h.val('Scratch!B2'), vis) ? ok('Visible Online quantity: ' + vis + '.') : no('Scratch!B2 shows ' + h.text('Scratch!B2') + ', but the visible Online Qty adds up to ' + vis + '. Does your range cover every order row?');
+    } });
+  add({ id: 'dt-validate', plat: 'tools1', title: 'Guard the Qty Column', xp: 20, level: 2,
+    task: 'Add <b>data validation</b> to the Qty cells (F2 to the last order): only <b>whole numbers from 1 to 100</b>.',
+    hints: ['Select F2 down to the last order, then Data ▸ Data Validation.', 'Excel: Allow = Whole number, Minimum 1, Maximum 100. Sheets: Whole number between, 1 and 100.', 'Then try typing -5 in a Qty cell and see what each app does.'],
+    learn: 'Validation stops bad data at the moment it is typed. It does NOT fix data that is already there — or data pasted in.',
+    check: function (h) {
+      var rows = dtData(h.wb), last = rows.length ? rows[rows.length - 1].r : 1;
+      var miss = rows.filter(function (x) { var r = TL.ruleAt(h.wb, 'Orders', x.r, 5); return !r || r.type !== 'whole' || r.min !== 1 || r.max !== 100; });
+      return miss.length ? no('Qty cell F' + (miss[0].r + 1) + ' has no "whole number between 1 and 100" rule (cover F2:F' + (last + 1) + ').') : ok();
+    } });
+  add({ id: 'dt-cf', plat: 'tools1', title: 'Highlight the Clashing IDs', xp: 30, level: 3,
+    task: 'Two different orders share an OrderID (a typing error). Use <b>conditional formatting</b> on the OrderID cells to highlight every ID that appears more than once.',
+    hints: ['Select A2 down to the last order.', 'Excel: Home ▸ Conditional Formatting ▸ Duplicate Values.', 'Google Sheets has no duplicates preset: Format ▸ Conditional formatting ▸ Custom formula is =COUNTIF($A$2:$A$40, A2) > 1'],
+    learn: 'Conditional formatting makes problems jump out. Remove Duplicates would never catch these — the rows are different, only the ID clashes.',
+    check: function (h) {
+      var rows = dtData(h.wb), col = TL.cfColors(h.wb, 'Orders'), n = {};
+      rows.forEach(function (x) { n[tx(x.v[0])] = (n[tx(x.v[0])] || 0) + 1; });
+      var wrong = rows.filter(function (x) { return (n[tx(x.v[0])] > 1) !== !!col[x.r + ',0']; });
+      if (!rows.some(function (x) { return col[x.r + ',0']; })) return no('No OrderID cell is highlighted yet.');
+      return wrong.length ? no('OrderID in row ' + (wrong[0].r + 1) + (n[tx(wrong[0].v[0])] > 1 ? ' appears more than once but is not highlighted.' : ' is highlighted but appears only once.')) : ok('Every repeated OrderID is highlighted.');
+    } });
+  add({ id: 'dt-quiz-dv', plat: 'tools1', type: 'quiz', title: 'Validation Comes Too Late?', xp: 10, level: 1,
+    task: 'You add a "1 to 100" rule to Qty AFTER the data was typed. What happens to the <code>-3</code> already in a Qty cell?',
+    options: ['It is deleted automatically', 'It stays. Excel shows it only with Data ▸ Circle Invalid Data; Sheets marks it with a red corner', 'It turns into 1', 'Validation refuses to be added'], answer: 1,
+    hints: ['Validation checks values when they are typed.'], learn: 'Validation guards the door; it does not clean the room. Check existing data separately.' });
+  add({ id: 'dt-quiz-trim', plat: 'tools1', type: 'quiz', title: 'Which App Has the Button?', xp: 10, level: 1,
+    task: 'Which app has a one-click <b>Trim whitespace</b> command in its menus?',
+    options: ['Excel 365', 'Excel 2013', 'Google Sheets', 'All three'], answer: 2,
+    hints: ['Look under Data ▸ Data cleanup.'], learn: 'In Excel you use =TRIM() in a helper column, then Paste Values. Same result, more steps.' });
+
+  add({ id: 'dt-pivot', plat: 'tools2', title: 'Your First Pivot Table', xp: 25, level: 1,
+    task: 'Make a pivot table from the Orders table: <b>Rows = Category</b>, <b>Values = Sum of Qty</b>.',
+    hints: ['Click inside the Orders table, then Insert ▸ PivotTable (Sheets: Insert ▸ Pivot table).', 'Rows: Category · Columns: (none) · Values: Qty · Summarize by: Sum.'],
+    learn: 'A pivot table is a summary you build by choosing fields — no formulas. It is the spreadsheet version of SQL GROUP BY.',
+    check: function (h) {
+      var ok2 = pivots(h.wb, 'Orders').filter(function (p) { return colOf(p.P, 'Category') === p.P.rows && p.P.cols == null && colOf(p.P, 'Qty') === p.P.val && p.P.agg === 'SUM'; });
+      return ok2.length ? ok('Pivot on sheet "' + ok2[0].name + '".') : no('No pivot table from Orders with Rows = Category and Values = Sum of Qty yet.');
+    } });
+  add({ id: 'dt-pivot2', plat: 'tools2', title: 'Rows AND Columns', xp: 25, level: 2,
+    task: 'Make a pivot table: <b>Rows = Category</b>, <b>Columns = Channel</b>, <b>Values = Sum of Qty</b>.',
+    hints: ['Insert another pivot table from the Orders data.', 'Pick Channel in the Columns box.'],
+    learn: 'Columns split every row of the summary into groups — a whole grid of SUMIFS answers at once.',
+    check: function (h) {
+      var ok2 = pivots(h.wb, 'Orders').filter(function (p) { return colOf(p.P, 'Category') === p.P.rows && colOf(p.P, 'Channel') === p.P.cols && colOf(p.P, 'Qty') === p.P.val && p.P.agg === 'SUM'; });
+      return ok2.length ? ok() : no('No pivot table with Rows = Category, Columns = Channel and Values = Sum of Qty yet.');
+    } });
+  add({ id: 'dt-pivot-count', plat: 'tools2', title: 'Count, Not Sum', xp: 20, level: 2,
+    task: 'Make a pivot table that shows <b>how many orders</b> each <b>Channel</b> had (Rows = Channel, Values = OrderID, summarized by <b>Count</b>).',
+    hints: ['Summarize by Count (Sheets calls it COUNTA).', 'Counting OrderIDs counts orders. Summing them would add ID numbers — meaningless!'],
+    learn: 'Sum adds the values; Count counts the rows. Choosing the wrong summary is the most common pivot mistake.',
+    check: function (h) {
+      var ok2 = pivots(h.wb, 'Orders').filter(function (p) { return colOf(p.P, 'Channel') === p.P.rows && p.P.agg === 'COUNT'; });
+      return ok2.length ? ok() : no('No pivot table with Rows = Channel summarized by Count yet.');
+    } });
+  add({ id: 'dt-refresh', plat: 'tools2', title: 'Keep It Fresh', xp: 25, level: 2,
+    task: 'Change any <b>Qty</b> in the Orders table, then make sure your pivot tables show the new numbers. (Excel: Data ▸ Refresh All. Sheets: just look.)',
+    hints: ['Edit a Qty cell in Orders, then go back to the pivot sheet.', 'Excel: a yellow warning says the pivot is out of date — click Refresh (or Data ▸ Refresh All).', 'Google Sheets updates pivot tables by itself.'],
+    learn: 'Excel pivot tables are snapshots until you Refresh. Google Sheets pivots follow the data automatically. Forgetting Refresh is how wrong reports get sent.',
+    check: function (h) {
+      var list = pivots(h.wb, 'Orders');
+      if (!list.length) return no('Make a pivot table first.');
+      var stale = list.filter(function (p) { return TL.pivotStale(h.wb, p.name); });
+      if (stale.length) return no('Pivot "' + stale[0].name + '" is out of date — Refresh it (Data ▸ Refresh All).');
+      var changed = list.some(function (p) { return p.P.sig0 && p.P.sig0 !== p.P.sig; });
+      return changed ? ok() : no('Change a Qty in the Orders table AFTER making the pivot, then update the pivot.');
+    } });
+  add({ id: 'dt-sumifs', plat: 'tools2', title: 'Check the Pivot With a Formula', xp: 25, level: 2,
+    task: 'In <b>Scratch!B4</b>, write a <code>SUMIFS</code> formula that gives the total Qty of <b>Snacks</b> sold <b>Online</b> — the same number as that cell of your Rows×Columns pivot.',
+    hints: ['=SUMIFS(sum_range, criteria_range1, criteria1, criteria_range2, criteria2)', '=SUMIFS(Orders!F2:F40, Orders!D2:D40, "Snacks", Orders!H2:H40, "Online")'],
+    learn: 'Every pivot cell is a SUMIFS (or COUNTIFS) answer. Checking one cell with a formula is how analysts make sure a pivot is right.',
+    check: function (h) {
+      var miss = needFormula(h, 'Scratch!B4'); if (miss) return miss;
+      if (!h.uses('Scratch!B4', 'SUMIFS')) return no('Use SUMIFS in Scratch!B4.');
+      var want = 0; dtData(h.wb).forEach(function (x) { if (tx(x.v[3]) === 'Snacks' && tx(x.v[7]) === 'Online' && typeof x.v[5] === 'number') want += x.v[5]; });
+      return near(h.val('Scratch!B4'), want) ? ok('Snacks sold online: ' + want + '.') : no('Scratch!B4 shows ' + h.text('Scratch!B4') + ' but Snacks + Online add up to ' + want + '.');
+    } });
+  add({ id: 'dt-chart-col', plat: 'tools2', title: 'Compare Categories', xp: 20, level: 1,
+    task: 'Make a <b>column or bar chart</b> of total Qty by Category (tip: chart the rows of your first pivot table, without the Grand Total row).',
+    hints: ['On the pivot sheet, select the category names and their totals (not Grand Total).', 'Insert ▸ Chart ▸ Column.'],
+    learn: 'Bars compare amounts between categories. Leave out totals — a Grand Total bar dwarfs everything else.',
+    check: function (h) {
+      var c = charts(h.wb).filter(function (x) { return (x.ch.type === 'column' || x.ch.type === 'bar'); });
+      if (!c.length) return no('No column or bar chart yet.');
+      var good = c.filter(function (x) { var l = x.d.labels.map(tx); return DTF.categories.every(function (k) { return l.indexOf(k) >= 0; }) && l.indexOf('Grand Total') < 0 && x.d.series.length >= 1; });
+      return good.length ? ok() : no('Chart the four categories (' + DTF.categories.join(', ') + ') with their totals — and leave out the Grand Total row.');
+    } });
+  add({ id: 'dt-chart-line', plat: 'tools2', title: 'Change Over Time', xp: 20, level: 1,
+    task: 'On the <b>Monthly</b> sheet, make a <b>line chart</b> of Online and In-store units for all 12 months.',
+    hints: ['Select A1:C13 on the Monthly sheet (Month, Online, In-store).', 'Insert ▸ Chart ▸ Line.'],
+    learn: 'Lines show change over time. Two series on one chart let you compare trends.',
+    check: function (h) {
+      var c = charts(h.wb).filter(function (x) { return x.ch.type === 'line' && x.sheet === 'Monthly'; });
+      if (!c.length) return no('No line chart on the Monthly sheet yet.');
+      var good = c.filter(function (x) { return x.d.labels.length === 12 && x.d.series.length === 2; });
+      return good.length ? ok() : no('The line chart should cover all 12 months and both series (Online and In-store). Select A1:C13.');
+    } });
+  add({ id: 'dt-chart-pie', plat: 'tools2', title: 'Part of a Whole', xp: 20, level: 2,
+    task: 'Make a <b>pie chart</b> showing each Channel\'s share of all units (Online vs In-store).',
+    hints: ['Make (or reuse) a pivot table: Rows = Channel, Values = Sum of Qty.', 'Select the two channel rows and their totals — not the Grand Total — then Insert ▸ Chart ▸ Pie.'],
+    learn: 'A pie shows parts of ONE whole. It works with a few slices; with many, use bars.',
+    check: function (h) {
+      var c = charts(h.wb).filter(function (x) { return x.ch.type === 'pie'; });
+      if (!c.length) return no('No pie chart yet.');
+      var good = c.filter(function (x) { var l = x.d.labels.map(tx).sort(); return JSON.stringify(l) === JSON.stringify(DTF.channels); });
+      return good.length ? ok() : no('The pie should have exactly two slices: In-store and Online (leave out Grand Total).');
+    } });
+  add({ id: 'dt-chart-scatter', plat: 'tools2', title: 'Is There a Relationship?', xp: 20, level: 2,
+    task: 'On the <b>Ads</b> sheet, make a <b>scatter chart</b> with AdSpend on the X axis and Visitors on the Y axis.',
+    hints: ['Select A1:B11 on the Ads sheet.', 'Insert ▸ Chart ▸ Scatter. The first column becomes X.'],
+    learn: 'A scatter chart shows whether two numbers move together. It shows a relationship — not proof that one causes the other.',
+    check: function (h) {
+      var c = charts(h.wb).filter(function (x) { return x.ch.type === 'scatter' && x.sheet === 'Ads'; });
+      if (!c.length) return no('No scatter chart on the Ads sheet yet.');
+      return c.some(function (x) { return x.d.labels.length >= 10 && x.d.labels.every(function (v) { return typeof v === 'number'; }) && x.d.series.length === 1; }) ? ok() : no('Use AdSpend (column A) as X and Visitors (column B) as Y for all 10 rows.');
+    } });
+  add({ id: 'dt-quiz-line', plat: 'tools2', type: 'quiz', title: 'Pick the Chart', xp: 10, level: 1,
+    task: 'You want to show how monthly sales <b>changed over the year</b>. Which chart fits best?',
+    options: ['Pie chart', 'Line chart', 'Scatter chart', 'A table of totals only'], answer: 1,
+    hints: ['Which chart connects points in order?'], learn: 'Line = change over time · Bar/column = compare categories · Pie = parts of one whole · Scatter = relationship between two numbers.' });
+  add({ id: 'dt-quiz-refresh', plat: 'tools2', type: 'quiz', title: 'The Stale Pivot', xp: 10, level: 1,
+    task: 'You fix a typo in the data, but your <b>Excel</b> pivot table still shows the old total. Why?',
+    options: ['Excel pivots only update when you click Refresh', 'You must delete the pivot and start over', 'Pivots ignore typos', 'Excel pivots never change'], answer: 0,
+    hints: ['Look for Data ▸ Refresh All.'], learn: 'Excel pivots are snapshots until refreshed; Google Sheets pivots update on their own.' });
+  add({ id: 'dt-quiz-axis', plat: 'tools2', type: 'quiz', title: 'Spot the Misleading Chart', xp: 15, level: 2,
+    task: 'A bar chart shows Store A = 102 and Store B = 98, but B\'s bar looks HALF as tall as A\'s. What is wrong?',
+    options: ['The colors are wrong', 'The vertical axis does not start at 0, so a small difference looks huge', 'It should be a pie chart', 'Nothing — B really sold half as much'], answer: 1,
+    hints: ['Look at where the axis starts.'], learn: 'Bars must start at 0. A cut-off axis is the most common way charts mislead.' });
+
   // ===== Compare-page quizzes =====
   add({ id: 'cmp-name', plat: 'compare', type: 'quiz', title: 'Who Says #NAME?', xp: 10, level: 1,
     task: 'Where does <code>=XLOOKUP(A2, B:B, C:C)</code> give a <b>#NAME?</b> error?',

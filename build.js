@@ -6,8 +6,8 @@ const path = require('path');
 
 const SRC = path.join(__dirname, 'src');
 const JS_ORDER = [
-  'data.js', 'seal.js', 'formula.js', 'engine.js', 'workbook.js', 'mldata.js', 'sql.js', 'platforms.js', 'csv.js', 'wrangle.js', 'certtest.js',
-  '@TESTBANK', 'challenges.js', 'lessons.js', 'reference.js', 'ui-core.js', 'ui-sheet.js', 'ui-csv.js', 'ui-sql.js', 'ui-wrangle.js', 'ui-cert.js',
+  'data.js', 'seal.js', 'formula.js', 'engine.js', 'workbook.js', 'sheettools.js', 'mldata.js', 'sql.js', 'platforms.js', 'csv.js', 'wrangle.js', 'datatools.js', 'certtest.js',
+  '@TESTBANK', 'challenges.js', 'lessons.js', 'reference.js', 'ui-core.js', 'ui-sheet.js', 'ui-sheettools.js', 'ui-csv.js', 'ui-sql.js', 'ui-wrangle.js', 'ui-datatools.js', 'ui-cert.js',
   'ui-reference.js', 'ui-rdbms.js', 'ui-ml.js', 'ui-test.js', 'main.js'
 ];
 

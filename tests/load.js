@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
-const ORDER = ['data.js', 'seal.js', 'formula.js', 'engine.js', 'workbook.js', 'mldata.js', 'sql.js', 'csv.js', 'wrangle.js'];
+const ORDER = ['data.js', 'seal.js', 'formula.js', 'engine.js', 'workbook.js', 'sheettools.js', 'mldata.js', 'sql.js', 'csv.js', 'wrangle.js', 'datatools.js'];
 module.exports = function load(extra) {
   const ctx = { console };
   ctx.globalThis = ctx;

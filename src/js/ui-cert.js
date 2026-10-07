@@ -27,7 +27,7 @@
     // Shown when the screen is free, and never once a test has been started (it would only get in the way).
     function started() { var t = UI.state.tests && UI.state.tests[id]; return UI.lessonCertified(id) || !!(t && t.attempts) || !!document.querySelector('.test-overlay'); }
     function show() {
-      if (started()) return;
+      if (started() || UI.quiet) return;
       if (document.querySelector('.modal-overlay, #cert-overlay')) { setTimeout(show, 700); return; }
       window.confettiBurst(120);
       UI.modal('Practice complete: Lesson ' + lesson.n, [

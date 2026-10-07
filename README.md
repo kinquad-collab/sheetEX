@@ -1,7 +1,7 @@
 # SheetEX — Spreadsheet Explorer (v2)
 
 > **v2** adds the **Data Wrangling Lab** with an **🤖 AI Readiness Check**, an **Interactive Cheat Sheet**, an
-> **interactive "What is an RDBMS?" page**, an **ML Data Lab**, **10 lessons with guides, no-hints certification tests and
+> **interactive "What is an RDBMS?" page**, an **ML Data Lab**, a **Data Tools Lab** (working menus, pivot tables and charts), **12 lessons with guides, no-hints certification tests and
 > certificates**. Everything runs from one Google Apps Script page. **No student data is collected**: everything stays in the
 > student's browser and in one sealed **progress file** (`.json`) the student saves. v1 is preserved on its own branch.
 
@@ -18,13 +18,14 @@ one behaves like the real thing, errors included:
 | **SQL** | WHERE = FILTER, GROUP BY = SUMIF, JOIN = VLOOKUP, HAVING, integer division (`7/2 = 3`), case-sensitive text, UPDATE without WHERE |
 | **Data Wrangling Lab** (v2) | Cleaning a messy order feed before an AI model sees it. Item codes that lost their zeros (`104` vs `"0104"`), text that looks like numbers, four date formats plus a European `03.09.2026`, blanks vs fake nulls (`N/A`, `-`, `null`), messy names and store codes, `$` prices stored as text. Then VLOOKUP/HLOOKUP/XLOOKUP joins, why lookups return `#N/A` (number vs text), concatenation, delimiters, TEXTJOIN, and FILTER around missing values. Runs on an Excel 365 **or** Google Sheets engine (switch at the top) |
 | **What is an RDBMS?** (v2) | A hands-on page: change one copy of a price in a flat sheet and watch an *update anomaly* appear, then fix it with one `UPDATE`; click columns to see types and keys; follow an order through an ER diagram (foreign key → primary key); press buttons that try duplicate keys, missing names, negative prices, text in a number column and orphan rows, and watch the database refuse each one; move lunch money between two accounts and pull the plug mid-transfer, with and without a transaction (ACID). Ends with a free-play SQL sandbox |
+| **Data Tools Lab** (v2) | The **menus** students use at home and at work, in Excel 365, Excel 2013 or Google Sheets, on a messy order export: Sort (and the one-column trap), Filter with SUBTOTAL, Find & Replace, Paste Values, Remove Duplicates, Trim whitespace, Text to Columns / Split, Data Validation, Conditional Formatting, **pivot tables** (rows, columns, values, filter; Excel's Refresh vs Sheets' automatic updates) and **charts** (column, bar, line, pie, scatter, with an axis-starts-at-0 switch) |
 | **ML Data Lab** (v2) | Getting a database table ready for a machine-learning model: examples, features and the label; class imbalance and a "lazy baseline" that beats the real model on accuracy; missing values (drop, fill, flag); test rows that are copies of training rows; a column that leaks the answer from the future; building the training table with `CREATE TABLE … AS SELECT` and a JOIN; grading the model with accuracy, precision, recall and a clickable confusion matrix |
 | **Interactive Cheat Sheet** (v2) | 33 everyday data tasks ("pad leading zeros", "count fake nulls", "split at a delimiter", "why does my lookup say #N/A?") with the answer for Excel 365, Excel 2013, Google Sheets, SQL and CSV side by side, plus a **▶ Run** button that runs it live on the Peachtree data |
 
 Students start on a home page, pick a workspace, and earn **XP**, **levels** (Intern → Chief Data Officer)
 and **badges**. Every workspace has a free-play sandbox plus a side panel with:
 
-- **🏆 Challenges** — 93 auto-checked practice challenges with progressive hints, grouped into 10 lessons. A hint costs 20% of that challenge's XP.
+- **🏆 Challenges** — 117 auto-checked practice challenges with progressive hints, grouped into 12 lessons. A hint costs 20% of that challenge's XP.
 - **📘 Cheat sheet** — what is different on this platform, keyboard shortcuts, a searchable function list using *that* platform's argument names, and error codes.
 - **🌐 Will it work elsewhere?** — runs the selected cell's formula in Excel 365, Excel 2013 and Google Sheets on the same data, shows each result, and writes the rewrite (for example XLOOKUP → `IFERROR(INDEX(…, MATCH(…, 0)), …)`, or MAXIFS → `{=MAX(IF(…))}`). One click applies the fix.
 
@@ -53,16 +54,38 @@ Real models are far more complex, but the lesson is the same: garbage in, garbag
 | 8 | Cross-Platform Translator | Compare |
 | 9 | Databases 101: What is an RDBMS? | RDBMS page (tables, keys, constraints, transactions) |
 | 10 | Databases for Machine Learning | ML Data Lab |
+| 11 | Sort, Filter & Clean with the Menus | Data Tools Lab |
+| 12 | Pivot Tables & Charts | Data Tools Lab |
 
 Every lesson has a **📖 guide** (why it matters, vocabulary with examples, common traps) that opens the first time a
 student enters its workspace and from the challenge panel or home page.
+
+### The menus (v2)
+
+Every spreadsheet workspace has working **Data**, **Insert** and **Home** menus (Excel) or **Edit**, **Insert**, **Format**
+and **Data** menus (Google Sheets), named the way each app names them. They are deliberately simple — plain dialogs, no
+dragging — but they keep the behaviors that really differ between the apps:
+
+| Tool | Excel 365 / 2013 | Google Sheets |
+|---|---|---|
+| Sort | *Sort Warning* when you select one column of a table ("Expand the selection?") | *Sort range* sorts only what you selected; *Sort sheet* moves row 1 too when nothing is frozen |
+| Remove duplicates | Data ▸ Remove Duplicates · "N duplicate values found and removed" | Data ▸ Data cleanup ▸ Remove duplicates |
+| Trim spaces | no button — `=TRIM()` then Paste Values | Data ▸ Data cleanup ▸ Trim whitespace |
+| Data validation | refuses bad typing (Stop); existing/pasted data needs *Circle Invalid Data* | warns by default (red corner), can reject; existing data is marked |
+| Conditional formatting | has a *Duplicate Values* preset | no duplicates preset — *Custom formula is* `=COUNTIF(…)>1` |
+| Pivot tables | new sheet "Sheet1", *Row Labels* / *Sum of Qty*; **stale until Refresh** | new sheet "Pivot Table 1", *SUM of Qty*; **updates automatically** |
+| Filter | status bar "5 of 24 records found" | "showing 5 of 24 rows" |
+
+`SUBTOTAL` is supported and skips filtered-out rows, so students can see why `SUM` gives the wrong total on a filtered list.
+Charts appear in a **📊 Charts** panel and update with the data; the panel warns about common chart mistakes (pie with too
+many slices, axis not starting at 0, numbers stored as text, scatter without numeric X).
 
 ### Practice, then a certification test
 
 Practice challenges have hints whenever a student is stuck. When every practice challenge in a lesson is done, the
 lesson's **certification test** unlocks:
 
-- **10 questions drawn at random** from that lesson's bank (12–18 per lesson, **152 in total**), **half of them hands-on**. **8 of 10 to pass.**
+- **10 questions drawn at random** from that lesson's bank (12–18 per lesson, **185 in total**), **half of them hands-on**. **8 of 10 to pass.**
 - **No hints and no cheat sheet.** The test covers the whole screen.
 - **Hands-on questions are run, not pattern-matched.** A formula answer is evaluated by the same engine as the workspace, both on the
   real data and on a shuffled copy (rows reversed, numbers changed). Any correct formula is accepted, and the app's quirks still
@@ -171,6 +194,10 @@ src/
   js/lessons.js       v2: lesson list, guides and sealed certificate records
   js/seal.js          v2: SHA-256 + HMAC in plain JS; the class-key marker Code.gs replaces
   js/certtest.js      v2: certification-test engine (runs answers, fingerprints results, draws tests)
+  js/sheettools.js    v2: sort, filter, remove duplicates, split, trim, find & replace, paste values, validation,
+                      conditional formatting, pivot tables, chart data — plain functions shared by menus, checks and tests
+  js/ui-sheettools.js v2: the menus, dialogs, grid decorations, pivot bar and Charts panel
+  js/datatools.js     v2: Lessons 11–12 data (messy orders, monthly units, ad spend)
   js/mldata.js        v2: Lesson 10 data (ml_examples, predictions) with planted ML pitfalls
   banks/questions.js  v2: certification-test question banks WITH answers (never shipped; build ships fingerprints)
   banks/build-bank.js v2: runs every bank answer through the engine and turns it into fingerprints

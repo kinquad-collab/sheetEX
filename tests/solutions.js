@@ -86,5 +86,24 @@ module.exports = {
   'ml-features': { ml: ["CREATE TABLE train_set AS SELECT e.example_id, e.promo, e.price, e.units_last_week, e.in_stock_start, p.category, e.stockout FROM ml_examples e JOIN products p ON e.sku = p.sku WHERE e.split = 'train';"] },
   'ml-accuracy': { ml: ['SELECT AVG(p.predicted = e.stockout) FROM predictions p JOIN ml_examples e ON p.example_id = e.example_id;'], note: 'Also accepted: 100.0 * SUM(p.predicted = e.stockout) / COUNT(*) (a percent).' },
   'ml-confusion': { ml: ['SELECT e.stockout, p.predicted, COUNT(*) FROM predictions p JOIN ml_examples e ON p.example_id = e.example_id GROUP BY e.stockout, p.predicted;'] },
-  'rd-bank': { ui: 'Section 5: With a transaction (BEGIN) → Step 1 → ⚡ Power failure! → With a transaction (BEGIN) → Step 1 → Step 2 → COMMIT.' }
+  'rd-bank': { ui: 'Section 5: With a transaction (BEGIN) → Step 1 → ⚡ Power failure! → With a transaction (BEGIN) → Step 1 → Step 2 → COMMIT.' },
+  // Lessons 11–12 — Data Tools Lab (dt: menu operations, run with SX.tools on the lab workbook in every app)
+  'dt-sort': { dt: [['sort', { col: 1 }]] },
+  'dt-replace': { dt: [['replace', { col: 5, find: 'N/A', replace: '', whole: true }]] },
+  'dt-dedupe': { dt: [['dedupe']] },
+  'dt-trim': { dt: [['trim', { col: 2 }]] },
+  'dt-dedupe2': { dt: [['trim', { col: 2 }], ['dedupe']] },
+  'dt-split': { dt: [['split', { col: 8, delim: 'comma' }]] },
+  'dt-filter': { dt: [['filter'], ['crit', { col: 7, values: ['Online'] }], ['cell', 'Scratch!B2', '=SUBTOTAL(9,Orders!F2:F40)']] },
+  'dt-validate': { dt: [['dv', { col: 5, type: 'whole', min: 1, max: 100 }]] },
+  'dt-cf': { dt: [['cf', { col: 0, type: 'formula', formula: '=COUNTIF($A$2:$A$40,A2)>1' }]], note: 'Excel can also use Home ▸ Conditional Formatting ▸ Duplicate Values.' },
+  'dt-pivot': { dt: [['pivot', { rows: 3, val: 5, agg: 'SUM' }]] },
+  'dt-pivot2': { dt: [['pivot', { rows: 3, cols: 7, val: 5, agg: 'SUM' }]] },
+  'dt-pivot-count': { dt: [['pivot', { rows: 7, val: 0, agg: 'COUNT' }]] },
+  'dt-refresh': { dt: [['pivot', { rows: 3, val: 5, agg: 'SUM' }], ['cell', 'Orders!F2', '7'], ['refresh']] },
+  'dt-sumifs': { dt: [['cell', 'Scratch!B4', '=SUMIFS(Orders!F2:F40,Orders!D2:D40,"Snacks",Orders!H2:H40,"Online")']] },
+  'dt-chart-col': { dt: [['pivot', { rows: 3, val: 5, agg: 'SUM' }], ['chart', { pivot: true, type: 'column' }]] },
+  'dt-chart-line': { dt: [['chart', { sheet: 'Monthly', r1: 0, c1: 0, r2: 12, c2: 2, type: 'line' }]] },
+  'dt-chart-pie': { dt: [['pivot', { rows: 7, val: 5, agg: 'SUM' }], ['chart', { pivot: true, type: 'pie' }]] },
+  'dt-chart-scatter': { dt: [['chart', { sheet: 'Ads', r1: 0, c1: 0, r2: 10, c2: 1, type: 'scatter' }]] }
 };

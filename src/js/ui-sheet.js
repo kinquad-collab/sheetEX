@@ -60,6 +60,7 @@
   UI.SheetView = SheetView;
 
   SheetView.prototype.destroy = function () {
+    if (this.closeMenu) this.closeMenu();
     document.removeEventListener('keydown', this.onDocKey);
     document.removeEventListener('copy', this.onCopy);
     document.removeEventListener('cut', this.onCut);
@@ -82,10 +83,12 @@
       this.opts.titleExtra || null,
       h('span.app-ver', { text: this.P.name })
     ]));
-    // Menu / ribbon tabs (decorative, helps it feel like the real app)
+    // Menu / ribbon tabs. Data, Insert and Home (Excel) / Edit, Insert, Format, Data (Sheets) open working menus.
     root.appendChild(h('div.menu-row', null, RIBBON[plat].map(function (t, i) {
       var active = (plat === 'gs') ? false : t.toUpperCase() === 'HOME';
-      return h('span.menu-item' + (active ? '.on' : '') + (plat === 'xl2013' && i === 0 ? '.file-tab' : '') + (plat === 'xl365' && i === 0 ? '.file-tab365' : ''), { text: t });
+      var el = h('span.menu-item' + (active ? '.on' : '') + (plat === 'xl2013' && i === 0 ? '.file-tab' : '') + (plat === 'xl365' && i === 0 ? '.file-tab365' : '') + (self.menuItems(t) ? '.has-menu' : ''),
+        { text: t, role: 'button', tabindex: '-1', onmousedown: function (e) { e.preventDefault(); }, onclick: function () { if (self.menuPop && self.menuAnchor === el) self.closeMenu(); else self.openMenu(t, el); } });
+      return el;
     })));
 
     // Toolbar
@@ -104,7 +107,7 @@
       h('div.tb-group', null, [tb('Σ', 'AutoSum', function () { self.autoSum(); }), tb('fx', 'Insert function', function () { self.insertFunctionDialog(); }, 'tb-fx'),
         tb('⤓', 'Fill down (Ctrl+D)', function () { self.fill('down'); }), this.sfBtn = tb('{=}', 'Show formulas (Ctrl+`)', function () { self.toggleFormulas(); })]),
       h('div.tb-spacer'),
-      h('div.tb-group.tb-panels', null, [pb('challenges', '🏆 Challenges', 'Challenges'), pb('cheat', '📘 Cheat sheet', 'Cheat sheet'), pb('elsewhere', '🌐 Will it work elsewhere?', 'Run this formula in every app')].concat((this.opts.extraTabs || []).map(function (t) { return pb(t.id, t.button || t.label, t.label); }))),
+      h('div.tb-group.tb-panels', null, [pb('challenges', '🏆 Challenges', 'Challenges'), pb('cheat', '📘 Cheat sheet', 'Cheat sheet'), pb('elsewhere', '🌐 Will it work elsewhere?', 'Run this formula in every app'), pb('charts', '📊 Charts', 'Charts in this workbook')].concat((this.opts.extraTabs || []).map(function (t) { return pb(t.id, t.button || t.label, t.label); }))),
       tb('⟲', 'Reset this workbook to the original data', function () { self.resetData(); }, 'tb-reset')
     ]));
 
@@ -138,7 +141,8 @@
     this.tabs = h('div.sheet-tabs');
     this.status = h('div.statusbar');
 
-    var main = h('div.ws-main', null, [this.fxWrap, this.cellInfo, this.gridWrap, this.tabs, this.status]);
+    this.pivotHost = h('div.pivot-host');
+    var main = h('div.ws-main', null, [this.fxWrap, this.cellInfo, this.pivotHost, this.gridWrap, this.tabs, this.status]);
     this.panelHost = h('div.panel-host');
     root.appendChild(h('div.ws-body', null, [main, this.panelHost]));
     root.appendChild(this.acPop); root.appendChild(this.sigTip);
@@ -186,6 +190,10 @@
     this.gridInner.appendChild(this.refLayer);
     this.gridInner.appendChild(this.selBox);
     this.gridInner.appendChild(this.editor);
+    var self2 = this;
+    this.dvBtn = h('button.dv-btn', { text: '▾', title: 'Pick from the list', tabindex: '-1', onmousedown: function (e) { e.preventDefault(); e.stopPropagation(); }, onclick: function () { self2.listPick(); } });
+    this.gridInner.appendChild(this.dvBtn);
+    this.decor = {};
     this.cache = {};
     this.renderTabs();
   };
@@ -244,6 +252,7 @@
     }
     for (c = 0; c < COLS; c++) this.colHeads[c].classList.toggle('hl', c >= sel.c1 && c <= sel.c2);
     for (r = 0; r < ROWS; r++) this.rowHeads[r].classList.toggle('hl', r >= sel.r1 && r <= sel.r2);
+    this.decorate();
     this.positionSel();
     this.updateBars();
     this.updateStatus();
@@ -350,6 +359,7 @@
       if (nums.length > 1) parts.push(h('span.st-sum', { text: 'Sum: ' + E.displayValue(nums.reduce(function (a, b) { return a + b; }, 0)) }));
       else if (count > 1) parts.push(h('span.st-sum', { text: 'Count: ' + count }));
     }
+    if (this.filterNote) parts.splice(this.excel ? 1 : 0, 0, h('span.st-filter', { text: this.filterNote }));
     this.status.innerHTML = '';
     parts.forEach(function (p) { this.status.appendChild(p); }, this);
   };
@@ -382,6 +392,7 @@
       return;
     }
     var r = +t.dataset.r, cc = +t.dataset.c;
+    if (t.classList.contains('has-filter') && !this.editing && e.clientX > t.getBoundingClientRect().right - 20) { e.preventDefault(); this.select(r, cc); this.filterPopup(cc, t); return; }
     if (this.editing) {
       if (this.canInsertRef()) {
         e.preventDefault();
@@ -488,6 +499,8 @@
       if (lk === 'd') { e.preventDefault(); this.fill('down'); return; }
       if (lk === 'r') { e.preventDefault(); this.fill('right'); return; }
       if (lk === 'a') { e.preventDefault(); this.selectAll(); return; }
+      if (lk === 'h') { e.preventDefault(); this.findDialog(); return; }
+      if (lk === 'v' && ((e.shiftKey && !this.excel) || (e.altKey && this.excel))) { e.preventDefault(); this.pasteValuesOnly(); return; }
       if (k === '`' || k === '~') { e.preventDefault(); this.toggleFormulas(); return; }
       return; // let copy/paste events through
     }
@@ -509,6 +522,7 @@
 
   SheetView.prototype.startEdit = function (text, fromTyping, inFx) {
     if (this.editing) return;
+    if (this.locked()) { if (inFx) this.focusGrid(); return; }
     this.ar = this.r; this.ac = this.c;
     this.editing = { r: this.r, c: this.c, sheet: this.sheet, fromTyping: fromTyping, inFx: !!inFx, orig: this.wb.formulaText(this.sheet, this.r, this.c), point: null };
     var rect = this.cellRect(this.r, this.c);
@@ -553,6 +567,7 @@
         if (opts.cse && !this.excel && this.isFormulaText(text) && !/^=\s*ARRAYFORMULA\(/i.test(text)) text = '=ARRAYFORMULA(' + text.slice(1) + ')';
         var prep = this.wb.prepare(text, { cse: opts.cse });
         if (prep.dialog) { this.excelDialog(prep); return false; }
+        if (!this.checkEntry(ed.sheet, ed.r, ed.c, prep.cell)) { var bad = this.activeEditEl(); if (bad) setTimeout(function () { bad.focus(); bad.select(); }, 60); return false; }
         this.wb.applyEdits([{ sheet: ed.sheet, r: ed.r, c: ed.c, cell: prep.cell }]);
         this.afterCommit(ed.sheet, ed.r, ed.c, prep.cell, opts);
       }
@@ -820,6 +835,7 @@
   SheetView.prototype.undo = function () { if (this.editing) return; var b = this.wb.undo(); if (b && b.sheet && b.sheet !== this.sheet) this.switchSheet(b.sheet, true); if (b) { this.r = this.ar = b.r; this.c = this.ac = b.c; } this.afterChange(); };
   SheetView.prototype.redo = function () { if (this.editing) return; var b = this.wb.redo(); if (b && b.sheet && b.sheet !== this.sheet) this.switchSheet(b.sheet, true); if (b) { this.r = this.ar = b.r; this.c = this.ac = b.c; } this.afterChange(); };
   SheetView.prototype.clearSel = function () {
+    if (this.locked()) return;
     var s = this.selRange(), edits = [];
     for (var r = s.r1; r <= s.r2; r++) for (var c = s.c1; c <= s.c2; c++) {
       var cell = this.wb.getCell(this.sheet, r, c);
@@ -919,6 +935,7 @@
     if (!on) this.clip = this.clip && !this.clip.cut ? this.clip : null;
   };
   SheetView.prototype.pasteInternal = function () {
+    if (this.locked()) return;
     if (!this.clip) { UI.toast('Nothing copied yet', 'Select cells and press Ctrl+C first.'); return; }
     var s = this.selRange(), clip = this.clip, edits;
     if (clip.cut) {
@@ -944,6 +961,7 @@
     }
     var pasted = e.clipboardData ? e.clipboardData.getData('text/plain') : '';
     e.preventDefault();
+    if (this.locked()) return;
     if (this.clip && (!pasted || pasted.replace(/\r/g, '') === this.clipText)) { this.pasteInternal(); return; }
     if (!pasted) return;
     var rows = pasted.replace(/\r/g, '').replace(/\n$/, '').split('\n').map(function (l) { return l.split('\t'); });
@@ -965,7 +983,8 @@
       this.panel = UI.sidePanel([
         { id: 'challenges', label: '🏆 Challenges', render: function () { return self.challengesTab(); } },
         { id: 'cheat', label: '📘 Cheat sheet', render: function () { return self.cheatTab(); } },
-        { id: 'elsewhere', label: '🌐 Elsewhere', render: function () { return self.elsewhereTab(); } }
+        { id: 'elsewhere', label: '🌐 Elsewhere', render: function () { return self.elsewhereTab(); } },
+        { id: 'charts', label: '📊 Charts', render: function () { return self.chartsTab(); } }
       ].concat((this.opts.extraTabs || []).map(function (t) { return { id: t.id, label: t.label, render: function () { return t.render(self); } }; })), id);
       this.panel.el.querySelector('.sp-tabs').addEventListener('click', function () { self.markPanelBtns(self.panel.current()); UI.state.ui['panel_' + self.key] = self.panel.current(); });
       this.panel.el.appendChild(h('button.sp-close', { title: 'Close panel', 'aria-label': 'Close panel', text: '×', onclick: function () { self.togglePanel(self.panel.current()); } }));

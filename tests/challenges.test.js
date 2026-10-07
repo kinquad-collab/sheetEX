@@ -86,7 +86,7 @@ const CSV = {
 };
 
 for (const ch of SX.challenges.LIST) {
-  if (/^wr[12]$/.test(ch.plat) || ch.plat === 'rdbms' || ch.plat === 'ml') continue; // covered by dedicated tests below
+  if (/^wr[12]$/.test(ch.plat) || ch.plat === 'rdbms' || ch.plat === 'ml' || /^tools/.test(ch.plat)) continue; // covered by dedicated tests below
   if (ch.type === 'quiz') {
     test('quiz ' + ch.id + ' is well-formed', () => { assert.ok(ch.options[ch.answer]); });
     continue;
@@ -247,6 +247,63 @@ test('lesson 9: SQL challenges are solvable and reject the starting state', () =
   assert.ok(SX.challenges.byId('rd-anomaly').check(Object.assign(rdRun([]), { anomaly: true })).ok);
   assert.ok(SX.challenges.byId('rd-bank').check(Object.assign(rdRun([]), { bankDone: true })).ok);
 });
+// Data Tools Lab: run menu operations (the same SX.tools functions the menus call) on a fresh lab workbook.
+function dtRun(steps, plat) {
+  const T = SX.tools, wb = SX.datatools.makeWorkbook(plat || 'xl365');
+  const region = (s, r, c) => T.currentRegion(wb, s || 'Orders', r || 1, c || 0);
+  const colRange = (col) => { const R = region(); return { r1: 1, c1: col, r2: R.r2, c2: col }; };
+  for (const [op, o = {}, extra] of steps) {
+    if (op === 'sort') T.sortRange(wb, 'Orders', region(), { col: o.col, desc: !!o.desc, header: true });
+    else if (op === 'replace') T.findReplace(wb, 'Orders', colRange(o.col), o);
+    else if (op === 'dedupe') { const R = region(); T.removeDuplicates(wb, 'Orders', R, { cols: [...Array(R.c2 - R.c1 + 1).keys()].map((i) => i + R.c1), header: true }); }
+    else if (op === 'trim') T.trimRange(wb, 'Orders', colRange(o.col));
+    else if (op === 'split') T.applyEdits(wb, T.planSplit(wb, 'Orders', colRange(o.col), { delim: o.delim }));
+    else if (op === 'filter') T.setFilter(wb, 'Orders', region());
+    else if (op === 'crit') T.setCriteria(wb, 'Orders', o.col, o.values);
+    else if (op === 'cell') { const m = /^(.+)!([A-Z]+)(\d+)$/.exec(o); wb.applyEdits([{ sheet: m[1], r: +m[3] - 1, c: SX.f.colToIdx(m[2]), cell: wb.prepare(extra).cell }]); }
+    else if (op === 'dv') T.addValidation(wb, 'Orders', colRange(o.col), o);
+    else if (op === 'cf') T.addRule(wb, 'Orders', colRange(o.col), o);
+    else if (op === 'pivot') T.addPivot(wb, 'Orders', region(), o);
+    else if (op === 'refresh') T.refreshAll(wb);
+    else if (op === 'chart') {
+      let R = o;
+      if (o.pivot) { // chart the category rows of the newest pivot, without Grand Total
+        const ps = wb.sheets.filter((s) => s.meta && s.meta.pivot); const name = ps[ps.length - 1].name;
+        let hr = 0; while (!['Row Labels', 'Category', 'Channel'].includes(wb.value(name, hr, 0))) hr++;
+        let last = hr; while (wb.value(name, last + 1, 0) !== 'Grand Total') last++;
+        R = { sheet: name, r1: hr, c1: 0, r2: last, c2: 1 };
+      }
+      T.addChart(wb, R.sheet, R, { type: o.type });
+    }
+    T.autoRefreshPivots(wb);
+  }
+  return SX.challenges.sheetHelpers(wb);
+}
+test('lessons 11–12: every challenge rejects the untouched lab and common mistakes', () => {
+  for (const plat of ['xl365', 'xl2013', 'gs'])
+    for (const ch of SX.challenges.forPlat('tools1').concat(SX.challenges.forPlat('tools2')).filter((c) => c.type !== 'quiz'))
+      assert.ok(!ch.check(dtRun([], plat)).ok, plat + ' ' + ch.id + ' should not pass untouched');
+  const bad = [
+    ['dt-sort', [['sort', { col: 1, desc: true }]]], // newest first
+    ['dt-dedupe', [['trim', { col: 2 }]]],
+    ['dt-dedupe2', [['dedupe']]], // did not trim first
+    ['dt-filter', [['filter'], ['crit', { col: 7, values: ['Online'] }], ['cell', 'Scratch!B2', '=SUM(Orders!F2:F40)']]], // SUM counts hidden rows
+    ['dt-validate', [['dv', { col: 5, type: 'whole', min: 0, max: 100 }]]],
+    ['dt-pivot', [['pivot', { rows: 3, val: 5, agg: 'COUNT' }]]],
+    ['dt-pivot-count', [['pivot', { rows: 7, val: 0, agg: 'SUM' }]]],
+    ['dt-chart-pie', [['chart', { sheet: 'Monthly', r1: 0, c1: 0, r2: 12, c2: 1, type: 'pie' }]]]
+  ];
+  for (const [id, steps] of bad) assert.ok(!SX.challenges.byId(id).check(dtRun(steps)).ok, id + ' should reject ' + JSON.stringify(steps));
+  // a one-column sort scrambles rows and is caught
+  const T = SX.tools, wb = SX.datatools.makeWorkbook('gs');
+  T.sortRange(wb, 'Orders', { r1: 0, c1: 1, r2: 39, c2: 1 }, { col: 1, header: true });
+  assert.match(SX.challenges.byId('dt-sort').check(SX.challenges.sheetHelpers(wb)).msg, /mixes data/);
+  // Excel refresh: an edited source makes the pivot stale until refreshed
+  const x = dtRun([['pivot', { rows: 3, val: 5, agg: 'SUM' }], ['cell', 'Orders!F2', '7']], 'xl365');
+  assert.match(SX.challenges.byId('dt-refresh').check(x).msg, /out of date/);
+  assert.ok(SX.challenges.byId('dt-refresh').check(dtRun([['pivot', { rows: 3, val: 5, agg: 'SUM' }], ['cell', 'Orders!F2', '7']], 'gs')).ok, 'Sheets pivots update by themselves');
+});
+
 // Mirrors MlView.exec in ui-ml.js: the checks look at the most recent SELECT result and the sandbox tables.
 function mlRun(sqls, extra) {
   const db = SX.sql.makeStoreDb(); let last = null;
@@ -290,6 +347,7 @@ for (const ch of SX.challenges.LIST.filter((c) => c.type !== 'quiz')) {
     if (k.ui) { assert.ok(k.ui.length > 10); return; } // page interaction: verified in tests/e2e-lessons.js
     if (k.rd) { const r = ch.check(rdRun(k.rd)); assert.ok(r.ok, r.msg); return; }
     if (k.ml) { const r = ch.check(mlRun(k.ml)); assert.ok(r.ok, r.msg); return; }
+    if (k.dt) { for (const plat of ['xl365', 'xl2013', 'gs']) { const r = ch.check(dtRun(k.dt, plat)); assert.ok(r.ok, plat + ': ' + r.msg); } return; }
     const plats = k.wr ? ['xl365', 'gs'] : [ch.plat];
     for (const plat of plats) {
       let h;

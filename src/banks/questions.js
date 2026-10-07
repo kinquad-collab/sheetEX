@@ -13,6 +13,8 @@ const RAW = { sheet: 'RawOrders', cols: 'A:H', rows: 5, last: 31 };
 const T = { sheet: 'Targets', cols: 'A:F', rows: 4, last: 4 };
 const CT = { sheet: 'Contacts', cols: 'A:F', rows: 4, last: 9 };
 const IC = { sheet: 'ItemCodes', cols: 'A:D', rows: 3, last: 25 };
+const OR = { sheet: 'Orders', cols: 'A:I', rows: 5, last: 40 };
+const MO = { sheet: 'Monthly', cols: 'A:C', rows: 3, last: 13 };
 
 module.exports = {
   xl365: [
@@ -300,6 +302,78 @@ module.exports = {
     { id: 'm-time', kind: 'mc', topic: 'Train/test split', q: 'Why are weeks 1–4 used for training and weeks 5–6 for testing, instead of mixing all weeks?',
       opts: ['A real model predicts the future, so it should be tested on later weeks it never saw', 'Later weeks have more rows', 'SQL can only sort by week', 'It makes the label balanced'], a: 'A real model predicts the future, so it should be tested on later weeks it never saw' },
     { id: 'm-acc18', kind: 'text', topic: 'Accuracy', q: 'A model is right on 18 of 24 test rows. What is its accuracy, in percent? (number only)', a: ['75', '75%'] }
+  ],
+
+  tools1: [
+    { id: 't1-subtotal', kind: 'formula', topic: 'SUBTOTAL', plat: 'xl365', book: 'tools', at: 'B2', must: ['SUBTOTAL'], show: [OR], ref: '=SUBTOTAL(9,Orders!F2:F40)',
+      q: 'Write a formula that totals Qty (Orders!F2:F40) but would <b>leave out rows hidden by a filter</b>.' },
+    { id: 't1-trim', kind: 'formula', topic: 'Trim', plat: 'xl365', book: 'tools', sheet: 'Orders', at: 'K2', fill: 40, show: [OR], ref: '=TRIM(C2)',
+      q: 'In <b>Orders!K2</b>, write the Excel formula that removes extra spaces from the Customer name in C2. It will be filled down to row 40.' },
+    { id: 't1-countdup', kind: 'formula', topic: 'Finding duplicates', plat: 'xl365', book: 'tools', sheet: 'Orders', at: 'K2', fill: 40, show: [OR], ref: '=COUNTIF($A$2:$A$40,A2)',
+      q: 'In <b>Orders!K2</b>, write a formula that shows <b>how many times this row\'s OrderID appears</b> in A2:A40 (so duplicates show 2 or more). It will be filled down to row 40.' },
+    { id: 't1-city', kind: 'formula', topic: 'Splitting text', plat: 'xl365', book: 'tools', sheet: 'Orders', at: 'K2', fill: 40, show: [OR], ref: '=LEFT(I2,FIND(",",I2)-1)',
+      q: 'Location (column I) looks like <code>Atlanta, GA</code>. In <b>Orders!K2</b>, write a formula that returns just the <b>city</b>. Filled down to row 40.' },
+    { id: 't1-state', kind: 'formula', topic: 'Splitting text', plat: 'gs', book: 'tools', sheet: 'Orders', at: 'K2', fill: 40, show: [OR], ref: '=RIGHT(I2,2)',
+      q: 'In Google Sheets, in <b>Orders!K2</b>, return just the two-letter <b>state</b> from Location (column I). Filled down to row 40.' },
+    { id: 't1-na', kind: 'formula', topic: 'Fake nulls', plat: 'gs', book: 'tools', at: 'B2', show: [OR], ref: '=COUNTIF(Orders!F2:F40,"N/A")',
+      q: 'Write a formula that counts how many Qty cells (Orders!F2:F40) contain the text <code>N/A</code>.' },
+    { id: 't1-bad', kind: 'formula', topic: 'Validation', plat: 'xl2013', book: 'tools', at: 'B2', show: [OR], ref: '=COUNTIF(Orders!F2:F40,"<1")',
+      q: 'In Excel 2013, count the Qty cells (Orders!F2:F40) that hold an impossible quantity: a number <b>less than 1</b>.' },
+    { id: 't1-unique', kind: 'formula', topic: 'Finding duplicates', plat: 'xl365', book: 'tools', at: 'B2', show: [OR], ref: '=COUNTA(UNIQUE(Orders!A2:A40))',
+      q: 'In Excel 365, write ONE formula that counts how many <b>different</b> OrderIDs are in Orders!A2:A40.' },
+    { id: 't1-sortwarn', kind: 'mc', topic: 'Sorting', q: 'In Excel you select only column F of a table and click Sort A to Z. Excel asks "Expand the selection?". What should you choose, and why?',
+      opts: ['Expand the selection — so whole rows move together', 'Continue with the current selection — it is faster', 'Cancel — Excel cannot sort numbers', 'It does not matter'], a: 'Expand the selection — so whole rows move together' },
+    { id: 't1-sortsheet', kind: 'mc', topic: 'Sorting', q: 'In Google Sheets you use <b>Data ▸ Sort sheet A → Z</b> on a table whose header row is NOT frozen. What happens to row 1?',
+      opts: ['It gets sorted into the data like any other row', 'It always stays on top', 'It is deleted', 'Sheets asks first'], a: 'It gets sorted into the data like any other row' },
+    { id: 't1-subtotal-why', kind: 'mc', topic: 'SUBTOTAL', q: 'A filter shows only Online orders. Which formula totals ONLY the rows you can see?',
+      opts: ['=SUBTOTAL(9, F2:F40)', '=SUM(F2:F40)', '=SUMIF(F2:F40, "visible")', '=COUNT(F2:F40)'], a: '=SUBTOTAL(9, F2:F40)' },
+    { id: 't1-dupspace', kind: 'mc', topic: 'Remove duplicates', q: 'Two rows are identical except one Customer is <code>"Kim, Taylor "</code> (with a space at the end). What does Remove Duplicates do?',
+      opts: ['Keeps both rows — the extra space makes them different', 'Removes one of them', 'Removes both', 'Trims the space for you'], a: 'Keeps both rows — the extra space makes them different' },
+    { id: 't1-pastevalues', kind: 'mc', topic: 'Paste values', q: 'You cleaned the names with a TRIM formula in helper column K. Why use <b>Paste Values</b> over column C before deleting column K?',
+      opts: ['So the cleaned text stays when the formulas’ source is deleted', 'To make the text bold', 'Because TRIM only works after pasting', 'To sort the column'], a: 'So the cleaned text stays when the formulas’ source is deleted' },
+    { id: 't1-dv-old', kind: 'mc', topic: 'Validation', q: 'You add a validation rule (whole numbers 1–100) to cells that already contain <code>-3</code>. What happens to the -3?',
+      opts: ['Nothing — validation only checks new typing; the old value stays', 'It is deleted', 'It becomes 1', 'The rule cannot be added'], a: 'Nothing — validation only checks new typing; the old value stays' },
+    { id: 't1-cf-sheets', kind: 'mc', topic: 'Conditional formatting', q: 'How do you highlight duplicate values with conditional formatting in <b>Google Sheets</b>?',
+      opts: ['Custom formula is =COUNTIF($A$2:$A$40, A2) > 1', 'Choose the "Duplicate values" preset', 'Data ▸ Remove duplicates', 'Sheets cannot highlight duplicates'], a: 'Custom formula is =COUNTIF($A$2:$A$40, A2) > 1' },
+    { id: 't1-split', kind: 'mc', topic: 'Splitting text', q: 'You run Text to Columns on column I, but column J already has data. What happens?',
+      opts: ['The split pieces overwrite column J (Excel asks first)', 'Excel inserts a new column automatically', 'The split is cancelled', 'The pieces go to a new sheet'], a: 'The split pieces overwrite column J (Excel asks first)' },
+    { id: 't1-filter', kind: 'mc', topic: 'Filters', q: 'What does a filter do to the rows that do not match?',
+      opts: ['Hides them — nothing is deleted', 'Deletes them', 'Moves them to the bottom', 'Turns them grey but still counts them in SUBTOTAL'], a: 'Hides them — nothing is deleted' }
+  ],
+
+  tools2: [
+    { id: 't2-sumifs', kind: 'formula', topic: 'Pivot = SUMIFS', plat: 'xl365', book: 'tools', at: 'B2', show: [OR], ref: '=SUMIFS(Orders!F2:F40,Orders!D2:D40,"Snacks",Orders!H2:H40,"Online")',
+      q: 'Write a formula for the total Qty of <b>Snacks</b> sold <b>Online</b> — the same number a pivot table cell (Rows = Category, Columns = Channel) would show.' },
+    { id: 't2-countif', kind: 'formula', topic: 'Pivot = COUNTIFS', plat: 'gs', book: 'tools', at: 'B2', show: [OR], ref: '=COUNTIF(Orders!H2:H40,"In-store")',
+      q: 'In Google Sheets, write a formula that counts how many orders were <b>In-store</b> (Channel is column H, rows 2–40).' },
+    { id: 't2-avgif', kind: 'formula', topic: 'Pivot = AVERAGEIF', plat: 'xl2013', book: 'tools', at: 'B2', show: [OR], ref: '=AVERAGEIF(Orders!D2:D40,"Drinks",Orders!G2:G40)',
+      q: 'In Excel 2013, write a formula for the <b>average UnitPrice of Drinks</b> orders — what a pivot would show with "Average of UnitPrice".' },
+    { id: 't2-maxifs', kind: 'formula', topic: 'Pivot = MAXIFS', plat: 'xl365', book: 'tools', at: 'B2', show: [OR], ref: '=MAXIFS(Orders!F2:F40,Orders!D2:D40,"Apparel")',
+      q: 'In Excel 365, write a formula for the <b>largest single Qty</b> ordered in the <b>Apparel</b> category.' },
+    { id: 't2-countcat', kind: 'formula', topic: 'Pivot = COUNTIFS', plat: 'xl365', book: 'tools', at: 'B2', show: [OR], ref: '=COUNTIF(Orders!D2:D40,"Snacks")',
+      q: 'Write a formula that counts how many order rows are in the <b>Snacks</b> category.' },
+    { id: 't2-monthly', kind: 'formula', topic: 'Totals', plat: 'gs', book: 'tools', at: 'B2', show: [MO], ref: '=SUM(Monthly!B2:C13)',
+      q: 'In Google Sheets, write a formula for the <b>total units for the whole year</b> on the Monthly sheet (both channels, 12 months).' },
+    { id: 't2-sumcount', kind: 'mc', topic: 'Sum vs Count', q: 'You want the NUMBER of orders per Channel. Which pivot value setting is right?',
+      opts: ['Count of OrderID', 'Sum of OrderID', 'Average of OrderID', 'Max of OrderID'], a: 'Count of OrderID' },
+    { id: 't2-refresh', kind: 'mc', topic: 'Refresh', q: 'You change a Qty in the source data. What must you do so an <b>Excel</b> pivot table shows it?',
+      opts: ['Refresh it (Data ▸ Refresh All)', 'Nothing — it updates instantly', 'Delete the Qty column', 'Re-type the pivot numbers'], a: 'Refresh it (Data ▸ Refresh All)' },
+    { id: 't2-sheets', kind: 'mc', topic: 'Refresh', q: 'What does a <b>Google Sheets</b> pivot table do when the source data changes?',
+      opts: ['Updates automatically', 'Waits for Refresh All', 'Shows #REF!', 'Deletes itself'], a: 'Updates automatically' },
+    { id: 't2-line', kind: 'mc', topic: 'Choosing a chart', q: 'Which chart best shows how units changed <b>month by month</b>?',
+      opts: ['Line chart', 'Pie chart', 'Scatter chart', 'A single number'], a: 'Line chart' },
+    { id: 't2-pie', kind: 'mc', topic: 'Choosing a chart', q: 'You want to compare sales for <b>12 products</b>. Why is a pie chart a poor choice?',
+      opts: ['Twelve thin slices are hard to compare — use a bar chart', 'Pie charts cannot show 12 numbers', 'Pie charts only work in Excel', 'Pie charts need negative numbers'], a: 'Twelve thin slices are hard to compare — use a bar chart' },
+    { id: 't2-axis', kind: 'mc', topic: 'Misleading charts', q: 'Why should the vertical axis of a bar chart start at 0?',
+      opts: ['Otherwise small differences look much bigger than they are', 'Charts cannot show other numbers', 'It makes the chart load faster', 'It is required by Excel'], a: 'Otherwise small differences look much bigger than they are' },
+    { id: 't2-scatter', kind: 'mc', topic: 'Choosing a chart', q: 'What does a scatter chart of AdSpend (X) vs Visitors (Y) help you see?',
+      opts: ['Whether the two numbers tend to rise and fall together', 'The share of each month', 'The total ad spend', 'Proof that ads cause visitors'], a: 'Whether the two numbers tend to rise and fall together' },
+    { id: 't2-total', kind: 'mc', topic: 'Charting pivots', q: 'You chart a pivot table and include the <b>Grand Total</b> row. What goes wrong?',
+      opts: ['The total bar dwarfs the categories it adds up', 'Nothing — totals belong in charts', 'The chart becomes a pie chart', 'Excel refuses'], a: 'The total bar dwarfs the categories it adds up' },
+    { id: 't2-rowlabels', kind: 'mc', topic: 'Pivot tables', q: 'A pivot table is most like which SQL clause?',
+      opts: ['GROUP BY', 'WHERE', 'JOIN', 'ORDER BY'], a: 'GROUP BY' },
+    { id: 't2-pivotedit', kind: 'mc', topic: 'Pivot tables', q: 'Where do the numbers in a pivot table come from?',
+      opts: ['They are calculated from the source data you chose', 'You type them in', 'They are random examples', 'They come from the internet'], a: 'They are calculated from the source data you chose' }
   ],
 
   rdbms: [

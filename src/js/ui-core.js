@@ -90,7 +90,8 @@
   UI.wbs = {};
   // Workbook keys: 'xl365' etc. for the store workbooks, 'wr-xl365' / 'wr-gs' for the Data Wrangling Lab.
   function wbSpec(key) {
-    var m = /^wr-(.+)$/.exec(key);
+    var m = /^wr-(.+)$/.exec(key), d = /^dt-(.+)$/.exec(key);
+    if (d) return { plat: d[1], make: SX.datatools.makeWorkbook };
     return m ? { plat: m[1], make: SX.wrangle.makeWorkbook } : { plat: key, make: SX.makeStoreWorkbook };
   }
   UI.workbook = function (key) {
@@ -163,6 +164,8 @@
     { id: 'researcher', icon: '📚', name: 'Researcher', desc: 'Run 10 examples in the Interactive Cheat Sheet.', xp: 15 },
     { id: 'ai-ready', icon: '🤖', name: 'AI-Ready Data', desc: 'Reach an AI-readiness score of 100 in the Data Wrangling Lab.', xp: 40 },
     { id: 'done-rdbms', icon: '🗃️', name: 'Database Architect', desc: 'Finish Lesson 9: What is an RDBMS?', xp: 30 },
+    { id: 'done-tools1', icon: '🧹', name: 'Menu Master', desc: 'Finish Lesson 11: Sort, Filter & Clean.', xp: 30 },
+    { id: 'done-tools2', icon: '📊', name: 'Pivot Pro', desc: 'Finish Lesson 12: Pivot Tables & Charts.', xp: 30 },
     { id: 'done-ml', icon: '🧠', name: 'Data Scientist', desc: 'Finish Lesson 10: Databases for Machine Learning.', xp: 30 },
     { id: 'certified', icon: '🎓', name: 'Certified', desc: 'Pass your first certification test.', xp: 25 },
     { id: 'ace', icon: '💯', name: 'Perfect Score', desc: 'Score 100% on a certification test.', xp: 40 },
@@ -285,7 +288,7 @@
     fn();
   }
   function levelUp(lv) {
-    if (lv.n <= shownLevel) return;
+    if (lv.n <= shownLevel || UI.quiet) return; // UI.quiet: used by automated tests
     shownLevel = lv.n;
     window.confettiBurst(80);
     UI.modal('Level up!', [
@@ -351,7 +354,7 @@
   function mapOf(o, keys, valueOk) { return onlyKeys(o, keys) && Object.keys(o).every(function (k) { return valueOk(o[k]); }); }
   var TIME = function (x) { return isNum(x, 0, 4e12); };
   var TEST_KEYS = ['attempts', 'best', 'of', 'passed', 'secs', 'open', 'lastFail', 'passScore', 'passAttempt', 'passSecs'];
-  var WB_KEYS = ['xl365', 'xl2013', 'gs', 'wr-xl365', 'wr-gs'];
+  var WB_KEYS = ['xl365', 'xl2013', 'gs', 'wr-xl365', 'wr-gs', 'dt-xl365', 'dt-xl2013', 'dt-gs'];
 
   // ---------- The progress file ----------
   // One JSON file that is BOTH the student's proof of work AND their way back to exactly where they were.
@@ -615,13 +618,15 @@
         blurb: 'Why real data lives in a relational database: break a spreadsheet, follow keys across tables, watch the database refuse bad data, and survive a power failure with a transaction.' },
       ml: { id: 'ml', name: 'ML Data Lab', icon: 'ML', tagline: 'Databases for machine learning', lessons: ['ml'],
         blurb: 'Get a real training table ready for an AI model: find the label, count the classes, catch test rows that leaked into training, spot a cheating column, and grade a model with a confusion matrix.' },
+      tools: { id: 'tools', name: 'Data Tools Lab', icon: 'DT', tagline: 'Menus, pivot tables & charts', lessons: ['tools1', 'tools2'],
+        blurb: 'Clean a messy order export with the real menus — sort, filter, remove duplicates, split, validate, highlight — then summarize it with pivot tables and charts. In Excel 365, Excel 2013 or Google Sheets.' },
       reference: { id: 'reference', name: 'Interactive Cheat Sheet', icon: '?!', tagline: 'Every task, every tool', lessons: [],
         blurb: 'Look up a task like "pad leading zeros" or "find nulls" and see the answer in Excel 365, Excel 2013, Google Sheets, SQL and CSV — then run it live.' }
     };
     function sumProgress(ids) {
       return ids.reduce(function (a, id) { var p = UI.platProgress(id); return { done: a.done + p.done, total: a.total + p.total, xp: a.xp + p.xp, maxXp: a.maxXp + p.maxXp }; }, { done: 0, total: 0, xp: 0, maxXp: 0 });
     }
-    var cards = SX.platforms.ORDER.slice(0, 4).concat(['wrangle', 'sql', 'rdbms', 'ml', 'reference']).map(function (id) {
+    var cards = SX.platforms.ORDER.slice(0, 4).concat(['wrangle', 'tools', 'sql', 'rdbms', 'ml', 'reference']).map(function (id) {
       var p = PL[id] || EXTRA[id], pr = EXTRA[id] ? sumProgress(EXTRA[id].lessons) : UI.platProgress(id);
       return h('button.plat-card.pc-' + id, { onclick: function () { UI.go(id); } }, [
         h('div.pc-top', null, [platIcon(p, true), h('div', null, [h('div.pc-name', { text: p.name }), h('div.pc-tag', { text: p.tagline })])]),
@@ -711,9 +716,10 @@
     else if (view === 'reference') UI.activeView = new UI.ReferenceView(host);
     else if (view === 'rdbms') UI.activeView = new UI.RdbmsView(host);
     else if (view === 'ml') UI.activeView = new UI.MlView(host);
+    else if (view === 'tools') UI.activeView = UI.dataToolsView(host);
     // first visit: open the lesson guide (after the view exists)
     var lessonsHere = SX.lessons.LIST.filter(function (l) { return l.workspace === view; }).map(function (l) { return l.id; });
-    if (lessonsHere.length && UI.maybeGuide && !(view === 'wrangle' && !UI.state.ui.wrIntroDone)) UI.maybeGuide(lessonsHere);
+    if (lessonsHere.length && UI.maybeGuide && !(view === 'wrangle' && !UI.state.ui.wrIntroDone) && !(view === 'tools' && !UI.state.ui.dtIntro)) UI.maybeGuide(lessonsHere);
   };
 
   UI.start = function () {
