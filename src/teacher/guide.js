@@ -5,11 +5,28 @@ const vm = require('vm');
 
 module.exports = function buildTeacherGuide(root) {
   const ctx = { console }; ctx.globalThis = ctx; vm.createContext(ctx);
-  ['data.js', 'formula.js', 'engine.js', 'workbook.js', 'sql.js', 'platforms.js', 'csv.js', 'wrangle.js', 'challenges.js', 'lessons.js', 'reference.js']
+  ['data.js', 'seal.js', 'formula.js', 'engine.js', 'workbook.js', 'mldata.js', 'sql.js', 'platforms.js', 'csv.js', 'wrangle.js', 'certtest.js', 'challenges.js', 'lessons.js', 'reference.js']
     .forEach((f) => vm.runInContext(fs.readFileSync(path.join(root, 'src', 'js', f), 'utf8'), ctx, { filename: f }));
   const SX = ctx.SX;
   const KEY = require('./solutions.js');
   const TALK = require('./discussion.js');
+  const BANK = require('./bank.js');
+  function bankAnswer(q) {
+    if (q.kind === 'mc') return '<b>' + esc(q.a) + '</b><div class="alt">Other options: ' + q.opts.filter((o) => o !== q.a).map(esc).join(' · ') + '</div>';
+    if (q.kind === 'text') return '<b>' + q.a.map(esc).join('</b> or <b>') + '</b>';
+    if (q.kind === 'csv') return '<code>' + esc(q.ref).replace(/\t/g, '⇥').replace(/\n/g, '<br>') + '</code>';
+    let out = '<code>' + esc(q.ref) + '</code>' + (q.cse ? ' <i>Ctrl+Shift+Enter</i>' : '');
+    if (q.kind === 'formula') out += '<div class="alt">' + esc(SX.platforms.PLATFORMS[q.plat].name) + ' · ' + esc((q.sheet || 'Scratch') + '!' + q.at) + (q.fill ? ' filled to row ' + q.fill : '') + '. Any formula with the same results on the original and on a shuffled copy of the data is accepted.</div>';
+    if (q.kind === 'sql') out += '<div class="alt">Any SELECT returning the same rows' + (q.ordered ? ' in the same order' : '') + ' (column order does not matter) is accepted.</div>';
+    if (q.kind === 'probe') out += '<div class="alt">Graded by behavior: hidden test statements must succeed or be refused exactly as with this answer.' + (q.must ? ' Must use ' + q.must.join(' and ') + '.' : '') + '</div>';
+    return out;
+  }
+  function bankTable(id) {
+    const qs = BANK[id] || [];
+    return '<h3>Certification test bank (' + qs.length + ' questions; each test draws ' + SX.certtest.SIZE + ', half hands-on; ' + Math.round(SX.certtest.PASS * 100) + '% to pass)</h3>' +
+      '<table class="key bank"><tr><th>#</th><th>Topic</th><th>Question</th><th>Answer</th></tr>' +
+      qs.map((q, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(q.topic) + '<br><span class="muted">' + (SX.certtest.isHandsOn(q) ? 'hands-on' : 'concept') + '</span></td><td>' + esc(strip(q.q)) + '</td><td>' + bankAnswer(q) + '</td></tr>').join('') + '</table>';
+  }
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const strip = (h) => String(h).replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
   const stars = (n) => '★'.repeat(n) + '☆'.repeat(3 - n);
@@ -24,6 +41,7 @@ module.exports = function buildTeacherGuide(root) {
     if (k.csv) out += '<div class="ans">' + esc(k.csv) + '</div>';
     if (k.ui) out += '<div class="ans">' + esc(k.ui) + '</div>';
     if (k.rd) out += k.rd.map((q) => '<div class="ans"><code>' + esc(q) + '</code></div>').join('');
+    if (k.ml) out += k.ml.map((q) => '<div class="ans"><code>' + esc(q) + '</code></div>').join('');
     if (k.needsNote) out += '<div class="alt">' + esc(k.needsNote) + '</div>';
     if (k.alt) out += '<div class="alt">Also accepted: <code>' + esc(k.alt) + '</code></div>';
     if (k.needs) out += '<div class="alt">Needs earlier step(s): ' + k.needs.map(esc).join(', ') + '</div>';
@@ -50,7 +68,7 @@ module.exports = function buildTeacherGuide(root) {
       '<h3>Vocabulary</h3><table class="vocab">' + (g.terms || []).map((v) => '<tr><td><b>' + esc(v[0]) + '</b></td><td>' + esc(v[1]) + '</td><td><code>' + esc(v[2]) + '</code></td></tr>').join('') + '</table>' +
       '<h3>Challenges &amp; answer key</h3><table class="key"><tr><th>#</th><th>Challenge</th><th>Task</th><th>Answer</th></tr>' +
       list.map((ch, i) => '<tr><td>' + (i + 1) + '</td><td><b>' + esc(ch.title) + '</b><br><span class="muted">' + stars(ch.level) + ' · ' + ch.xp + ' XP</span></td><td>' + esc(strip(ch.task)) +
-        '<div class="learn">Takeaway: ' + esc(strip(ch.learn)) + '</div></td><td>' + answer(ch) + '</td></tr>').join('') + '</table>' +
+        '<div class="learn">Takeaway: ' + esc(strip(ch.learn)) + '</div></td><td>' + answer(ch) + '</td></tr>').join('') + '</table>' + bankTable(L.id) +
       '<div class="cols"><div><h3>Discussion</h3><ol>' + (t.discuss || []).map((q) => '<li>' + esc(q) + '</li>').join('') + '</ol></div>' +
       '<div><h3>Exit ticket</h3><p>' + esc(t.exit || '') + '</p><p class="muted">Answer: <code>' + esc(t.exitAnswer || '') + '</code></p></div></div></section>';
   }).join('');
@@ -71,7 +89,7 @@ h2 { margin: 0 0 6px; font-size: 20px; } h3 { font-size: 14.5px; margin: 14px 0 
 .muted, .meta { color: var(--muted); } .why { background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 8px 12px; border-radius: 0 8px 8px 0; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; } th { text-align: left; background: #f3f2ef; }
 td, th { border-bottom: 1px solid #eee; padding: 6px; vertical-align: top; }
-.key td:nth-child(3) { width: 38%; } .key td:nth-child(4) { width: 36%; }
+.key td:nth-child(3) { width: 38%; } .key td:nth-child(4) { width: 36%; } .bank td:nth-child(2) { width: 14%; }
 code { font: 12px ui-monospace, Consolas, monospace; background: #f2f4f7; padding: 1px 4px; border-radius: 4px; word-break: break-word; }
 .ans { margin-bottom: 4px; } .addr { display: block; font-size: 11.5px; color: var(--muted); }
 .alt, .note, .learn { font-size: 12px; color: #475467; margin-top: 3px; } .note { color: #b45309; } .learn { color: #4c1d95; }
@@ -82,18 +100,19 @@ code { font: 12px ui-monospace, Consolas, monospace; background: #f2f4f7; paddin
 </style></head><body><main>
 <div class="cover"><button class="print" onclick="window.print()">Print / Save PDF</button>
 <h1>SheetEX v2 — Teacher Guide</h1>
-<p>Data wrangling for AI across Excel 365, Excel 2013, Google Sheets, CSV/TSV and SQL.</p>
-<p>${lessons.length} lessons · ${nCh} auto-checked challenges · about ${Math.round(totalMin / 50)} class periods (50 min) · certificates for every lesson</p>
+<p>Data wrangling for AI across Excel 365, Excel 2013, Google Sheets, CSV/TSV, SQL and relational databases.</p>
+<p>${lessons.length} lessons · ${nCh} practice challenges · ${Object.values(BANK).reduce((a, b) => a + b.length, 0)} certification-test questions · about ${Math.round(totalMin / 50)} class periods (50 min) · certificates for every lesson</p>
 <p style="font-size:12px;opacity:.75">Teacher-only: this guide contains the answer key. It is NOT part of the student app.</p></div>
 
 <section><h2>How it runs</h2>
 <ul>
-<li><b>Students</b> open your Apps Script web-app link (embedded in Canvas). Progress saves in their browser automatically.</li>
-<li><b>Certificates</b> unlock when every challenge in a lesson is done. Students print/save as PDF, download an image, or paste the certificate code into Canvas.</li>
-<li><b>Gradebook</b> (Apps Script only): every certificate is recorded in the <i>SheetEX Gradebook</i> Google Sheet in your Drive. Run <code>setup</code> once in the script editor to get its link.</li>
-<li><b>Checking codes:</b> in the app click <b>?</b> ▸ <i>For teachers</i> and paste all submitted codes at once.</li>
-<li><b>Hints</b> cost 20% of a challenge's XP; a certificate shows hints used, so you can see independence at a glance.</li>
-<li><b>Moving computers:</b> students use <i>Class cloud save</i> (name + PIN) or copy their progress code.</li>
+<li><b>No student data is collected.</b> The Apps Script only serves the page. Progress lives in each student's own browser and in the codes they choose to turn in. Nothing is sent to you, to Google Drive or to anyone else.</li>
+<li><b>Names are permanent.</b> On first visit a student types a first and last name and confirms it; after that it cannot be changed. A misspelled name means "Erase everything and start over" (all progress is lost), so check spelling on day one.</li>
+<li><b>Practice, then test.</b> Practice challenges have hints. When a lesson's practice is done, the <b>certification test</b> unlocks: ${SX.certtest.SIZE} random questions from the bank below (half hands-on), no hints, no cheat sheet, ${Math.round(SX.certtest.PASS * 100)}% to pass. An attempt counts when it starts (closing the page = a failed attempt), and a failed attempt has a ${Math.round(SX.certtest.COOLDOWN / 60)}-minute review break.</li>
+<li><b>Certificates</b> show the test score, the attempt number, hints used in practice, and a verification ID. Students print/save as PDF, download an image, or paste the certificate code (<code>SXC2-…</code>) into Canvas.</li>
+<li><b>Sealed codes.</b> Progress codes (<code>SXP2-…</code>) and certificate codes are signed with your deployment's class key (created automatically the first time anyone opens your web app). An edited code, a code with a changed name, or a code from any other copy of SheetEX is rejected. Run <code>newClassKey</code> once in the script editor to invalidate every old code (for example, each semester).</li>
+<li><b>Checking work:</b> in the app click <b>?</b> ▸ <i>For teachers</i>: paste all submitted codes at once, or type a name + lesson + verification ID from a printed certificate.</li>
+<li><b>Honest limit:</b> the signing key has to live inside the page for the page to sign codes. This stops editing codes and saves; a student who reads the page's JavaScript in developer tools could, with real effort, rebuild the signing. On managed Chromebooks, Google Admin can turn developer tools off (Chrome policy <i>DeveloperToolsAvailability</i>). Treat certificates as strong evidence, like a screenshot of a proctored quiz, not cryptographic proof.</li>
 </ul></section>
 
 <section><h2>Suggested pacing</h2>

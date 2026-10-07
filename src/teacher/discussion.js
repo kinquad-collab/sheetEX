@@ -16,6 +16,8 @@ module.exports = {
     exit: 'Write SQL for the number of sales per store.', exitAnswer: 'SELECT store_id, COUNT(*) FROM sales GROUP BY store_id;' },
   rdbms: { minutes: 60, discuss: ['Your school keeps student records. Why would it use a database instead of one giant spreadsheet?', 'Give an example from your own life where "all or nothing" matters (like the lunch-money transfer).', 'Constraints stop bad data before it is saved. How would that have helped in the Data Wrangling Lab?'],
     exit: 'Write the CREATE TABLE for clubs(club_id, name) where club_id is the primary key and name is required.', exitAnswer: 'CREATE TABLE clubs (club_id INTEGER PRIMARY KEY, name TEXT NOT NULL);' },
+  ml: { minutes: 75, discuss: ['A model scores 99% accuracy at spotting a rare disease that 1% of people have. Should you trust it? What would you ask to see?', 'Where could leakage sneak into a school project — for example, predicting final grades?', 'Missing values: when is it OK to drop the rows, and when does that make the model unfair?'],
+    exit: 'Write SQL that counts how many TEST rows are stockouts.', exitAnswer: "SELECT COUNT(*) FROM ml_examples WHERE split = 'test' AND stockout = 1;" },
   compare: { minutes: 25, discuss: ['Before sharing a spreadsheet, what should you check?'],
     exit: 'Name a function that exists in Excel 365 but gives #NAME? in Excel 2013.', exitAnswer: 'XLOOKUP, FILTER, SORT, UNIQUE, IFS, TEXTJOIN, LET, MAXIFS…' }
 };

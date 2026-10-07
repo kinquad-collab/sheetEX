@@ -76,5 +76,15 @@ module.exports = {
   'rd-fk-create': { rd: ['CREATE TABLE students (student_id INTEGER PRIMARY KEY, name TEXT NOT NULL);', "INSERT INTO students (name) VALUES ('Ana'), ('Ben');",
     'CREATE TABLE enrollments (student_id INTEGER REFERENCES students(student_id), course TEXT NOT NULL);', "INSERT INTO enrollments VALUES (1, 'Intro to AI');"], needsNote: 'Build students first (previous challenge).' },
   'rd-rollback': { rd: ['BEGIN; DELETE FROM sales; SELECT COUNT(*) FROM sales;', 'ROLLBACK;'] },
+  // Lesson 10 — Databases for Machine Learning  (ml: SQL run in any console on the ML Data Lab page; ui: clicks)
+  'ml-roles': { ui: 'Section 1: example_id → Row ID; week → Train/test bookkeeping (Feature also accepted); store_id, sku, units_last_week, promo, price, in_stock_start → Feature; restock_after → Known only afterwards; stockout → Label; split → Train/test bookkeeping. Then "Check my sorting".' },
+  'ml-balance': { ml: ['SELECT stockout, COUNT(*) FROM ml_examples GROUP BY stockout;'] },
+  'ml-nulls': { ml: ['SELECT COUNT(*) FROM ml_examples WHERE units_last_week IS NULL;'] },
+  'ml-split': { ml: ['SELECT split, COUNT(*) FROM ml_examples GROUP BY split;'] },
+  'ml-dupes': { ml: ['SELECT week, store_id, sku FROM ml_examples GROUP BY week, store_id, sku HAVING COUNT(DISTINCT split) > 1;'] },
+  'ml-leakdemo': { ui: 'Section 4: press "Train a model that uses restock_after".' },
+  'ml-features': { ml: ["CREATE TABLE train_set AS SELECT e.example_id, e.promo, e.price, e.units_last_week, e.in_stock_start, p.category, e.stockout FROM ml_examples e JOIN products p ON e.sku = p.sku WHERE e.split = 'train';"] },
+  'ml-accuracy': { ml: ['SELECT AVG(p.predicted = e.stockout) FROM predictions p JOIN ml_examples e ON p.example_id = e.example_id;'], note: 'Also accepted: 100.0 * SUM(p.predicted = e.stockout) / COUNT(*) (a percent).' },
+  'ml-confusion': { ml: ['SELECT e.stockout, p.predicted, COUNT(*) FROM predictions p JOIN ml_examples e ON p.example_id = e.example_id GROUP BY e.stockout, p.predicted;'] },
   'rd-bank': { ui: 'Section 5: With a transaction (BEGIN) → Step 1 → ⚡ Power failure! → With a transaction (BEGIN) → Step 1 → Step 2 → COMMIT.' }
 };

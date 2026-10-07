@@ -420,7 +420,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
 
 /* ---------- Toasts, modals, confetti ---------- */
 #toasts { position: fixed; left: 16px; bottom: 64px; z-index: 200; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; pointer-events: none; }
-.toast { background: #fff; border-left: 5px solid #3b82f6; border-radius: 10px; padding: 10px 14px; box-shadow: 0 10px 30px rgba(0,0,0,.18); max-width: 340px; animation: tin .3s ease-out; pointer-events: auto; }
+.toast { background: #fff; border-left: 5px solid #3b82f6; border-radius: 10px; padding: 10px 14px; box-shadow: 0 10px 30px rgba(0,0,0,.18); max-width: 340px; animation: tin .3s ease-out; pointer-events: none; }
 .toast.out { opacity: 0; transform: translateX(-20px); transition: all .4s; }
 .toast-title { font-weight: 800; } .toast-body { font-size: 12.5px; color: #475467; }
 .toast-xp { border-left-color: #f59e0b; } .toast-xp .toast-title { color: #b45309; }
@@ -666,6 +666,102 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
 .rd-syscard { border: 1px solid #ebe9e4; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; background: #fcfcfb; }
 @media (max-width: 760px) { .rd-two { grid-template-columns: 1fr; } }
 
+/* ---------- v2: locked name, teacher checks ---------- */
+.locked-name { display: flex; align-items: center; gap: 4px; font-size: 17px; padding: 6px 0; }
+.name-confirm { font-size: 26px; font-weight: 800; text-align: center; padding: 14px; margin: 6px 0 10px; border: 2px dashed var(--peach); border-radius: 12px; background: #fff7ed; letter-spacing: .2px; }
+.small.good, .good { color: var(--good); } .small.bad, div.bad { color: var(--bad); }
+.print-check { display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 8px; }
+tr.bad-row td { background: var(--bad-bg); }
+.lesson-tile.ready { border-color: #93c5fd; background: linear-gradient(180deg, #eff6ff, #fff); }
+.lesson-tile.ready .lt-n { background: #2563eb; }
+
+/* ---------- v2: certification test ---------- */
+body.testing { overflow: hidden; }
+.test-overlay { position: fixed; inset: 0; z-index: 140; background: var(--bg); overflow: auto; }
+.tq-wrap { max-width: 920px; margin: 0 auto; padding: 18px 16px 28px; display: flex; flex-direction: column; gap: 12px; min-height: 100%; }
+.tq-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: linear-gradient(90deg, var(--navy), var(--navy-2)); color: #fff; border-radius: var(--radius); padding: 12px 16px; }
+.tq-kicker { font-size: 12px; opacity: .75; text-transform: uppercase; letter-spacing: .6px; }
+.tq-title { font-size: 18px; font-weight: 700; }
+.tq-right { display: flex; gap: 10px; align-items: center; }
+.tq-nohint { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); border-radius: 999px; padding: 2px 10px; font-size: 12px; }
+.tq-timer { font-variant-numeric: tabular-nums; }
+.tq-dots { display: flex; gap: 6px; flex-wrap: wrap; }
+.tq-dot { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #d0d5dd; background: #fff; font-weight: 700; font-size: 13px; }
+.tq-dot.done { background: #e0f2fe; border-color: #7dd3fc; }
+.tq-dot.on { outline: 2px solid var(--peach); outline-offset: 1px; }
+.tq-body { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.tq-qhead { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tq-qn { font-weight: 700; color: var(--muted); font-size: 13px; }
+.tq-plat, .tq-kind { font-size: 12px; border-radius: 999px; padding: 1px 9px; border: 1px solid var(--line); background: var(--soft); }
+.tq-plat { color: #fff; border: none; background: var(--accent, var(--navy)); }
+.tq-q { font-size: 16.5px; line-height: 1.5; }
+.tq-opts { display: grid; gap: 8px; }
+.tq-opt { text-align: left; border: 1px solid #d0d5dd; background: #fff; border-radius: 10px; padding: 10px 12px; }
+.tq-opt:hover { background: #f9fafb; }
+.tq-opt.sel { border-color: var(--peach); background: #fff7ed; box-shadow: inset 4px 0 0 var(--peach); font-weight: 600; }
+.tq-input { max-width: 360px; font-size: 16px; }
+.tq-cell { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tq-addr { font-family: var(--mono); font-size: 13px; background: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; white-space: nowrap; }
+.tq-formula, .tq-code { font-family: var(--mono); font-size: 14px; }
+.tq-formula { flex: 1; min-width: 240px; }
+.tq-code { min-height: 84px; resize: vertical; }
+.tq-code.csv { white-space: pre; tab-size: 8; }
+.tq-cse { font-family: var(--mono); font-size: 12px; color: var(--xl2013); font-weight: 700; }
+.tq-sheet { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.tq-sheet-name { font-size: 12px; font-weight: 700; padding: 4px 8px; background: var(--soft); border-bottom: 1px solid var(--line); }
+.tq-scroll { overflow-x: auto; max-width: 100%; }
+.tq-grid { border-collapse: collapse; font-size: 12.5px; }
+.tq-grid th, .tq-grid td { border: 1px solid #e7e5e0; padding: 3px 7px; white-space: pre; }
+.tq-grid th { background: #f3f2ef; color: var(--muted); font-weight: 600; }
+.tq-grid td.hdr { font-weight: 700; background: #fbfaf8; }
+.tq-grid td.more { color: var(--muted); font-style: italic; }
+.tq-grid.res td { font-family: var(--mono); }
+.tq-grid td.null { color: var(--muted); font-style: italic; }
+.tq-schema { display: flex; flex-direction: column; gap: 4px; background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-family: var(--mono); font-size: 12.5px; }
+.tq-out { border-left: 3px solid #93c5fd; padding: 6px 10px; background: #f8fafc; border-radius: 0 8px 8px 0; overflow-x: auto; }
+.tq-out.bad { border-left-color: var(--bad); background: var(--bad-bg); color: #7a271a; }
+.tq-foot { display: flex; align-items: center; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.tq-foot .small { margin-right: auto; }
+.tq-score { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 12px; }
+.tq-score b { font-size: 38px; line-height: 1; }
+.tq-score.pass { background: var(--good-bg); color: #065f46; } .tq-score.fail { background: var(--bad-bg); color: #7a271a; }
+.tq-review { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 4px 12px; margin: 10px 0; font-size: 13px; }
+.tq-rv.ok { color: var(--good); } .tq-rv.no { color: var(--bad); }
+
+/* ---------- v2: ML Data Lab (Lesson 10) ---------- */
+.pc-ml { --accent: #0f766e; } .pi-ml { background: linear-gradient(135deg, #2dd4bf, #115e59); }
+.ml-hero { background: linear-gradient(135deg, #134e4a, #0f766e); }
+.ml-preview td { font-size: 12px; }
+.ml-roles { display: grid; gap: 6px; margin: 6px 0; }
+.ml-rolerow { display: grid; grid-template-columns: 150px 70px 220px 1fr; gap: 10px; align-items: center; }
+.ml-role { padding: 5px 8px; }
+.ml-fb { font-size: 12.5px; } .ml-fb.good { color: var(--good); } .ml-fb.bad { color: var(--bad); }
+.ml-chart svg { max-width: 420px; display: block; margin-top: 6px; }
+.ml-bar-label { font-size: 12px; fill: var(--ink); } .ml-bar-val { font-size: 12px; font-weight: 700; fill: var(--ink); }
+.ml-neg { fill: #2a78d6; } .ml-pos { fill: #eb6834; }
+.chip.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+.ml-card { border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: var(--soft); }
+.ml-metrics { display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+.ml-metric { display: flex; flex-direction: column; align-items: flex-start; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; min-width: 110px; }
+.ml-metric b { font-size: 24px; line-height: 1.1; } .ml-metric span { font-size: 12px; color: var(--muted); }
+.ml-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.ml-legend { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; }
+.ml-split { display: grid; grid-template-columns: repeat(auto-fill, 18px); gap: 4px; margin: 8px 0; }
+.ml-sq { display: inline-block; width: 18px; height: 18px; border-radius: 4px; }
+.ml-sq.tr { background: #2a78d6; } .ml-sq.te { background: #eb6834; }
+.ml-sq.dup { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ink); }
+.ml-pipe { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 8px 0; }
+.ml-step { font-family: var(--mono); font-size: 12.5px; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; }
+.ml-arrow { color: var(--muted); }
+.ml-cm { display: grid; grid-template-columns: 80px 1fr 1fr; gap: 6px; max-width: 380px; }
+.ml-cmh { font-size: 12px; font-weight: 700; color: var(--muted); align-self: end; text-align: center; }
+.ml-cmh.side { align-self: center; text-align: right; }
+.ml-cell { border: 1px solid var(--line); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; align-items: center; background: #fff; }
+.ml-cell b { font-size: 26px; } .ml-cell span { font-size: 12px; color: var(--muted); }
+.ml-cell.tp, .ml-cell.tn { background: var(--good-bg); } .ml-cell.fp, .ml-cell.fn { background: var(--bad-bg); }
+.ml-detail { margin-top: 8px; min-height: 36px; }
+@media (max-width: 760px) { .ml-rolerow { grid-template-columns: 1fr 1fr; } .print-check { grid-template-columns: 1fr; } }
+
 </style>
 </head>
 <body>
@@ -775,6 +871,151 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     STORES: STORES, STORE_HEADERS: STORE_HEADERS,
     SALES: SALES, SALES_HEADERS: SALES_HEADERS,
     SUPPLIERS: SUPPLIERS, SUPPLIER_HEADERS: SUPPLIER_HEADERS
+  };
+})(globalThis.SX = globalThis.SX || {});
+
+// ---- seal.js ----
+/* SheetEX — sealed codes. SHA-256 + HMAC (RFC 2104) in plain JS, so it runs the same in browsers, in Apps Script
+ * pages and in tests. Progress codes, certificate codes and the saved game are signed with a key made from a
+ * program key and a CLASS KEY. When SheetEX is served by Google Apps Script, Code.gs swaps the class key below for a
+ * random key that belongs to that deployment, so codes made by any other copy of SheetEX are rejected.
+ *
+ * Honest limit: the key has to live inside the page for the page to sign codes. This stops edited codes and edited
+ * saves; it cannot stop someone who reads the page's source code with developer tools and re-implements the signing. */
+(function (SX) {
+  'use strict';
+
+  // Replaced by Code.gs at serve time (exactly one occurrence of the marker must exist in the whole app).
+  var CLASS_KEY = '__SX_CLASS_KEY__';
+  var DEFAULT = CLASS_KEY.indexOf('__SX_' + 'CLASS') === 0;
+
+  var A = [132, 17, 103, 79, 91, 244, 143, 142, 105, 74, 46, 76, 29, 159, 36, 50, 187, 35, 203, 166, 202, 150, 184, 104, 208, 6, 148, 187, 0, 160, 92, 66];
+  var B = [107, 47, 156, 134, 121, 222, 185, 55, 200, 156, 58, 68, 114, 86, 180, 66, 58, 116, 37, 155, 206, 230, 254, 169, 198, 150, 37, 65, 15, 221, 136, 156];
+  var BANK = [235, 193, 228, 128, 15, 199, 142, 188, 167, 193, 104, 101, 38, 61, 181, 119];
+
+  // ---------- UTF-8 and base64url ----------
+  function utf8(s) {
+    s = unescape(encodeURIComponent(String(s)));
+    var out = new Array(s.length);
+    for (var i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+    return out;
+  }
+  function fromUtf8(bytes) {
+    var s = '';
+    for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return decodeURIComponent(escape(s));
+  }
+  var B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  function b64u(bytes) {
+    var out = '';
+    for (var i = 0; i < bytes.length; i += 3) {
+      var n = (bytes[i] << 16) | ((bytes[i + 1] || 0) << 8) | (bytes[i + 2] || 0);
+      out += B64[(n >> 18) & 63] + B64[(n >> 12) & 63] + (i + 1 < bytes.length ? B64[(n >> 6) & 63] : '') + (i + 2 < bytes.length ? B64[n & 63] : '');
+    }
+    return out;
+  }
+  function unb64u(s) {
+    if (!/^[A-Za-z0-9_-]*$/.test(s) || s.length % 4 === 1) throw new Error('bad base64');
+    var out = [];
+    for (var i = 0; i < s.length; i += 4) {
+      var chunk = s.slice(i, i + 4), n = 0;
+      for (var k = 0; k < 4; k++) n = n * 64 + (k < chunk.length ? B64.indexOf(chunk[k]) : 0);
+      out.push((n >> 16) & 255);
+      if (chunk.length > 2) out.push((n >> 8) & 255);
+      if (chunk.length > 3) out.push(n & 255);
+    }
+    return out;
+  }
+
+  // ---------- SHA-256 ----------
+  var K = [
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
+    0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
+    0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+    0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
+  function sha256(msg) {
+    var bytes = typeof msg === 'string' ? utf8(msg) : msg.slice();
+    var bitLen = bytes.length * 8;
+    bytes.push(0x80);
+    while (bytes.length % 64 !== 56) bytes.push(0);
+    for (var s = 7; s >= 0; s--) bytes.push(s >= 4 ? Math.floor(bitLen / Math.pow(2, 8 * s)) & 255 : (bitLen >>> (8 * s)) & 255);
+    var H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+    var w = new Array(64);
+    for (var off = 0; off < bytes.length; off += 64) {
+      for (var i = 0; i < 16; i++) w[i] = (bytes[off + 4 * i] << 24) | (bytes[off + 4 * i + 1] << 16) | (bytes[off + 4 * i + 2] << 8) | bytes[off + 4 * i + 3];
+      for (i = 16; i < 64; i++) {
+        var x = w[i - 15], y = w[i - 2];
+        var s0 = ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);
+        var s1 = ((y >>> 17) | (y << 15)) ^ ((y >>> 19) | (y << 13)) ^ (y >>> 10);
+        w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+      }
+      var a = H[0], b = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
+      for (i = 0; i < 64; i++) {
+        var S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+        var t1 = (h + S1 + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0;
+        var S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+        var t2 = (S0 + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+        h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+      }
+      H[0] = (H[0] + a) | 0; H[1] = (H[1] + b) | 0; H[2] = (H[2] + c) | 0; H[3] = (H[3] + d) | 0;
+      H[4] = (H[4] + e) | 0; H[5] = (H[5] + f) | 0; H[6] = (H[6] + g) | 0; H[7] = (H[7] + h) | 0;
+    }
+    var out = [];
+    H.forEach(function (v) { out.push((v >>> 24) & 255, (v >>> 16) & 255, (v >>> 8) & 255, v & 255); });
+    return out;
+  }
+  function hmac(key, msg) {
+    if (key.length > 64) key = sha256(key);
+    var ipad = [], opad = [];
+    for (var i = 0; i < 64; i++) { var k = key[i] || 0; ipad.push(k ^ 0x36); opad.push(k ^ 0x5c); }
+    return sha256(opad.concat(sha256(ipad.concat(typeof msg === 'string' ? utf8(msg) : msg))));
+  }
+  function hex(bytes) { return bytes.map(function (b) { return (b < 16 ? '0' : '') + b.toString(16); }).join(''); }
+
+  var KEY = sha256(A.map(function (v, i) { return v ^ B[i]; }).concat(utf8('|class|' + (DEFAULT ? 'default' : CLASS_KEY))));
+
+  function mac(str, n) { return b64u(hmac(KEY, str).slice(0, n || 16)); }
+  function safeEqual(a, b) {
+    if (a.length !== b.length) return false;
+    var d = 0; for (var i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    return d === 0;
+  }
+
+  // PREFIX-<payload>.<signature>; the signature covers the prefix too, so a certificate can never pass as a progress code.
+  function pack(prefix, obj) {
+    var body = b64u(utf8(JSON.stringify(obj)));
+    return prefix + '-' + body + '.' + mac(prefix + '.' + body);
+  }
+  function unpack(prefix, code) {
+    var s = String(code == null ? '' : code).replace(/\s+/g, '');
+    if (!s) return { ok: false, why: 'The code is empty.' };
+    var m = /^([A-Z0-9]+)-([A-Za-z0-9_-]+)\.([A-Za-z0-9_-]{22})$/.exec(s);
+    if (!m) return { ok: false, why: 'That is not a SheetEX code — it does not have the right format. Copy the whole code, exactly as SheetEX made it.' };
+    if (m[1] !== prefix) return { ok: false, why: 'That is a different kind of SheetEX code (' + m[1] + '), not a ' + prefix + ' code.' };
+    if (!safeEqual(mac(prefix + '.' + m[2]), m[3])) return { ok: false, why: 'This code was changed after SheetEX made it, or it was made by a different copy of SheetEX. It cannot be used here.' };
+    try { return { ok: true, obj: JSON.parse(fromUtf8(unb64u(m[2]))) }; }
+    catch (e) { return { ok: false, why: 'The code is damaged.' }; }
+  }
+
+  // Answer fingerprints for the certification tests (fixed salt, so the bank can be built ahead of time).
+  function answerHash(qid, norm) { return b64u(sha256(BANK.concat(utf8(qid + '|' + norm))).slice(0, 12)); }
+
+  // A short ID printed on certificates: lets a teacher check a paper copy by name + lesson.
+  var B32 = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  function printId(name, lesson) {
+    var b = hmac(KEY, 'print|' + normName(name) + '|' + lesson), out = '';
+    for (var i = 0; i < 8; i++) out += B32[b[i] % 32];
+    return out.slice(0, 4) + '-' + out.slice(4);
+  }
+  function normName(n) { return String(n || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+
+  SX.seal = {
+    sha256: sha256, hmac: hmac, hex: hex, utf8: utf8, fromUtf8: fromUtf8, b64u: b64u, unb64u: unb64u,
+    mac: mac, pack: pack, unpack: unpack, answerHash: answerHash, printId: printId, normName: normName,
+    isDefaultKey: function () { return DEFAULT; },
+    fingerprint: function () { return mac('fingerprint', 4).toUpperCase().replace(/[-_]/g, 'X').slice(0, 5); }
   };
 })(globalThis.SX = globalThis.SX || {});
 
@@ -3030,10 +3271,99 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
   SX.makeStoreWorkbook = makeStoreWorkbook;
 })(globalThis.SX = globalThis.SX || {});
 
+// ---- mldata.js ----
+/* SheetEX — Lesson 10 data: a machine-learning table built from the store data.
+ * Each row of ml_examples is one training EXAMPLE: one product at one store for one week. The model's job is to
+ * predict the LABEL `stockout` (1 = the product ran out that week) from the FEATURES. Planted problems for students
+ * to find: missing feature values, class imbalance, test rows that are copies of training rows (leakage), and a
+ * column that is only known AFTER the answer (target leakage: restock_after). `predictions` holds a simple model's
+ * guesses for the test rows, so students can grade it with SQL. */
+(function (SX) {
+  'use strict';
+  var D = SX.data;
+  // Small seeded random generator so every student gets the same data
+  var seed = 2;
+  function rnd() { seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+  function pick(a) { return a[Math.floor(rnd() * a.length)]; }
+
+  var price = {}; D.PRODUCTS.forEach(function (p) { price[p[0]] = p[3]; });
+  var skus = D.PRODUCTS.map(function (p) { return p[0]; });
+  var stores = D.STORES.map(function (s) { return s[0]; });
+  var COLUMNS = [
+    { name: 'example_id', type: 'INTEGER', role: 'id', about: 'Row ID (primary key). Never a feature — it carries no information about the world.' },
+    { name: 'week', type: 'INTEGER', role: 'split', about: 'Week number 1–6. Weeks 1–4 are for training, weeks 5–6 for testing (the model is tested on the "future").' },
+    { name: 'store_id', type: 'TEXT', role: 'feature', about: 'Which store (foreign key to stores). A category feature.' },
+    { name: 'sku', type: 'TEXT', role: 'feature', about: 'Which product (foreign key to products). A category feature.' },
+    { name: 'units_last_week', type: 'INTEGER', role: 'feature', about: 'Units sold the week before. Some values are missing (NULL).' },
+    { name: 'promo', type: 'INTEGER', role: 'feature', about: '1 if the product was on sale this week, else 0.' },
+    { name: 'price', type: 'REAL', role: 'feature', about: 'Shelf price this week (10% off during a promo).' },
+    { name: 'in_stock_start', type: 'INTEGER', role: 'feature', about: 'Units on the shelf when the week started.' },
+    { name: 'restock_after', type: 'INTEGER', role: 'leak', about: 'Units ordered AFTER the week ended to refill the shelf. Only known after the answer — target leakage!' },
+    { name: 'stockout', type: 'INTEGER', role: 'label', about: 'THE LABEL: 1 if the product ran out that week, 0 if not. This is what the model predicts.' },
+    { name: 'split', type: 'TEXT', role: 'split', about: '"train" rows teach the model; "test" rows check it on data it has never seen.' }
+  ];
+
+  var ROWS = [], id = 1;
+  for (var week = 1; week <= 6; week++) {
+    stores.forEach(function (st) {
+      var used = {};
+      for (var k = 0; k < 2; k++) {
+        var sku = pick(skus);
+        while (used[sku]) sku = pick(skus);
+        used[sku] = true;
+        var promo = rnd() < 0.25 ? 1 : 0;
+        var last = 4 + Math.floor(rnd() * 30);
+        var demand = Math.round(last * (promo ? 1.6 : 1.05) * (0.8 + rnd() * 0.45));
+        var start = Math.round(last * (0.9 + rnd() * 0.9)) + 2;
+        var out = demand > start ? 1 : 0;
+        var restock = out ? Math.max(5, Math.round((demand - start) * 1.5 + 10)) : 0;
+        ROWS.push([id++, week, st, sku, last, promo, +(price[sku] * (promo ? 0.9 : 1)).toFixed(2), start, restock, out, week <= 4 ? 'train' : 'test']);
+      }
+    });
+  }
+  // Missing feature values (a sensor/import glitch)
+  [3, 11, 19, 26, 34, 47].forEach(function (i) { ROWS[i][4] = null; });
+  // Leakage: four training rows were accidentally copied into the test set
+  var LEAKED = [5, 14, 22, 37];
+  LEAKED.forEach(function (i) { var r = ROWS[i].slice(); r[0] = id++; r[10] = 'test'; ROWS.push(r); });
+
+  // A simple "model": predicts a stockout when there is a promo, or when the shelf starts with less than last week's sales
+  var PREDICTIONS = ROWS.filter(function (r) { return r[10] === 'test'; }).map(function (r) {
+    var guess = r[5] === 1 || (r[4] != null && r[7] < r[4]) ? 1 : 0;
+    return [r[0], guess];
+  });
+
+  function create(db) {
+    db.create('ml_examples', COLUMNS.map(function (c) { return { name: c.name, type: c.type }; }),
+      ROWS.map(function (r) { return r.slice(); }),
+      { pk: ['example_id'], fks: [{ col: 'store_id', table: 'stores', refCol: 'store_id' }, { col: 'sku', table: 'products', refCol: 'sku' }],
+        checks: [{ text: 'promo IN (0, 1)' }, { text: 'stockout IN (0, 1)' }, { text: "split IN ('train', 'test')" }], notNull: ['week', 'store_id', 'sku', 'stockout', 'split'], strict: true });
+    db.create('predictions', [{ name: 'example_id', type: 'INTEGER' }, { name: 'predicted', type: 'INTEGER' }],
+      PREDICTIONS.map(function (r) { return r.slice(); }),
+      { pk: ['example_id'], fks: [{ col: 'example_id', table: 'ml_examples', refCol: 'example_id' }], checks: [{ text: 'predicted IN (0, 1)' }], notNull: ['predicted'], strict: true });
+  }
+
+  // Facts the challenges check against
+  function count(f) { return ROWS.filter(f).length; }
+  var test = ROWS.filter(function (r) { return r[10] === 'test'; }), byId = {};
+  ROWS.forEach(function (r) { byId[r[0]] = r; });
+  var cm = { tp: 0, fp: 0, fn: 0, tn: 0 };
+  PREDICTIONS.forEach(function (p) { var y = byId[p[0]][9]; cm[p[1] ? (y ? 'tp' : 'fp') : (y ? 'fn' : 'tn')]++; });
+  var FACTS = {
+    total: ROWS.length, pos: count(function (r) { return r[9] === 1; }), neg: count(function (r) { return r[9] === 0; }),
+    nulls: count(function (r) { return r[4] === null; }), train: count(function (r) { return r[10] === 'train'; }), test: test.length,
+    leaked: LEAKED.length, leakedKeys: LEAKED.map(function (i) { return [ROWS[i][1], ROWS[i][2], ROWS[i][3]]; }),
+    cm: cm, accuracy: (cm.tp + cm.tn) / PREDICTIONS.length,
+    baseline: test.filter(function (r) { return r[9] === 0; }).length / test.length
+  };
+
+  SX.mldata = { COLUMNS: COLUMNS, ROWS: ROWS, PREDICTIONS: PREDICTIONS, FACTS: FACTS, create: create };
+})(globalThis.SX = globalThis.SX || {});
+
 // ---- sql.js ----
 /* SheetEX — a small SQLite-flavored SQL engine (plus Google Sheets QUERY language).
  * Supports: SELECT [DISTINCT] ... FROM ... [JOIN ... ON] WHERE GROUP BY HAVING ORDER BY LIMIT OFFSET,
- * scalar subqueries, IN (subquery), CASE, CAST, INSERT, UPDATE, DELETE, CREATE TABLE, DROP TABLE. */
+ * scalar subqueries, IN (subquery), CASE, CAST, INSERT, UPDATE, DELETE, CREATE TABLE [AS SELECT], DROP TABLE. */
 (function (SX) {
   'use strict';
 
@@ -3252,6 +3582,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     if (this.isWord('IF')) { this.p++; this.expectKw('NOT'); this.expectWord('EXISTS'); ifNot = true; }
     var table = this.ident('a table name');
     var spec = { type: 'create', table: table, ifNot: ifNot, cols: [], pk: [], uniques: [], fks: [], checks: [], notNull: [], strict: false };
+    if (this.acceptKw('AS')) { spec.asSelect = this.select(); return spec; }
     this.expectOp('(', 'Column definitions go in parentheses: CREATE TABLE t (id INTEGER PRIMARY KEY, name TEXT);');
     var self = this;
     function names() { self.expectOp('('); var a = []; do { a.push(self.ident('a column name')); } while (self.acceptOp(',')); self.expectOp(')'); return a; }
@@ -3940,6 +4271,19 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
           if (st.ifNot) return { type: 'msg', message: 'Table ' + st.table + ' already exists — nothing changed.' };
           throw new SqlError('table ' + st.table + ' already exists', 'Use a different name, or DROP TABLE ' + st.table + ' first.');
         }
+        if (st.asSelect) {
+          var sel = this.select(st.asSelect, null), used = {};
+          var acols = sel.columns.map(function (n, i) {
+            var nm = String(n).replace(/^.*\./, '').replace(/[^A-Za-z0-9_]/g, '_') || 'col' + (i + 1);
+            while (used[nm.toLowerCase()]) nm += '_' + (i + 1);
+            used[nm.toLowerCase()] = true;
+            var vals = sel.rows.map(function (r) { return r[i]; }).filter(function (v) { return v !== null; });
+            var type = !vals.length ? '' : vals.every(function (v) { return typeof v === 'number' && Math.floor(v) === v; }) ? 'INTEGER' : vals.every(function (v) { return typeof v === 'number'; }) ? 'REAL' : 'TEXT';
+            return { name: nm, type: type };
+          });
+          db.create(st.table, acols, sel.rows.map(function (r) { return r.slice(); }), {});
+          return { type: 'msg', message: 'Table ' + st.table + ' created from a query: ' + sel.rows.length + ' row' + (sel.rows.length === 1 ? '' : 's') + ', ' + acols.length + ' columns.', changed: sel.rows.length };
+        }
         st.fks.forEach(function (f) { db.table(f.table); });
         st.checks.forEach(function (c) { new Parser(c.text, false).expr(); });
         if (st.strict) st.cols.forEach(function (c) {
@@ -4130,6 +4474,8 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       db.create('item_codes', [{ name: 'code', type: 'TEXT' }, { name: 'product', type: 'TEXT' }, { name: 'category', type: 'TEXT' }, { name: 'price', type: 'REAL' }],
         W.ITEMS.map(function (it) { return [it.code, it.product, it.category, it.price]; }));
     }
+    // v2 Lesson 10: machine-learning examples + a model's predictions
+    if (SX.mldata) SX.mldata.create(db);
     return db;
   }
 
@@ -4969,6 +5315,227 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     makeWorkbook: makeWorkbook, files: files, X: X, code4: code4 };
 })(globalThis.SX = globalThis.SX || {});
 
+// ---- certtest.js ----
+/* SheetEX — certification-test engine: runs a student's answer and turns it into a fingerprint.
+ * The question bank shipped to students holds only fingerprints of correct answers (SX.seal.answerHash), never the
+ * answers. Hands-on answers are RUN: a formula is evaluated in a fresh workbook and in a "shuffled" copy (rows
+ * reversed, numbers changed), so typing the answer as a constant, or pointing at the one cell that happens to hold
+ * it, does not match. The build computes the fingerprints with this same file, from the teacher-only answer key. */
+(function (SX) {
+  'use strict';
+  var F = SX.f;
+
+  function canon(v) {
+    if (v === null || v === undefined || v === '') return '';
+    if (F.isErr(v)) return v.code;
+    if (typeof v === 'number') return Math.abs(v) < 1e-9 ? '0' : String(+v.toPrecision(10));
+    if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE';
+    return String(v);
+  }
+  function normText(s) {
+    s = String(s == null ? '' : s).trim().replace(/\s+/g, ' ').replace(/[.]$/, '').toLowerCase();
+    if (/^[-+]?\$?[\d,]*\.?\d+%?$/.test(s)) {
+      var pct = /%$/.test(s), n = parseFloat(s.replace(/[$,%]/g, ''));
+      if (isFinite(n)) return String(+(pct ? n / 100 : n).toPrecision(10));
+    }
+    return s.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+  }
+
+  // ---------- spreadsheets ----------
+  var books = {};
+  // Columns whose numbers are safe to change (never IDs or codes that other tables look up).
+  var BUMP = { Products: [3, 4, 5, 6], Sales: [4], RawOrders: [4], ItemCodes: [3], Targets: [1, 2, 3, 4, 5], Contacts: [4] };
+  function perturbWb(wb) {
+    wb.sheets.forEach(function (s) {
+      if (s.name === 'Scratch' || s.name === 'Report') return;
+      var max = wb.maxRow(s.name), maxC = wb.maxCol(s.name), rows = [];
+      for (var r = 1; r <= max; r++) {
+        var row = [];
+        for (var c = 0; c <= maxC; c++) { var cell = wb.getCell(s.name, r, c); row.push(cell ? { input: cell.input, fmt: cell.fmt } : null); }
+        rows.push(row);
+      }
+      if (s.name === 'Targets') rows = rows.map(function (row) { return row; }); // row labels matter for HLOOKUP row numbers
+      else rows.reverse();
+      rows.forEach(function (row, i) {
+        row.forEach(function (cell, c) {
+          if (cell && /^-?\d+(\.\d+)?$/.test(cell.input) && cell.fmt !== 'date' && (BUMP[s.name] || []).indexOf(c) >= 0) {
+            var bump = ((i * 7 + c * 3) % 5) + 1;
+            cell = { input: String(+(parseFloat(cell.input) + bump).toFixed(2)), fmt: cell.fmt };
+          }
+          wb.setCell(s.name, i + 1, c, cell);
+        });
+      });
+    });
+    wb.recalc();
+    return wb;
+  }
+  function book(kind, plat, variant) {
+    var k = kind + '|' + plat + '|' + variant;
+    if (!books[k]) {
+      var wb = kind === 'wrangle' ? SX.wrangle.makeWorkbook(plat) : SX.makeStoreWorkbook(plat);
+      if (!wb.sheet('Scratch')) wb.addSheet('Scratch');
+      if (variant) perturbWb(wb);
+      books[k] = wb;
+    }
+    return books[k];
+  }
+  function parseAddr(a) { var m = /^([A-Z]+)(\d+)$/.exec(a); return { r: +m[2] - 1, c: F.colToIdx(m[1]) }; }
+  function hasRef(ast) { var found = false; F.walk(ast, function (n) { if (n.t === 'ref' || n.t === 'range' || n.t === 'name' || n.ref) found = true; }); return found; }
+
+  // Evaluate one formula answer in one workbook. Returns { vals:[...], show } or { error }.
+  function runFormula(q, text, cse, wb) {
+    text = String(text || '').trim();
+    if (text[0] !== '=') return { error: 'Answer with a formula that starts with =' };
+    var at = parseAddr(q.at), sheet = q.sheet || 'Scratch';
+    var last = q.fill ? q.fill - 1 : at.r;
+    var placed = [], out = { vals: [] };
+    try {
+      for (var r = at.r; r <= last; r++) {
+        var src = r === at.r ? text : '=' + F.shiftFormula(text.slice(1), r - at.r, 0);
+        var prep = wb.prepare(src, { cse: cse });
+        if (prep.dialog) return { error: (wb.plat.style === 'excel' ? 'Excel refuses this formula: ' : '') + prep.dialog + (prep.detail ? ' ' + prep.detail : '') };
+        wb.setCell(sheet, r, at.c, prep.cell); placed.push(r);
+        if (r === at.r && prep.cell && !prep.cell.perr) {
+          var ast; try { ast = F.parse(prep.cell.input.slice(1), wb.plat.parse); } catch (e) { ast = null; }
+          if (ast && !hasRef(ast)) return { error: 'Use a formula that refers to the data — a typed-in answer does not count.' };
+        }
+      }
+      wb.recalc();
+      for (r = at.r; r <= last; r++) {
+        var v = wb.getValue(sheet, r, at.c), rng = wb.spillRange(sheet, r, at.c);
+        if (rng) {
+          var m = [];
+          for (var i = rng.r1; i <= rng.r2; i++) { var row = []; for (var j = rng.c1; j <= rng.c2; j++) row.push(canon(wb.value(sheet, i, j))); m.push(row); }
+          out.vals.push(m);
+          if (r === at.r) out.show = m;
+        } else {
+          out.vals.push(canon(v));
+          if (r === at.r) { out.show = [[canon(v)]]; if (F.isErr(v)) out.errMsg = v.msg; }
+        }
+      }
+      if (q.fill) out.showFill = out.vals.slice(0, 5);
+      return out;
+    } finally {
+      placed.forEach(function (r) { wb.setCell(sheet, r, at.c, null); });
+      wb.recalc();
+    }
+  }
+
+  // ---------- SQL ----------
+  function freshDb(variant) {
+    var db = SX.sql.makeStoreDb();
+    if (variant) {
+      SX.sql.execute(db, 'UPDATE sales SET qty = qty + (order_id % 3) + 1; DELETE FROM sales WHERE order_id % 9 = 0; UPDATE products SET price = price + 0.5, in_stock = in_stock + 7, cost = cost + 0.25;');
+      if (db.tables.ml_examples) SX.sql.execute(db, 'UPDATE ml_examples SET units_last_week = units_last_week + 2 WHERE units_last_week IS NOT NULL; ' +
+        'DELETE FROM predictions WHERE example_id % 7 = 0; DELETE FROM ml_examples WHERE example_id % 7 = 0;');
+      Object.keys(db.tables).forEach(function (k) { db.tables[k].rows.reverse(); });
+    }
+    return db;
+  }
+  // Rows compared as a set unless order was asked for; column order never matters.
+  function tableOf(res, ordered) {
+    var rows = res.rows.map(function (r) { return r.map(canon); });
+    var keys = res.columns.map(function (c, i) { return { i: i, k: JSON.stringify(rows.map(function (r) { return r[i]; }).sort()) }; });
+    keys.sort(function (a, b) { return a.k < b.k ? -1 : a.k > b.k ? 1 : a.i - b.i; });
+    rows = rows.map(function (r) { return keys.map(function (k) { return r[k.i]; }); });
+    if (!ordered) rows.sort(function (a, b) { var x = JSON.stringify(a), y = JSON.stringify(b); return x < y ? -1 : x > y ? 1 : 0; });
+    return { cols: res.columns.length, rows: rows };
+  }
+  function runSelect(q, sql, variant) {
+    sql = String(sql || '').trim();
+    if (!sql) return { error: 'Type a query.' };
+    var db = freshDb(variant), res;
+    try { res = SX.sql.execute(db, sql); }
+    catch (e) { if (e instanceof SX.sql.SqlError) return { error: 'Error: ' + e.message }; throw e; }
+    if (res.length !== 1 || res[0].statement.type !== 'select') return { error: 'Answer with ONE SELECT query.' };
+    return { table: tableOf(res[0], q.ordered), raw: res[0] };
+  }
+  // DDL / constraint questions: run the student's SQL, then hidden probes; the pattern of what succeeds is the answer.
+  function runProbe(q, sql) {
+    sql = String(sql || '').trim();
+    if (!sql) return { error: 'Type your SQL.' };
+    var db = freshDb(false), mine;
+    try { mine = SX.sql.execute(db, sql); }
+    catch (e) { if (e instanceof SX.sql.SqlError) return { error: 'Error: ' + e.message }; throw e; }
+    var outcomes = q.probes.map(function (p) {
+      try {
+        var r = SX.sql.execute(db, p);
+        var last = r[r.length - 1];
+        return last.type === 'rows' ? JSON.stringify(tableOf(last, true).rows) : 'ok';
+      } catch (e) { if (e instanceof SX.sql.SqlError) return 'refused'; throw e; }
+    });
+    return { outcomes: outcomes, msg: mine.map(function (r) { return r.message || (r.rows ? r.rows.length + ' rows' : ''); }).join(' ') };
+  }
+
+  // ---------- grading ----------
+  // Returns { norm, preview } ; norm === null means "cannot be right" (with preview explaining why).
+  function evaluate(q, resp) {
+    resp = resp || {};
+    var missing = (q.must || []).filter(function (w) { return !new RegExp('\\b' + w + '\\b', 'i').test(String(resp.text || '')); });
+    if (missing.length) return { norm: null, preview: { error: 'Your answer must use ' + missing.join(' and ') + '.' } };
+    if (q.kind === 'mc') return { norm: resp.text == null ? null : String(resp.text) };
+    if (q.kind === 'text') return { norm: String(resp.text || '').trim() ? normText(resp.text) : null };
+    if (q.kind === 'formula') {
+      var a = runFormula(q, resp.text, !!resp.cse, book(q.book || 'store', q.plat, 0));
+      if (a.error) return { norm: null, preview: { error: a.error } };
+      var b = q.same ? a : runFormula(q, resp.text, !!resp.cse, book(q.book || 'store', q.plat, 1));
+      if (b.error) return { norm: null, preview: { error: b.error } };
+      return { norm: JSON.stringify([a.vals, b.vals]), preview: { grid: q.fill ? a.showFill.map(function (v) { return Array.isArray(v) ? v[0] : [v]; }) : a.show, errMsg: a.errMsg, fill: !!q.fill } };
+    }
+    if (q.kind === 'sql') {
+      var x = runSelect(q, resp.text, false);
+      if (x.error) return { norm: null, preview: { error: x.error } };
+      var y = runSelect(q, resp.text, true);
+      if (y.error) return { norm: null, preview: { error: y.error } };
+      return { norm: JSON.stringify([x.table, y.table]), preview: { columns: x.raw.columns, rows: x.raw.rows.slice(0, 8).map(function (r) { return r.map(canon); }), total: x.raw.rows.length } };
+    }
+    if (q.kind === 'probe') {
+      var p = runProbe(q, resp.text);
+      if (p.error) return { norm: null, preview: { error: p.error } };
+      return { norm: JSON.stringify(p.outcomes), preview: { msg: p.msg } };
+    }
+    if (q.kind === 'csv') {
+      var text = String(resp.text || '').replace(/\r/g, '').replace(/\n+$/, '');
+      if (!text) return { norm: null };
+      var parsed = SX.csv.parse(text, q.delim || ',');
+      var fields = parsed.rows.map(function (r) { return r.cells.map(function (c) { return c.v; }); });
+      if (parsed.problems.length) return { norm: null, preview: { error: parsed.problems[0].msg, fields: fields } };
+      return { norm: JSON.stringify(fields), preview: { fields: fields } };
+    }
+    return { norm: null };
+  }
+  function isCorrect(q, resp) {
+    var e = evaluate(q, resp);
+    if (e.norm === null) return false;
+    var hsh = SX.seal.answerHash(q.id, e.norm);
+    return q.h.indexOf(hsh) >= 0;
+  }
+  function isHandsOn(q) { return q.kind === 'formula' || q.kind === 'sql' || q.kind === 'probe' || q.kind === 'csv'; }
+
+  // Pick a test: up to half hands-on, the rest concept questions; options shuffled.
+  var SIZE = 10, PASS = 0.8;
+  function shuffle(a, rnd) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(rnd() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function draw(bank, rnd) {
+    rnd = rnd || Math.random;
+    var hands = shuffle(bank.filter(isHandsOn), rnd), concept = shuffle(bank.filter(function (q) { return !isHandsOn(q); }), rnd);
+    var nh = Math.min(hands.length, Math.ceil(SIZE / 2)), nc = Math.min(concept.length, SIZE - nh);
+    nh = Math.min(hands.length, SIZE - nc);
+    var picked = shuffle(hands.slice(0, nh).concat(concept.slice(0, nc)), rnd);
+    return picked.map(function (q) { return q.opts ? Object.assign({}, q, { opts: shuffle(q.opts, rnd) }) : q; });
+  }
+  function needed(n) { return Math.ceil(n * PASS - 1e-9); }
+
+  SX.certtest = { evaluate: evaluate, isCorrect: isCorrect, isHandsOn: isHandsOn, draw: draw, needed: needed, normText: normText, canon: canon,
+    book: book, SIZE: SIZE, PASS: PASS, COOLDOWN: 120 };
+})(globalThis.SX = globalThis.SX || {});
+
+// ---- @TESTBANK ----
+(function (SX) {
+  'use strict';
+  // Generated by build.js from src/teacher/bank.js — fingerprints only, no answers.
+  SX.TESTBANK = {"xl365":[{"id":"x1-sum","kind":"formula","topic":"SUM","q":"Write a formula for the <b>total number of units in stock</b> across all products (InStock is column F, rows 2–25).","plat":"xl365","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["TJYqDS8xuxOa6uQj"]},{"id":"x1-countif","kind":"formula","topic":"COUNTIF","q":"Write a formula that counts how many products have a <b>Price greater than $10</b>.","plat":"xl365","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["0t-k-yOrP9ycOz-U"]},{"id":"x1-sumif","kind":"formula","topic":"SUMIF","q":"Write a formula for the <b>total Qty sold by store S02</b> (Sales rows 2–61).","plat":"xl365","at":"B2","show":[{"sheet":"Sales","cols":"A:F","rows":4,"last":61}],"h":["-Sqo86m_4si1WK5v"]},{"id":"x1-avgif","kind":"formula","topic":"AVERAGEIF","q":"Write a formula for the <b>average Price of the Snacks</b> category.","plat":"xl365","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["tRKwRJSXNMrrrg8F"]},{"id":"x1-xlookup","kind":"formula","topic":"XLOOKUP","q":"Write a lookup formula that returns the <b>Price of SKU-404</b>. (It must keep working if rows are re-sorted.)","plat":"xl365","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["pczBKWZzg3iGIdXI"]},{"id":"x1-filter","kind":"formula","topic":"FILTER","q":"Write ONE formula that spills the <b>names of every Apparel product</b>, in the order they appear in the table.","plat":"xl365","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["nr5d5sb_Kl8wvAe8"]},{"id":"x1-sortunique","kind":"formula","topic":"SORT + UNIQUE","q":"Write ONE formula that spills an <b>A→Z list of the categories, each listed once</b>.","plat":"xl365","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["E-QrfRqkVneezaHq"]},{"id":"x1-value","kind":"formula","topic":"Relative references","q":"In <b>Products!J2</b>, write a formula for that product's <b>inventory value (Price × InStock)</b>. It will be filled down to row 25.","plat":"xl365","sheet":"Products","at":"J2","fill":25,"show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["nPQ_ZcLE1iCKCAp5"]},{"id":"x1-if","kind":"formula","topic":"IF","q":"In <b>Products!J2</b>, write a formula that shows <b>\"Reorder\"</b> when InStock is below ReorderAt, otherwise <b>\"OK\"</b>. It will be filled down to row 25.","plat":"xl365","sheet":"Products","at":"J2","fill":25,"show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["PCbWbnKI4Um_h8K-"]},{"id":"x1-spill","kind":"mc","topic":"#SPILL!","q":"A FILTER formula shows <code>#SPILL!</code>. What is the most likely cause?","opts":["Cells below or beside it are not empty","The formula has a typo in the function name","No rows matched the condition","The range is too small"],"h":["OqpHZFQo0fi_SShg"]},{"id":"x1-abs","kind":"mc","topic":"Absolute references","q":"Cell K2 holds <code>=E2*$H$1</code>. You fill it down to K3. What does K3 hold?","opts":["=E3*$H$1","=E3*$H$2","=E2*$H$1","=F2*$H$1"],"h":["OmXa2DkIbigMZKi8"]},{"id":"x1-len","kind":"text","topic":"Text functions","q":"What does <code>=LEN(\"Peachtree\")</code> return?","h":["yNxPyYA_kqC3lzch"]},{"id":"x1-round","kind":"text","topic":"ROUND","q":"What does <code>=ROUND(12.4867, 2)</code> return?","h":["hDy3DIc-GdW4Pqz_"]},{"id":"x1-dyn","kind":"mc","topic":"Dynamic arrays","q":"Which of these functions returns a list of results that <b>spills</b> into the cells below?","opts":["UNIQUE","COUNTIF","VLOOKUP","ROUND"],"h":["S_NJzTT7ulu2UD0Y"]},{"id":"x1-why","kind":"mc","topic":"Formulas vs typed values","q":"Why is <code>=SUM(F2:F25)</code> better than typing the total (1,357) into the cell?","opts":["It updates when the data changes","It makes the file smaller","Typed numbers cannot be formatted","Excel cannot add typed numbers"],"h":["lqmrVmzcggpg8yPG"]},{"id":"x1-filldown","kind":"mc","topic":"Fill down","q":"You select J2:J25 (J2 has a formula) and press <kbd>Ctrl</kbd>+<kbd>D</kbd>. What happens?","opts":["J2 is copied into J3:J25, with references shifted row by row","J2 is deleted","The column is sorted","J3:J25 get the exact same formula with no changes"],"h":["yxuXmjCJoWLdaqyr"]}],"xl2013":[{"id":"x2-indexmatch","kind":"formula","topic":"INDEX + MATCH","q":"This workbook is opened in <b>Excel 2013</b>. Write a formula that returns the <b>Price of SKU-404</b>.","plat":"xl2013","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["aCLzS_bmIuJ9XYlW"]},{"id":"x2-vlookup","kind":"formula","topic":"VLOOKUP","q":"In Excel 2013, write a formula that returns the <b>Product name for SKU-203</b>.","plat":"xl2013","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["M3bTxt5Vplgi-8T4"]},{"id":"x2-nestedif","kind":"formula","topic":"Nested IF","q":"Excel 2013 has no IFS. In <b>Products!J2</b>, show <b>\"Reorder\"</b> if InStock &lt; ReorderAt, <b>\"Low\"</b> if InStock &lt; 1.5 × ReorderAt, otherwise <b>\"OK\"</b>. It will be filled down to row 25.","plat":"xl2013","sheet":"Products","at":"J2","fill":25,"show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["jjiO2wTtfgtKS8MP"]},{"id":"x2-cse","kind":"formula","topic":"Array formulas (CSE)","q":"Excel 2013 has no MAXIFS. Write a formula for the <b>largest single-order Qty sold by store S03</b>.","plat":"xl2013","at":"B2","show":[{"sheet":"Sales","cols":"A:F","rows":4,"last":61}],"h":["R61gsx2BdENOTJfI"]},{"id":"x2-sumproduct","kind":"formula","topic":"SUMPRODUCT","q":"In ONE cell, write a formula for the <b>total inventory value</b>: the sum of Price × InStock over every product.","plat":"xl2013","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["-oycl02izXcm9cna"]},{"id":"x2-countif","kind":"formula","topic":"COUNTIF","q":"Write a formula that counts the orders with a <b>Qty of 5 or more</b>.","plat":"xl2013","at":"B2","show":[{"sheet":"Sales","cols":"A:F","rows":4,"last":61}],"h":["R3-N1tx9jPYvGrZ6"]},{"id":"x2-join","kind":"formula","topic":"Joining text","q":"In <b>Stores!G2</b> (Excel 2013), join City and State like <b>Cumming, GA</b>. It will be filled down to row 6.","plat":"xl2013","sheet":"Stores","at":"G2","fill":6,"show":[{"sheet":"Stores","cols":"A:F","rows":5,"last":6}],"h":["UePEq37QoR4dyAle"]},{"id":"x2-name","kind":"mc","topic":"#NAME?","q":"What does Excel 2013 show for <code>=XLOOKUP(\"SKU-101\",A2:A25,B2:B25)</code>?","opts":["#NAME?","#N/A","#VALUE!","Granola Bar"],"h":["rsXKYePKEoFe-miC"]},{"id":"x2-csekey","kind":"mc","topic":"Array formulas (CSE)","q":"How do you enter an array formula like <code>{=MAX(IF(…))}</code> in Excel 2013?","opts":["Press Ctrl+Shift+Enter","Type the curly braces yourself","Press Enter twice","Wrap it in ARRAYFORMULA()"],"h":["maDkuJGCinHOTui-"]},{"id":"x2-false","kind":"mc","topic":"VLOOKUP","q":"In <code>=VLOOKUP(\"SKU-203\", A2:H25, 2, FALSE)</code>, what does <code>FALSE</code> mean?","opts":["Find an exact match only","Return the 2nd match","Search from the bottom up","Ignore capital letters"],"h":["AODRvOo_oiUcbist"]},{"id":"x2-approx","kind":"mc","topic":"VLOOKUP","q":"Someone leaves off the last argument of VLOOKUP on an <b>unsorted</b> list. What happens?","opts":["It does an approximate match and can quietly return the wrong row","It always returns #N/A","Excel refuses the formula","It works exactly the same as FALSE"],"h":["z2aX_FPcmtyZUizK"]},{"id":"x2-match","kind":"text","topic":"MATCH","q":"Products!A2:A25 starts SKU-101, SKU-102, SKU-103… What does <code>=MATCH(\"SKU-103\",Products!A2:A25,0)</code> return?","h":["uDuzL1g15w6PNi--"]},{"id":"x2-implicit","kind":"mc","topic":"Array formulas (CSE)","q":"In Excel 2013, <code>=MAX(IF(C2:C61=\"S03\",E2:E61))</code> is entered with plain Enter. What happens?","opts":["It does not look at the whole range: it uses one row (or shows #VALUE!), so the answer is wrong","It works the same as Ctrl+Shift+Enter","It shows #SPILL!","Excel converts it to MAXIFS"],"h":["6P7yvdQw3IrVCKUm"]},{"id":"x2-exists","kind":"mc","topic":"Version differences","q":"Which function exists in Excel 2013?","opts":["IFERROR","IFS","TEXTJOIN","XLOOKUP"],"h":["8hRGxsWXNuUz_qxO"]},{"id":"x2-iferror","kind":"mc","topic":"IFERROR","q":"What does <code>=IFERROR(VLOOKUP(\"SKU-999\",A2:D25,4,FALSE),\"Not found\")</code> show when SKU-999 is not in the list?","opts":["Not found","#N/A","0","FALSE"],"h":["9q_NWdmU5MQpai4_"]}],"gs":[{"id":"g-filter","kind":"formula","topic":"FILTER","q":"In <b>Google Sheets</b>, write ONE formula that lists the <b>names of all Drinks products</b>.","plat":"gs","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["O3qQybfWL6kAxgxW"]},{"id":"g-sort","kind":"formula","topic":"SORT","q":"In Google Sheets, sort the block <b>Products!B2:D25</b> by Price (its 3rd column), <b>highest price first</b>.","plat":"gs","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["hq5itg4KDmIx05YD"]},{"id":"g-arrayformula","kind":"formula","topic":"ARRAYFORMULA","q":"In ONE cell, write a Google Sheets formula that fills a whole column with <b>Price × InStock for every product</b> (rows 2–25).","plat":"gs","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["2Y0IMJPabQAIAgho"]},{"id":"g-query","kind":"formula","topic":"QUERY","q":"Use <b>QUERY</b> on Products!A1:H25 (1 header row) to list the Product names in the <b>Snacks</b> category, with the header <b>Product</b> on top.","plat":"gs","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["QGO_xaZuzF_zZUdK"]},{"id":"g-split","kind":"formula","topic":"SPLIT","q":"In <b>Products!J2</b>, split the Supplier name into <b>one word per cell</b> (spilling to the right). It will be filled down to row 25.","plat":"gs","sheet":"Products","at":"J2","fill":25,"show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["NRgcuRPDmLRJeIKg"]},{"id":"g-regex","kind":"formula","topic":"REGEXMATCH","q":"Write a Google Sheets formula that counts how many <b>product names contain a digit</b> (0–9).","plat":"gs","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["_PBxqKA2zWySwq9V"]},{"id":"g-concat","kind":"formula","topic":"Joining text","q":"In <b>Stores!G2</b> (Google Sheets), join City and State like <b>Cumming, GA</b>. It will be filled down to row 6.","plat":"gs","sheet":"Stores","at":"G2","fill":6,"show":[{"sheet":"Stores","cols":"A:F","rows":5,"last":6}],"h":["UyXiFv9aJ5TOidYc"]},{"id":"g-sortneg","kind":"mc","topic":"Silent differences","q":"In Google Sheets, <code>=SORT(A2:B25, 2, -1)</code> sorts column 2…","opts":["Lowest to highest — -1 counts as TRUE (ascending)","Highest to lowest","It shows #ERROR!","It does not sort at all"],"h":["JE_kgVTuhz-W7q9D"]},{"id":"g-error","kind":"mc","topic":"Errors","q":"You type a formula with a missing quote mark. What does Google Sheets do?","opts":["Accepts it and shows #ERROR! in the cell","Shows a pop-up and refuses to enter it","Fixes the quote for you","Shows #NAME?"],"h":["EB8KyJ5AKfAMLLqC"]},{"id":"g-open","kind":"mc","topic":"Open-ended ranges","q":"What does <code>E2:E</code> mean in Google Sheets?","opts":["Column E from row 2 down to the last row","Only cell E2","Columns E through Z","It is an error"],"h":["Wyd7X8dv9ojZDsrn"]},{"id":"g-concat2","kind":"mc","topic":"Joining text","q":"How many values can Google Sheets' <code>CONCAT</code> join?","opts":["Exactly 2","Any number","Up to 30","Only ranges"],"h":["ITY98Z8vK4o8EYFc"]},{"id":"g-filterargs","kind":"mc","topic":"FILTER","q":"In Google Sheets, <code>=FILTER(B2:B25, C2:C25=\"Snacks\", D2:D25&gt;1)</code> — what is the third argument?","opts":["A second condition (both must be true)","What to show if nothing matches","The sort order","The number of results"],"h":["Ofn2S13Zw7eoaafv"]},{"id":"g-split3","kind":"text","topic":"SPLIT","q":"Into how many cells does <code>=SPLIT(\"snacks|drinks|apparel\", \"|\")</code> spill?","h":["qIABkYhlZbrQZ-4U","3zcPqxiewMUGHsHy"]},{"id":"g-af","kind":"mc","topic":"ARRAYFORMULA","q":"What is ARRAYFORMULA for?","opts":["Making one formula work on whole ranges so it fills a column","Entering formulas with Ctrl+Shift+Enter","Sorting arrays","Importing data from another file"],"h":["iCad09u3ftvIhYj_"]},{"id":"g-query-lang","kind":"mc","topic":"QUERY","q":"In <code>=QUERY(A1:H25, \"select B where C = 'Snacks'\", 1)</code>, what are B and C?","opts":["Column letters of the range","Named ranges","Sheet names","Cell values"],"h":["uO3NKDueMEVaU7ij"]}],"csv":[{"id":"c-comma","kind":"csv","topic":"Quoting commas","q":"Write the <b>CSV line</b> for this row — SKU: <code>SKU-302</code> · Product: <code>Gel Pens, 4-pack</code> · Price: <code>4.5</code>","h":["xpftMIQpwgYdvltP"]},{"id":"c-quote","kind":"csv","topic":"Escaping quotes","q":"Write the <b>CSV line</b> for — SKU: <code>SKU-307</code> · Product: <code>12\" Ruler</code> · Price: <code>1.99</code>","h":["FAh-2Qa7LL81RV0l"]},{"id":"c-blank","kind":"csv","topic":"Empty fields","q":"Write the <b>CSV line</b> for a row whose middle value is <b>missing</b> — SKU: <code>SKU-999</code> · Product: <i>(empty)</i> · Price: <code>2.5</code>","h":["s9B7RNbi2a-0EuE-"]},{"id":"c-tsv","kind":"csv","topic":"TSV","q":"Write the <b>TSV</b> (tab-separated) line for — Product: <code>Gel Pens, 4-pack</code> · Price: <code>4.5</code>. (Press Tab in the answer box to type a tab.)","delim":"\t","h":["lNJ0hH3qPEiB7lxR"]},{"id":"c-two","kind":"csv","topic":"Quoting commas","q":"Write a 2-line CSV file: a header row <code>Name</code>, <code>Note</code> and one data row — Name: <code>Avery</code> · Note: <code>Said \"hi\", then left</code>","h":["-q3KlHWUnIPW4a-u"]},{"id":"c-zip","kind":"csv","topic":"Leading zeros","q":"Write the <b>CSV line</b> for — City: <code>Burlington</code> · State: <code>VT</code> · Zip: <code>05401</code> (keep the zero!)","h":["9UUzRg3tiK5J5HdK"]},{"id":"c-formulas","kind":"mc","topic":"Values vs formulas","q":"A sheet with <code>=SUM(D2:D25)</code> in D26 is saved as CSV. What is stored in that spot?","opts":["Only the result, like 233.12","The formula =SUM(D2:D25)","Both the formula and the result","Nothing — CSV skips formula cells"],"h":["wQ9dmabJmI5X2n72"]},{"id":"c-zero","kind":"mc","topic":"Leading zeros","q":"A CSV holds the Zip <code>05401</code>. You open it by double-clicking in Excel. What do you see?","opts":["5401","05401","#VALUE!","5,401.00"],"h":["T1F-z46w0ob-i9cd"]},{"id":"c-long","kind":"mc","topic":"Long numbers","q":"A CSV has a 16-digit ID <code>4111222233334444</code>. After opening and saving in Excel it becomes…","opts":["4111222233334440 (Excel keeps only 15 digits)","Exactly the same","#NUM!","The text \"4111222233334444\""],"h":["iH6bEw6L1Js-naft"]},{"id":"c-delim","kind":"mc","topic":"Delimiters","q":"What separates the values in a TSV file?","opts":["A tab character","A comma","A semicolon","A space"],"h":["f938x7__iIKIEPwx"]},{"id":"c-count","kind":"text","topic":"Quoting commas","q":"How many fields are in this CSV line?  <code>a,\"b,c\",d</code>","h":["b6wPrBUmjGldZMrb","BF9wf9k2p2Vv484S"]},{"id":"c-lost","kind":"mc","topic":"Values vs formulas","q":"Which of these does a CSV file keep?","opts":["The values in one sheet","Bold text and colors","Several sheets","Formulas"],"h":["f22aVXa-83AlUAsf"]},{"id":"c-dq","kind":"text","topic":"Escaping quotes","q":"Inside a quoted CSV value, how do you write ONE quote mark character? Type exactly what goes in the file.","h":["tKRvxxm-4iq_aXJy"]},{"id":"c-date","kind":"mc","topic":"Import surprises","q":"A CSV contains the code <code>1-2</code> (aisle 1, shelf 2). Opening it in Excel shows…","opts":["A date like 2-Jan","1-2","-1","#VALUE!"],"h":["JmAzq83HM4co7qwi"]}],"wr1":[{"id":"w1-code","kind":"formula","topic":"Leading zeros","q":"ItemCode (column C) is a mess of numbers like <code>104</code> and text like <code>\" 0402\"</code>. In <b>RawOrders!S2</b>, turn it into a clean 4-character code like <b>0104</b>. It will be filled down to row 31.","plat":"xl365","book":"wrangle","sheet":"RawOrders","at":"S2","fill":31,"show":[{"sheet":"RawOrders","cols":"A:H","rows":5,"last":31}],"h":["JZID7U3QYOY1OGRT"]},{"id":"w1-qty","kind":"formula","topic":"Text to numbers","q":"In <b>RawOrders!S2</b>, convert Qty (column E) to a <b>real number</b>, and show a <b>truly blank</b> result (\"\") when there is no usable number (blank, N/A, -, null). Filled down to row 31.","plat":"xl365","book":"wrangle","sheet":"RawOrders","at":"S2","fill":31,"show":[{"sheet":"RawOrders","cols":"A:H","rows":5,"last":31}],"h":["gIaDg0BTwxyomlkW"]},{"id":"w1-store","kind":"formula","topic":"TRIM / UPPER","q":"Store codes (column B) look like <code>\" S02 \"</code>, <code>s04</code>, <code>S01</code>. In <b>RawOrders!S2</b>, clean them to the form <b>S02</b>. Filled down to row 31.","plat":"xl365","book":"wrangle","sheet":"RawOrders","at":"S2","fill":31,"show":[{"sheet":"RawOrders","cols":"A:H","rows":5,"last":31}],"h":["o-YPYOFOHwp4Uwrh"]},{"id":"w1-price","kind":"formula","topic":"Text to numbers","q":"UnitPrice (column F) holds things like <code>\"$3.25\"</code> and <code>\"14.99 \"</code>. In <b>RawOrders!S2</b>, turn it into a real number. Filled down to row 31.","plat":"xl365","book":"wrangle","sheet":"RawOrders","at":"S2","fill":31,"show":[{"sheet":"RawOrders","cols":"A:H","rows":5,"last":31}],"h":["hgR28BNDqAmdRzqd"]},{"id":"w1-name","kind":"formula","topic":"TRIM / PROPER","q":"In <b>RawOrders!S2</b>, clean Customer (column G): remove extra spaces and capitalize each word (<code>\"  avery johnson \"</code> → <b>Avery Johnson</b>). Filled down to row 31.","plat":"xl365","book":"wrangle","sheet":"RawOrders","at":"S2","fill":31,"show":[{"sheet":"RawOrders","cols":"A:H","rows":5,"last":31}],"h":["sSxG5yzQvP-74K8c"]},{"id":"w1-blank","kind":"formula","topic":"Missing values","q":"Write a formula that counts the Qty cells (E2:E31) that are <b>completely empty</b>.","plat":"xl365","book":"wrangle","at":"B2","show":[{"sheet":"RawOrders","cols":"A:H","rows":5,"last":31}],"h":["Na_pnkGK_uVf_9as"]},{"id":"w1-fake","kind":"formula","topic":"Missing values","q":"Write a formula that counts the Qty cells (E2:E31) holding a <b>fake-null word</b>: <code>N/A</code>, <code>-</code> or <code>null</code>.","plat":"xl365","book":"wrangle","at":"B2","show":[{"sheet":"RawOrders","cols":"A:H","rows":5,"last":31}],"h":["A3SfHzZGWnqnZdk0"]},{"id":"w1-euro","kind":"formula","topic":"Dates","q":"RawOrders!D19 holds the European date text <code>03.09.2026</code> (day.month.year = 3 September 2026). Write a formula that builds a <b>real date</b> from that cell's text.","plat":"xl365","book":"wrangle","at":"B2","show":[{"sheet":"RawOrders","cols":"A:H","rows":5,"last":31}],"same":true,"h":["5xV_Zyl5WLweJtVj"]},{"id":"w1-zeros","kind":"mc","topic":"Leading zeros","q":"Why does it matter that item code <code>0104</code> became the number <code>104</code>?","opts":["Lookups against the text code \"0104\" will not match","Numbers take more memory","104 is a different product","It does not matter"],"h":["GLoF1LonKrkeLmA0"]},{"id":"w1-nulls","kind":"mc","topic":"Missing values","q":"Which of these is a <b>fake null</b> that should be cleaned into a real blank?","opts":["\"N/A\"","0.5","\"S02\"","\"0104\""],"h":["rLMRGqYjtpwhwDo9"]},{"id":"w1-trim","kind":"text","topic":"TRIM / UPPER","q":"What does <code>=UPPER(TRIM(\"  s02 \"))</code> return?","h":["CgUEKLAGUTFGVySi"]},{"id":"w1-sumtext","kind":"mc","topic":"Text to numbers","q":"E2 holds the TEXT \"12\" and E3 holds the number 8. What does <code>=SUM(E2:E3)</code> return?","opts":["8","20","#VALUE!","128"],"h":["bsLJw9oA5GEgdWFu"]},{"id":"w1-zero","kind":"mc","topic":"Missing values","q":"Why not just replace every missing quantity with 0 before training an AI model?","opts":["The model learns that orders are smaller than they really are","Zero is not a number","AI models cannot read 0","It makes the file too big"],"h":["TKf97or73DzvgmsO"]},{"id":"w1-text","kind":"text","topic":"Leading zeros","q":"What does <code>=TEXT(7, \"000\")</code> return?","h":["DpuMYPVciuPlDtNc"]},{"id":"w1-isnum","kind":"mc","topic":"Text to numbers","q":"What does <code>=ISNUMBER(\"12\")</code> return?","opts":["FALSE","TRUE","12","#VALUE!"],"h":["cCsZMXMTG3gljBNR"]}],"wr2":[{"id":"w2-vlookup","kind":"formula","topic":"VLOOKUP","q":"In <b>RawOrders!S2</b>, look up the <b>Product name</b> for the row's ItemCode (column C) in <b>ItemCodes!A2:D25</b> (codes there are text like <code>0104</code>). Every row must find its product. Filled down to row 31.","plat":"xl365","book":"wrangle","sheet":"RawOrders","at":"S2","fill":31,"show":[{"sheet":"RawOrders","cols":"A:H","rows":5,"last":31},{"sheet":"ItemCodes","cols":"A:D","rows":3,"last":25}],"h":["WTqI5go8KVuHcKPw"]},{"id":"w2-hlookup","kind":"formula","topic":"HLOOKUP","q":"The Targets sheet runs <b>sideways</b> (stores across row 1). Write a formula that returns the <b>Sept Target for store S03</b>.","plat":"xl365","book":"wrangle","at":"B2","show":[{"sheet":"Targets","cols":"A:F","rows":4,"last":4}],"h":["vr1b__5gAhu-Ad4s"]},{"id":"w2-region","kind":"formula","topic":"HLOOKUP","q":"In <b>RawOrders!S2</b>, return the <b>Region</b> (Targets row 2) for the row's store — note the store codes in column B are messy. Filled down to row 31.","plat":"xl365","book":"wrangle","sheet":"RawOrders","at":"S2","fill":31,"show":[{"sheet":"RawOrders","cols":"A:H","rows":5,"last":31},{"sheet":"Targets","cols":"A:F","rows":4,"last":4}],"h":["0KjGrZggbC3ot72F"]},{"id":"w2-lastfirst","kind":"formula","topic":"Concatenation","q":"In <b>Contacts!G2</b>, build <b>Last, First</b> (like <code>Whitfield, Dana</code>). Filled down to row 9.","plat":"xl365","book":"wrangle","sheet":"Contacts","at":"G2","fill":9,"show":[{"sheet":"Contacts","cols":"A:F","rows":4,"last":9}],"h":["GHKMYQbHnTQ3mb5e"]},{"id":"w2-address","kind":"formula","topic":"Concatenation","q":"In <b>Contacts!G2</b>, build an address line like <code>Cumming, GA 30040</code> — Zip codes must always show <b>5 digits</b>. Filled down to row 9.","plat":"xl365","book":"wrangle","sheet":"Contacts","at":"G2","fill":9,"show":[{"sheet":"Contacts","cols":"A:F","rows":4,"last":9}],"h":["X4YpYQzkFctce3s1"]},{"id":"w2-textjoin","kind":"formula","topic":"TEXTJOIN","q":"Write ONE formula that joins all first names in <b>Contacts!A2:A9</b> into one cell, separated by a comma and a space.","plat":"xl365","book":"wrangle","at":"B2","show":[{"sheet":"Contacts","cols":"A:F","rows":4,"last":9}],"h":["_YUv_A4eRUUIuCO-"]},{"id":"w2-filter","kind":"formula","topic":"FILTER","q":"Write ONE formula that spills the <b>OrderIDs whose Qty (column E) is already a real number</b>.","plat":"xl365","book":"wrangle","at":"B2","show":[{"sheet":"RawOrders","cols":"A:H","rows":5,"last":31}],"h":["Fa7-MUVtclNmrPrA"]},{"id":"w2-tags","kind":"formula","topic":"Delimiters","q":"Tags (column F) are separated by <code>|</code>, like <code>snacks|drinks</code>. In <b>Contacts!G2</b>, count the <b>number of tags</b> (0 when empty). Filled down to row 9.","plat":"xl365","book":"wrangle","sheet":"Contacts","at":"G2","fill":9,"show":[{"sheet":"Contacts","cols":"A:F","rows":4,"last":9}],"h":["S2iDTIQqXyk4lFVu"]},{"id":"w2-na","kind":"mc","topic":"Why lookups fail","q":"<code>=VLOOKUP(C2, ItemCodes!A2:D25, 2, FALSE)</code> shows <code>#N/A</code> when C2 is the number 104 and the table has \"0104\". Why?","opts":["The number 104 and the text \"0104\" are different values","VLOOKUP cannot read numbers","The column number is wrong","The table must be sorted"],"h":["SQ5YF2ATQmMyV6Xy"]},{"id":"w2-hrow","kind":"mc","topic":"HLOOKUP","q":"Where does HLOOKUP search for the key?","opts":["Across the first row of the table","Down the first column","In every cell","In the last row"],"h":["pQSIbrVwa6SW6KA-"]},{"id":"w2-tj","kind":"text","topic":"TEXTJOIN","q":"What does <code>=TEXTJOIN(\"-\", TRUE, \"a\", \"\", \"b\")</code> return?","h":["KUYkZckzRFavMPoN"]},{"id":"w2-colnum","kind":"mc","topic":"VLOOKUP","q":"In <code>=VLOOKUP(key, ItemCodes!A2:D25, 4, FALSE)</code>, which column is returned?","opts":["Column D (the 4th column of the table)","Column 4 of the whole sheet only if the table starts in A","The 4th matching row","Column E"],"h":["w823A-LGpqscNlU9"]},{"id":"w2-delim","kind":"mc","topic":"Delimiters","q":"What is a delimiter?","opts":["A character that separates values, like , or | or a tab","A function that removes spaces","A type of number format","The header row"],"h":["qqOFfOnchihQHDsU"]},{"id":"w2-dollar","kind":"mc","topic":"Absolute references","q":"Why write <code>ItemCodes!$A$2:$D$25</code> (with $) in a VLOOKUP you will fill down?","opts":["So the lookup table does not shift as the formula moves down","To format the result as money","Because VLOOKUP requires $","To make it faster"],"h":["b13dFeXqJsE606uh"]},{"id":"w2-pad","kind":"text","topic":"Concatenation","q":"What does <code>=\"S\" &amp; TEXT(3, \"00\")</code> return?","h":["xA9eXT5TIVsmsRpL"]}],"sql":[{"id":"s-where","kind":"sql","topic":"WHERE","q":"List the <b>product and price</b> of every product in the <b>Electronics</b> category.","show":["products"],"h":["eiR63HKKHRGLq_-j"]},{"id":"s-top3","kind":"sql","topic":"ORDER BY / LIMIT","q":"List the <b>product and price of the 3 most expensive products</b>, most expensive first.","show":["products"],"ordered":true,"h":["7o7ODfMZuZN9gGu8"]},{"id":"s-group","kind":"sql","topic":"GROUP BY","q":"For each <b>store_id</b>, show the <b>total qty</b> sold (two columns: store_id, total).","show":["sales"],"h":["1nwxxsFUVQxGKt9x"]},{"id":"s-join","kind":"sql","topic":"JOIN","q":"For every sale at store <b>S05</b>, show the <b>order_id and the product name</b> (two columns).","show":["sales","products"],"h":["gePdwVrvNAaFXauM"]},{"id":"s-having","kind":"sql","topic":"HAVING","q":"Show each <b>category with more than 4 products</b> and its product count (two columns).","show":["products"],"h":["lpz5r8ueCFPLYZ6W"]},{"id":"s-avg","kind":"sql","topic":"Aggregates","q":"Show the <b>average qty</b> per sale (one value).","show":["sales"],"h":["yrUXtH0yhAow48R-"]},{"id":"s-city","kind":"sql","topic":"JOIN","q":"Show each <b>city</b> and its <b>revenue</b> (qty × price), highest revenue first (two columns).","show":["sales","stores","products"],"ordered":true,"h":["_lPdlC4_jQwOeOjb"]},{"id":"s-low","kind":"sql","topic":"WHERE","q":"List the <b>sku</b> of every product whose <b>in_stock is below its reorder_at</b>.","show":["products"],"h":["HrlBze3UID32AohP"]},{"id":"s-intdiv","kind":"mc","topic":"Integer division","q":"In SQLite, what is <code>SELECT 7 / 2;</code>?","opts":["3","3.5","4","An error"],"h":["Hrq2zQmLB4gT9sa0"]},{"id":"s-null","kind":"mc","topic":"NULL","q":"Which WHERE clause finds rows where qty is missing?","opts":["WHERE qty IS NULL","WHERE qty = NULL","WHERE qty = ''","WHERE qty = 0"],"h":["5WWjYl0Dpzaqge1d"]},{"id":"s-nowhere","kind":"mc","topic":"UPDATE safely","q":"What does <code>UPDATE products SET price = 0;</code> do?","opts":["Sets the price of EVERY product to 0","Nothing — WHERE is required","Sets only the first product","Shows an error"],"h":["TlLlxpitXxztjZC0"]},{"id":"s-having2","kind":"mc","topic":"HAVING","q":"What is the difference between WHERE and HAVING?","opts":["WHERE filters rows before grouping; HAVING filters groups after","They are the same","HAVING only works with text","WHERE only works with JOIN"],"h":["HDrUF6zsUFZHSuZ2"]},{"id":"s-count","kind":"text","topic":"Aggregates","q":"The products table has one row per product and there are 24 products. What does <code>SELECT COUNT(*) FROM products;</code> return?","h":["NiQXt-4ign-PoqAH"]},{"id":"s-joinlike","kind":"mc","topic":"JOIN","q":"Which spreadsheet idea is most like a SQL JOIN?","opts":["A VLOOKUP/XLOOKUP for every row","SUM","Sorting","Conditional formatting"],"h":["KtZn-J8mRJ0nFlqU"]},{"id":"s-quotes","kind":"mc","topic":"Syntax","q":"How is a text value written in standard SQL?","opts":["'Snacks' (single quotes)","\"Snacks\" (double quotes)","Snacks (no quotes)","[Snacks]"],"h":["rCpSDr6wm4UdmhlY"]}],"compare":[{"id":"cm-xl2013","kind":"formula","topic":"Translation","q":"Translate <code>=XLOOKUP(\"SKU-502\",Products!A2:A25,Products!B2:B25)</code> so it works in <b>Excel 2013</b>.","plat":"xl2013","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["nychj0hrynFGTqLZ"]},{"id":"cm-gssort","kind":"formula","topic":"Silent differences","q":"Excel 365's <code>=SORT(Products!B2:D25,3,-1)</code> sorts by price, highest first. Write the version that does the same in <b>Google Sheets</b>.","plat":"gs","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["PA5RCoe7Z3vO7y8w"]},{"id":"cm-maxifs","kind":"formula","topic":"Translation","q":"Translate <code>=MAXIFS(Products!D2:D25,Products!C2:C25,\"Electronics\")</code> for <b>Excel 2013</b> (highest Electronics price).","plat":"xl2013","at":"B2","show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["7m49k1xmpqGgwnop"]},{"id":"cm-concat","kind":"formula","topic":"Translation","q":"Excel 365's <code>=CONCAT(B2,\", \",C2)</code> breaks in Google Sheets. In <b>Stores!G2</b>, write a Sheets version (like <code>Cumming, GA</code>). Filled down to row 6.","plat":"gs","sheet":"Stores","at":"G2","fill":6,"show":[{"sheet":"Stores","cols":"A:F","rows":5,"last":6}],"h":["n6g1yHxm9zWYT3Sx"]},{"id":"cm-ifs","kind":"formula","topic":"Translation","q":"Translate <code>=IFS(D2&gt;=10,\"High\",D2&gt;=3,\"Mid\",TRUE,\"Low\")</code> for <b>Excel 2013</b>, in <b>Products!J2</b>. Filled down to row 25.","plat":"xl2013","sheet":"Products","at":"J2","fill":25,"show":[{"sheet":"Products","cols":"A:H","rows":4,"last":25}],"h":["dU60ePYHa9rYo7--"]},{"id":"cm-sql","kind":"sql","topic":"Spreadsheet → SQL","q":"Write the SQL version of <code>=SUMIF(Sales!C2:C61,\"S01\",Sales!E2:E61)</code> (one value).","show":["sales"],"h":["yn69g40zJOnaVHQV"]},{"id":"cm-everywhere","kind":"mc","topic":"Compatibility","q":"Which function works the same in Excel 365, Excel 2013 AND Google Sheets?","opts":["SUMIF","XLOOKUP","TEXTJOIN","LET"],"h":["ga6sVFBVOrIxAkRt"]},{"id":"cm-silent","kind":"mc","topic":"Silent differences","q":"Why is a \"silent difference\" between apps more dangerous than an error?","opts":["You get a wrong answer and nothing warns you","It crashes the app","It deletes the file","It only happens on phones"],"h":["IKmGdqUqZ09CPukt"]},{"id":"cm-errors","kind":"mc","topic":"Errors","q":"You type a broken formula. What do Excel and Google Sheets do?","opts":["Excel refuses it with a pop-up; Sheets accepts it and shows #ERROR!","Both show #ERROR!","Both show a pop-up","Excel shows #ERROR!; Sheets shows a pop-up"],"h":["ipz646Q5heLp6ztT"]},{"id":"cm-groupby","kind":"mc","topic":"Spreadsheet → SQL","q":"SQL's <code>GROUP BY store_id</code> with <code>SUM(qty)</code> is most like…","opts":["A SUMIF for every store at once","A VLOOKUP","Sorting by store","Deleting duplicates"],"h":["yZXsqnhtuf4gXpVO"]},{"id":"cm-hash","kind":"mc","topic":"Compatibility","q":"Where does the spill reference <code>B2#</code> work?","opts":["Only in Excel 365","Excel 365 and Excel 2013","Google Sheets only","All three"],"h":["wyuZiGyBd-Lpf8vc"]},{"id":"cm-share","kind":"mc","topic":"Compatibility","q":"You must share a lookup with people who might use Excel 2013 or Google Sheets. Which is safest?","opts":["INDEX + MATCH","XLOOKUP","FILTER","LET"],"h":["ocjNwMdjASvAnGjL"]},{"id":"cm-unique","kind":"text","topic":"Compatibility","q":"What does Excel 2013 show for <code>=UNIQUE(C2:C25)</code>?","h":["-z37E7wD311yHE-v","CasOmtUObJ4Da9nA"]}],"ml":[{"id":"m-balance","kind":"sql","topic":"Class balance","q":"Show <b>how many examples have each stockout value</b> (two columns: stockout, count).","show":["ml_examples"],"h":["MSDVw3mdFAnDnxew"]},{"id":"m-nulls","kind":"sql","topic":"Missing values","q":"Count the examples whose <b>units_last_week is missing</b> (one value).","show":["ml_examples"],"h":["QGnYcx8XTogc-Jm0"]},{"id":"m-split","kind":"sql","topic":"Train/test split","q":"Show <b>how many examples are in each split</b> (two columns: split, count).","show":["ml_examples"],"h":["KKbDSdY5gkAjyXd4"]},{"id":"m-leak","kind":"sql","topic":"Data leakage","q":"List the <b>week, store_id and sku</b> of every combination that appears in <b>both</b> the train and the test split (three columns).","show":["ml_examples"],"h":["PqwmEFmwKjV5HTLO"]},{"id":"m-acc","kind":"sql","topic":"Accuracy","q":"Return the model's <b>accuracy</b> on the test rows as a <b>fraction between 0 and 1</b> (one value). The model's guesses are in <code>predictions</code>.","show":["predictions","ml_examples"],"h":["ocYJCqwHymIycUEy"]},{"id":"m-confusion","kind":"sql","topic":"Confusion matrix","q":"Build the <b>confusion matrix</b>: one row per (real stockout, predicted) pair that occurs, with its count (three columns).","show":["predictions","ml_examples"],"h":["jEUwKrL2XutPE4pO"]},{"id":"m-trainavg","kind":"sql","topic":"Missing values","q":"Return the <b>average units_last_week of the training rows</b>, skipping missing values (one value).","show":["ml_examples"],"h":["mKjyeKprkFSZQgQT"]},{"id":"m-fill","kind":"sql","topic":"Missing values","q":"List every <b>example_id</b> with its <b>units_last_week, using 0 where the value is missing</b> (two columns).","show":["ml_examples"],"h":["X2gjxVeCLSA1pWzK"]},{"id":"m-rate","kind":"sql","topic":"Class balance","q":"Return the <b>fraction of training examples that are stockouts</b> (a number between 0 and 1).","show":["ml_examples"],"h":["j1Quj1KIlProgki9"]},{"id":"m-trainset","kind":"probe","topic":"Feature tables","q":"Create a table <b>train_set</b> holding only the <b>training</b> rows, <b>without</b> restock_after, keeping the label <b>stockout</b>, and with each product's <b>category</b> joined in from products.","probes":["SELECT COUNT(*) FROM train_set;","SELECT restock_after FROM train_set;","SELECT COUNT(DISTINCT category) FROM train_set;","SELECT SUM(stockout) FROM train_set;","SELECT COUNT(*) FROM train_set WHERE category IS NULL;"],"h":["aRn_KHMGX-gdXitk"]},{"id":"m-label","kind":"mc","topic":"Features and labels","q":"In a machine-learning table, what is the <b>label</b>?","opts":["The answer the model is trying to predict","The name of the table","Any text column","The primary key"],"h":["DjmOdkh-ANs0x-QV"]},{"id":"m-id","kind":"mc","topic":"Features and labels","q":"Why should <code>example_id</code> NOT be used as a feature?","opts":["It is just a row number and says nothing about the real world","It is too large","It is a foreign key","Integers cannot be features"],"h":["f55YC5jsXpzwHwat"]},{"id":"m-target","kind":"mc","topic":"Data leakage","q":"A model that uses <code>restock_after</code> scores 100% in testing but fails in real life. Why?","opts":["restock_after is only known after the stockout happens — target leakage","The test set was too small","The model needed more features","restock_after has missing values"],"h":["1hfwKodRKoiA93yc"]},{"id":"m-dupes","kind":"mc","topic":"Data leakage","q":"Some test rows are copies of training rows. What happens to the test score?","opts":["It looks better than the model really is","It looks worse than the model really is","Nothing changes","The database refuses to run"],"h":["J5fxNghOhZVjaVD1"]},{"id":"m-paradox","kind":"mc","topic":"Baselines","q":"Only 1 in 6 test rows is a stockout. A model that ALWAYS predicts \"no stockout\" gets about 83% accuracy. Is it useful?","opts":["No — it never catches a single stockout","Yes — 83% is a B","Yes — it is never wrong about non-stockouts, so it is perfect","It depends on the computer"],"h":["EU9UM-_GDmLMcLw_"]},{"id":"m-fn","kind":"mc","topic":"Confusion matrix","q":"The real stockout was 1, but the model predicted 0. What kind of mistake is that?","opts":["A false negative (a missed stockout)","A false positive (a false alarm)","A true negative","A true positive"],"h":["5c7HzUvrY1PMCgpX"]},{"id":"m-time","kind":"mc","topic":"Train/test split","q":"Why are weeks 1–4 used for training and weeks 5–6 for testing, instead of mixing all weeks?","opts":["A real model predicts the future, so it should be tested on later weeks it never saw","Later weeks have more rows","SQL can only sort by week","It makes the label balanced"],"h":["mSKjU2VkfC3dfMKu"]},{"id":"m-acc18","kind":"text","topic":"Accuracy","q":"A model is right on 18 of 24 test rows. What is its accuracy, in percent? (number only)","h":["NLQ6uerHG8xQD1B-","q7UmA-wxwiWL5apt"]}],"rdbms":[{"id":"r-clubs","kind":"probe","topic":"Primary keys / NOT NULL","q":"Create a table <b>clubs</b> with <b>club_id</b> (a whole-number primary key the database fills in automatically) and <b>name</b> (text that can never be missing).","probes":["INSERT INTO clubs (name) VALUES ('Chess');","INSERT INTO clubs (name) VALUES (NULL);","INSERT INTO clubs (club_id, name) VALUES (1, 'Again');","INSERT INTO clubs (club_id, name) VALUES (7, 'Robotics');","SELECT club_id, name FROM clubs ORDER BY club_id;"],"h":["zycv7yaBLL8usKo5"]},{"id":"r-members","kind":"probe","topic":"Foreign keys","q":"Create two tables: <b>clubs</b> (club_id INTEGER primary key, name TEXT) and <b>members</b> (member_id INTEGER primary key, name TEXT, club_id) — where a member's <b>club_id must point to a club that exists</b>.","probes":["INSERT INTO clubs (club_id, name) VALUES (1, 'Chess');","INSERT INTO members (member_id, name, club_id) VALUES (10, 'Ana', 1);","INSERT INTO members (member_id, name, club_id) VALUES (11, 'Ben', 99);","DELETE FROM clubs WHERE club_id = 1;","SELECT COUNT(*) FROM members;"],"h":["3t-JGtarxsvwQnZH"]},{"id":"r-check","kind":"probe","topic":"CHECK constraints","q":"Create a table <b>grades</b> with <b>student</b> (text, never missing) and <b>score</b> (a whole number that must be <b>between 0 and 100</b>, inclusive).","probes":["INSERT INTO grades VALUES ('A', 95);","INSERT INTO grades VALUES ('B', 101);","INSERT INTO grades VALUES ('C', -1);","INSERT INTO grades VALUES (NULL, 50);","INSERT INTO grades VALUES ('D', 0);","INSERT INTO grades VALUES ('E', 100);","SELECT COUNT(*) FROM grades;"],"h":["BQ3m7rMw9R3Wi_X3"]},{"id":"r-unique","kind":"probe","topic":"UNIQUE","q":"Create a table <b>accounts</b> with <b>id</b> (INTEGER primary key) and <b>email</b> — text that is required and can <b>never be used twice</b>.","probes":["INSERT INTO accounts (email) VALUES ('a@school.org');","INSERT INTO accounts (email) VALUES ('a@school.org');","INSERT INTO accounts (email) VALUES (NULL);","INSERT INTO accounts (email) VALUES ('b@school.org');","SELECT COUNT(*) FROM accounts;"],"h":["1_UKY5pLbHVzuZk3"]},{"id":"r-default","kind":"probe","topic":"DEFAULT","q":"Create a table <b>tickets</b>: <b>ticket_id</b> (INTEGER primary key), <b>title</b> (required text) and <b>status</b> (text that is <b>'open'</b> when nobody gives one).","probes":["INSERT INTO tickets (title) VALUES ('Printer jam');","INSERT INTO tickets (title, status) VALUES ('Wifi', 'closed');","INSERT INTO tickets (status) VALUES ('open');","SELECT title, status FROM tickets ORDER BY ticket_id;"],"h":["2Wi6yPBnAWBYB-kE"]},{"id":"r-tx","kind":"probe","topic":"Transactions","q":"Raise the price of every <b>Snacks</b> product by <b>10%</b>, as <b>one transaction</b> (BEGIN … COMMIT) so the change is saved for good.","probes":["BEGIN;","ROLLBACK;","SELECT sku, ROUND(price, 3) FROM products WHERE category = 'Snacks' ORDER BY sku;","SELECT COUNT(*) FROM products WHERE category <> 'Snacks' AND price > 30;"],"must":["BEGIN","COMMIT"],"h":["uYcsuoe1KZZFN5IN"]},{"id":"r-join","kind":"sql","topic":"Keys & JOIN","q":"Use the foreign key <code>sales.store_id → stores.store_id</code> to list every <b>order_id with its store's manager</b> (two columns).","show":["sales","stores"],"h":["TtzMcyR_Qmobbpam"]},{"id":"r-pk","kind":"mc","topic":"Primary keys","q":"What is a primary key?","opts":["A column whose value is different for every row, used as the row's ID","The first column of every table","A password for the database","A column that links to another table"],"h":["tu8-0p3NnwXaLagY"]},{"id":"r-fk","kind":"mc","topic":"Foreign keys","q":"<code>sales.sku</code> REFERENCES <code>products.sku</code>. What does the database do with a sale for SKU-999 (no such product)?","opts":["Refuses the INSERT","Creates SKU-999 in products","Saves it with a warning","Changes it to NULL"],"h":["QzSOsU-p-W40BMnT"]},{"id":"r-anomaly","kind":"mc","topic":"Normalization","q":"A flat sheet repeats each product's price on every order row. Someone fixes the price on only one row. This is called…","opts":["An update anomaly","A foreign key","A transaction","Normalization"],"h":["rH-jeWAtBGFJo-WK"]},{"id":"r-atomic","kind":"mc","topic":"Transactions","q":"Halfway through a money transfer inside BEGIN … COMMIT, the power fails. What happens?","opts":["The unfinished transaction is undone — no money is lost","Half the transfer is saved","The database is destroyed","The money is doubled"],"h":["mH59gunxP2UZrIMJ"]},{"id":"r-notdb","kind":"mc","topic":"What is an RDBMS","q":"Which of these is NOT a relational database management system?","opts":["A CSV file","PostgreSQL","MySQL","SQLite"],"h":["L5wUZEGqbQkJcSiA"]},{"id":"r-strict","kind":"mc","topic":"Data types","q":"products.price is a REAL column in a STRICT table. What happens with <code>UPDATE products SET price = 'cheap'</code>?","opts":["The database refuses it","The price becomes 0","It is stored as text","Every price becomes \"cheap\""],"h":["-BejtXla-_koZohJ"]},{"id":"r-norm","kind":"mc","topic":"Normalization","q":"What does normalization mean?","opts":["Store each fact once, in one place, and link to it with keys","Make all numbers between 0 and 1","Sort every table","Delete NULL values"],"h":["HvK0mhQV2SRSHdn2"]},{"id":"r-rollback","kind":"mc","topic":"Transactions","q":"After <code>BEGIN; DELETE FROM sales;</code> you run <code>ROLLBACK;</code>. How many sales rows are left (there were 60)?","opts":["60","0","59","It depends on the computer"],"h":["XA7lPdFDriddP-Nr"]},{"id":"r-acid","kind":"mc","topic":"Transactions","q":"In ACID, what does the <b>A (atomicity)</b> promise?","opts":["All of a transaction's changes happen, or none do","Data is encrypted","Queries run fast","Tables have primary keys"],"h":["Pl5KVp9sad9nkRp2"]}]};
+})(globalThis.SX = globalThis.SX || {});
+
 // ---- challenges.js ----
 /* SheetEX — challenge bank. Each challenge is auto-checked against the student's own work. */
 (function (SX) {
@@ -5616,6 +6183,101 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     task: 'In a database transaction, <b>atomic</b> means…', options: ['The data is very small', 'Either every change happens or none of them do', 'It runs as fast as possible', 'The data is encrypted'], answer: 1,
     hints: ['Remember the lunch-money power failure.'], learn: 'Atomic = indivisible. ACID: Atomic, Consistent, Isolated, Durable.' });
 
+  // ===== Lesson 10: Databases for Machine Learning (ML Data Lab) =====
+  var MF = SX.mldata ? SX.mldata.FACTS : null;
+  function mlRows(h) { return h.last && h.last.rows ? h.last.rows : null; }
+  function mlSingle(h) { var r = mlRows(h); return r && r.length === 1 && r[0].length === 1 ? r[0][0] : undefined; }
+  function mlNeedLast(h) { return mlRows(h) ? null : no('Run a SELECT query in any console on this page first — the check looks at your most recent result.'); }
+  add({ id: 'ml-quiz-label', plat: 'ml', type: 'quiz', title: 'Find the Label', xp: 10, level: 1,
+    task: 'The model will predict whether a product <b>runs out</b> this week. Which column of <code>ml_examples</code> is the <b>label</b>?',
+    options: ['example_id', 'promo', 'stockout', 'split'], answer: 2,
+    hints: ['The label is the answer the model is trying to guess.'], learn: 'The label is the answer column. Everything the model may look at to guess it is a feature.' });
+  add({ id: 'ml-roles', plat: 'ml', title: 'Sort the Columns', xp: 20, level: 2,
+    task: 'In section <b>1</b>, give every column its job — ID, feature, label, split, or "known only afterwards" — and press <b>Check my sorting</b>.',
+    hints: ['example_id is just a row number; split and week decide train vs test.', 'One column is filled in AFTER the week is over. A model could never know it in time.'],
+    learn: 'Before any AI work, decide what each column is for. IDs and after-the-fact columns must never be features.',
+    check: function (h) { return h.rolesOk ? ok() : no('Sort every column in section 1 and press "Check my sorting" until all are right.'); } });
+  add({ id: 'ml-balance', plat: 'ml', title: 'Count the Classes', xp: 15, level: 1,
+    task: 'Write a query that shows <b>how many examples have each stockout value</b> (0 and 1).',
+    hints: ['GROUP BY the label column.', 'SELECT stockout, COUNT(*) FROM ml_examples GROUP BY stockout;'],
+    learn: 'Only about 1 in 4 examples is a stockout. With imbalanced classes, "accuracy" alone can fool you.',
+    check: function (h) {
+      var miss = mlNeedLast(h); if (miss) return miss;
+      var r = mlRows(h), m = {}; r.forEach(function (row) { if (row.length >= 2) m[String(row[0])] = row[row.length - 1]; });
+      return r.length === 2 && m['0'] === MF.neg && m['1'] === MF.pos ? ok(MF.neg + ' non-stockouts and ' + MF.pos + ' stockouts.') : no('Your last result should have 2 rows: each stockout value (0, 1) and how many examples have it.');
+    } });
+  add({ id: 'ml-nulls', plat: 'ml', title: 'Hunt the Missing Values', xp: 15, level: 1,
+    task: 'Write a query that counts the examples where <code>units_last_week</code> is <b>missing</b>.',
+    hints: ['Missing in SQL is NULL — and you test it with IS NULL.', 'SELECT COUNT(*) FROM ml_examples WHERE units_last_week IS NULL;'],
+    learn: 'Models cannot use NULL directly. You must drop those rows, fill them in (for example with the average), or add a "was missing" flag — and write down which you chose.',
+    check: function (h) { var miss = mlNeedLast(h); if (miss) return miss; return mlSingle(h) === MF.nulls ? ok(MF.nulls + ' missing values.') : no('Your last result should be ONE number: how many rows have units_last_week IS NULL.'); } });
+  add({ id: 'ml-split', plat: 'ml', title: 'Check the Split', xp: 15, level: 1,
+    task: 'Show <b>how many examples are in each split</b> (train and test).',
+    hints: ['GROUP BY split.'],
+    learn: 'The test rows are the model’s final exam. It must never study them.',
+    check: function (h) {
+      var miss = mlNeedLast(h); if (miss) return miss;
+      var r = mlRows(h), m = {}; r.forEach(function (row) { if (row.length >= 2) m[String(row[0])] = row[row.length - 1]; });
+      return r.length === 2 && m.train === MF.train && m.test === MF.test ? ok(MF.train + ' training and ' + MF.test + ' test examples.') : no('Your last result should have 2 rows: train and test, each with its count.');
+    } });
+  add({ id: 'ml-dupes', plat: 'ml', title: 'Catch the Leak', xp: 30, level: 3,
+    task: 'Some test rows are <b>copies of training rows</b> (same week, store_id and sku). Write a query that lists the <b>week, store_id and sku</b> of every example that appears in <b>both</b> splits.',
+    hints: ['GROUP BY week, store_id, sku — then keep only the groups that have more than one split.', 'HAVING COUNT(DISTINCT split) > 1'],
+    learn: 'If the model is tested on rows it already studied, its test score is a lie. Removing duplicates across splits is a basic step in every real ML project.',
+    check: function (h) {
+      var miss = mlNeedLast(h); if (miss) return miss;
+      var r = mlRows(h), want = MF.leakedKeys.map(function (k) { return k.join('|'); }).sort();
+      var got = r.map(function (row) { return row.slice(0, 3).join('|'); }).sort();
+      return JSON.stringify(got) === JSON.stringify(want) ? ok('Found all ' + want.length + ' leaked copies.') : no('Your last result has ' + r.length + ' row(s). It should list exactly the (week, store_id, sku) combinations that appear in BOTH train and test — the first three columns, in that order.');
+    } });
+  add({ id: 'ml-quiz-leak', plat: 'ml', type: 'quiz', title: 'Too Good to Be True', xp: 15, level: 2,
+    task: 'Which column would let a model "cheat", because it is only known <b>after</b> the week is over?',
+    options: ['promo', 'in_stock_start', 'restock_after', 'price'], answer: 2,
+    hints: ['Read the column descriptions in section 1.'], learn: 'restock_after is filled in after a stockout happens. Using it is target leakage: perfect in testing, useless in real life.' });
+  add({ id: 'ml-leakdemo', plat: 'ml', title: 'Watch a Model Cheat', xp: 15, level: 1,
+    task: 'In section <b>4</b>, run the model that uses <code>restock_after</code> and see its "perfect" score.',
+    hints: ['Press "Train a model that uses restock_after".'],
+    learn: 'A perfect score is a warning sign. Real models are never perfect — check for leakage first.',
+    check: function (h) { return h.sawLeak ? ok() : no('Run the cheating model in section 4.'); } });
+  add({ id: 'ml-features', plat: 'ml', title: 'Build the Training Table', xp: 35, level: 3,
+    task: 'Create a table <code>train_set</code> with <b>only the training rows</b>, <b>without</b> the leaky <code>restock_after</code> column, and with the product\'s <b>category</b> joined in from <code>products</code>.',
+    hints: ['CREATE TABLE train_set AS SELECT … FROM ml_examples e JOIN products p ON e.sku = p.sku WHERE …', "Pick the columns you want, e.g. e.example_id, e.promo, e.price, e.units_last_week, e.in_stock_start, p.category, e.stockout — and WHERE e.split = 'train'."],
+    learn: 'A "feature table" is a JOIN that gathers every input the model may use — and nothing it must not see.',
+    check: function (h) {
+      var t = h.table('train_set'); if (!t) return no('There is no train_set table yet. Use CREATE TABLE train_set AS SELECT …');
+      var names = t.cols.map(function (c) { return c.name.toLowerCase(); });
+      if (names.indexOf('restock_after') >= 0) return no('train_set still has restock_after — leave the leaky column out.');
+      if (names.indexOf('category') < 0) return no('train_set needs a category column (JOIN products).');
+      if (names.indexOf('stockout') < 0) return no('Keep the label (stockout) — the model learns from it.');
+      var si = names.indexOf('split');
+      if (si >= 0 && t.rows.some(function (r) { return r[si] !== 'train'; })) return no('Some test rows got into train_set.');
+      return t.rows.length === MF.train ? ok('train_set has ' + MF.train + ' training rows and ' + names.length + ' columns.') : no('train_set has ' + t.rows.length + ' rows; it should have exactly the ' + MF.train + ' training rows.');
+    } });
+  add({ id: 'ml-accuracy', plat: 'ml', title: 'Grade the Model', xp: 25, level: 2,
+    task: 'The <code>predictions</code> table holds a model\'s guesses for the test rows. Write ONE query that returns the model\'s <b>accuracy</b>: the fraction (or percent) of predictions that match the real <code>stockout</code>.',
+    hints: ['JOIN predictions to ml_examples on example_id.', 'In SQLite, (predicted = stockout) is 1 when right and 0 when wrong — so AVG of it is the accuracy.', 'SELECT AVG(p.predicted = e.stockout) FROM predictions p JOIN ml_examples e ON p.example_id = e.example_id;'],
+    learn: 'Accuracy = right guesses ÷ all guesses. It is the first number everyone asks about — and often not the most important one.',
+    check: function (h) {
+      var miss = mlNeedLast(h); if (miss) return miss;
+      var v = mlSingle(h);
+      return typeof v === 'number' && (near(v, MF.accuracy, 0.001) || near(v, MF.accuracy * 100, 0.1)) ? ok('Accuracy: ' + Math.round(MF.accuracy * 100) + '%.') : no('Your last result should be ONE number: the share of predictions that equal stockout.');
+    } });
+  add({ id: 'ml-confusion', plat: 'ml', title: 'Build a Confusion Matrix', xp: 30, level: 3,
+    task: 'Write a query that counts the test predictions for <b>every combination of real stockout and predicted value</b> (columns: stockout, predicted, count).',
+    hints: ['JOIN predictions to ml_examples, then GROUP BY two columns.', 'SELECT e.stockout, p.predicted, COUNT(*) FROM predictions p JOIN ml_examples e ON p.example_id = e.example_id GROUP BY e.stockout, p.predicted;'],
+    learn: 'The confusion matrix shows WHICH mistakes a model makes: missed stockouts (false negatives) and false alarms (false positives).',
+    check: function (h) {
+      var miss = mlNeedLast(h); if (miss) return miss;
+      var cm = MF.cm, want = { '1|1': cm.tp, '0|1': cm.fp, '1|0': cm.fn, '0|0': cm.tn }, r = mlRows(h), ok2 = true, seen = 0;
+      r.forEach(function (row) { var k = row[0] + '|' + row[1]; if (want[k] === undefined || want[k] !== row[2]) ok2 = false; else seen++; });
+      var need = Object.keys(want).filter(function (k) { return want[k] > 0; }).length;
+      return ok2 && seen === need ? ok('Right: ' + (cm.tp + cm.tn) + ', missed stockouts: ' + cm.fn + ', false alarms: ' + cm.fp + '.') : no('Each row should be: real stockout, predicted value, and the count for that pair — one row per pair that occurs.');
+    } });
+  add({ id: 'ml-quiz-baseline', plat: 'ml', type: 'quiz', title: 'Beat the Baseline', xp: 15, level: 2,
+    task: 'On the test rows, "always predict 0 (no stockout)" is right <b>' + (MF ? Math.round(MF.baseline * 100) : 83) + '%</b> of the time. The real model is right <b>' + (MF ? Math.round(MF.accuracy * 100) : 75) + '%</b> of the time. What does this tell you?',
+    options: ['The model is great — 75% is a passing grade', 'With rare stockouts, accuracy is misleading: the model is worse than doing nothing', 'The test set is too big', 'Baselines are always 83%'], answer: 1,
+    hints: ['Would the "always 0" model ever warn the store about a stockout?'], learn: 'Always compare with a baseline, and look at the confusion matrix. A model that never predicts the rare class can still have high accuracy.' });
+
   // ===== Compare-page quizzes =====
   add({ id: 'cmp-name', plat: 'compare', type: 'quiz', title: 'Who Says #NAME?', xp: 10, level: 1,
     task: 'Where does <code>=XLOOKUP(A2, B:B, C:C)</code> give a <b>#NAME?</b> error?',
@@ -5697,6 +6359,8 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       skills: ['SELECT, WHERE, ORDER BY', 'GROUP BY and HAVING', 'JOIN (the SQL VLOOKUP)', 'Integer division', 'UPDATE safely'] },
     { id: 'rdbms', n: 9, title: 'Databases 101: What is an RDBMS?', tool: 'RDBMS Explorer', workspace: 'rdbms',
       skills: ['Tables, rows, columns and data types', 'Primary keys and foreign keys', 'Relationships and JOINs', 'Constraints that refuse bad data', 'Transactions and ACID'] },
+    { id: 'ml', n: 10, title: 'Databases for Machine Learning', tool: 'ML Data Lab', workspace: 'ml',
+      skills: ['Examples, features and labels', 'Class balance and baselines', 'Missing values', 'Train/test splits and data leakage', 'Grading a model: accuracy and the confusion matrix'] },
     { id: 'compare', n: 8, title: 'Cross-Platform Translator', tool: 'Compare', workspace: 'compare',
       skills: ['Which functions exist where', 'Silent differences between apps', 'Spreadsheet ideas in SQL'] }
   ];
@@ -5795,6 +6459,20 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       ],
       traps: ['A spreadsheet that repeats the same fact in many rows will eventually disagree with itself.', 'A foreign key must point at a row that already exists — add the parent first.', 'Nothing inside BEGIN is permanent until COMMIT.']
     },
+    ml: {
+      why: 'A machine-learning model only knows what its training table shows it. Most AI mistakes are really data mistakes: the wrong rows, a column that gives away the answer, or a test that was secretly part of the training. SQL is how data scientists find them.',
+      terms: [
+        ['Example', 'One row the model learns from.', 'Product SKU-101 at store S03 in week 2'],
+        ['Feature', 'An input column the model may use to make its guess.', 'promo, price, units_last_week'],
+        ['Label', 'The answer the model is trying to predict.', 'stockout (1 = ran out, 0 = did not)'],
+        ['Class imbalance', 'One answer is much rarer than the other.', '17 stockouts vs 47 non-stockouts'],
+        ['Train / test split', 'Learn from some rows; check on rows the model has never seen.', "WHERE split = 'test'"],
+        ['Data leakage', 'The model sees the answer during training — test copies, or a column only known afterwards.', 'restock_after'],
+        ['Baseline', 'The score of a "dumb" model. A real model must beat it.', 'Always predict 0'],
+        ['Confusion matrix', 'Counts of right and wrong guesses for each answer.', 'GROUP BY stockout, predicted']
+      ],
+      traps: ['High accuracy can be meaningless when one answer is rare — compare with a baseline.', 'If a model looks perfect, look for leakage before celebrating.', 'Never let test rows (or copies of them) into the training table.']
+    },
     compare: {
       why: 'The same formula can work, fail, or silently give a different answer depending on the app. Checking before you share is a professional habit.',
       terms: [
@@ -5810,47 +6488,25 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
 
   function byId(id) { return LESSONS.filter(function (l) { return l.id === id; })[0]; }
 
-  // --- tiny base64 (works in browsers and in tests) ---
-  var B = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-  function utf8(s) { return unescape(encodeURIComponent(s)); }
-  function b64(s) {
-    s = utf8(s); var out = '';
-    for (var i = 0; i < s.length; i += 3) {
-      var n = (s.charCodeAt(i) << 16) | ((s.charCodeAt(i + 1) || 0) << 8) | (s.charCodeAt(i + 2) || 0);
-      out += B[(n >> 18) & 63] + B[(n >> 12) & 63] + (i + 1 < s.length ? B[(n >> 6) & 63] : '') + (i + 2 < s.length ? B[n & 63] : '');
-    }
-    return out;
-  }
-  function unb64(s) {
-    var bytes = '';
-    for (var i = 0; i < s.length; i += 4) {
-      var n = 0, k;
-      for (k = 0; k < 4; k++) { var ch = s[i + k]; n = n * 64 + (ch === undefined ? 0 : B.indexOf(ch)); }
-      var len = Math.min(3, Math.floor((s.length - i) * 3 / 4));
-      for (k = 0; k < len; k++) bytes += String.fromCharCode((n >> (16 - 8 * k)) & 255);
-    }
-    return decodeURIComponent(escape(bytes));
-  }
-  // Tamper-evidence only: anyone who reads the source can recompute this.
-  function sum(s) { var x = 2026; for (var i = 0; i < s.length; i++) x = (x * 33 + s.charCodeAt(i)) % 2147483629; return x.toString(36); }
-
+  // ---- Certificate codes: sealed with SX.seal (see seal.js), strictly validated when read ----
   function certCode(c) {
-    var json = JSON.stringify({ n: c.name, l: c.lesson, x: c.xp, m: c.maxXp, h: c.hints, c: c.count, t: c.time });
-    return 'SXC1-' + b64(json) + '-' + sum(json);
+    return SX.seal.pack('SXC2', { n: c.name, i: c.sid, l: c.lesson, x: c.xp, m: c.maxXp, h: c.hints, c: c.count, s: c.score, q: c.of, a: c.attempts, d: c.secs, t: c.time });
   }
+  function isInt(x, lo, hi) { return typeof x === 'number' && Math.floor(x) === x && x >= lo && x <= hi; }
   function readCert(code) {
-    var m = /^SXC1-([A-Za-z0-9_-]+)-([a-z0-9]+)$/.exec(String(code).trim());
-    if (!m) return null;
-    try {
-      var json = unb64(m[1]);
-      if (sum(json) !== m[2]) return null;
-      var o = JSON.parse(json), L = byId(o.l);
-      return { name: o.n, lesson: o.l, title: L ? L.title : o.l, xp: o.x, maxXp: o.m, hints: o.h, count: o.c, time: o.t };
-    } catch (e) { return null; }
+    var r = SX.seal.unpack('SXC2', code);
+    if (!r.ok) return r;
+    var o = r.obj, L = byId(o.l), keys = ['n', 'i', 'l', 'x', 'm', 'h', 'c', 's', 'q', 'a', 'd', 't'];
+    var exact = o && typeof o === 'object' && Object.keys(o).length === keys.length && keys.every(function (k) { return k in o; });
+    var ok = exact && L && typeof o.n === 'string' && o.n.length >= 3 && o.n.length <= 40 && /^[A-Za-z0-9_-]{12}$/.test(o.i) &&
+      isInt(o.x, 0, 10000) && isInt(o.m, 1, 10000) && o.x <= o.m && isInt(o.h, 0, 500) && isInt(o.c, 1, 100) &&
+      isInt(o.q, 1, 50) && isInt(o.s, 0, o.q) && isInt(o.a, 1, 999) && isInt(o.d, 0, 86400) && isInt(o.t, 1.6e12, 4e12);
+    if (!ok) return { ok: false, why: 'This certificate code does not have the exact format SheetEX makes. It cannot be used.' };
+    return { ok: true, cert: { name: o.n, sid: o.i, lesson: o.l, title: L.title, n: L.n, xp: o.x, maxXp: o.m, hints: o.h, count: o.c,
+      score: o.s, of: o.q, attempts: o.a, secs: o.d, time: o.t } };
   }
-  function shortId(code) { return code.split('-').pop().toUpperCase(); }
 
-  SX.lessons = { LIST: LESSONS, byId: byId, certCode: certCode, readCert: readCert, shortId: shortId };
+  SX.lessons = { LIST: LESSONS, byId: byId, certCode: certCode, readCert: readCert };
 })(globalThis.SX = globalThis.SX || {});
 
 // ---- reference.js ----
@@ -6068,26 +6724,63 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
   UI.esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
 
   // ---------- Persistence ----------
-  var KEY = 'sheetex.v1';
-  function storageGet() { try { return window.localStorage.getItem(KEY); } catch (e) { return null; } }
+  // The save is split in two: CORE (name, XP, challenges, tests, certificates) is sealed with SX.seal so editing it
+  // in the browser's storage makes the whole save invalid; the rest (spreadsheets, files, settings) is plain.
+  var KEY = 'sheetex.v2';
+  var CORE = ['name', 'sid', 'xp', 'done', 'hints', 'wrong', 'errors', 'badges', 'visited', 'stats', 'certs', 'tests', 'created'];
+  function storageGet(k) { try { return window.localStorage.getItem(k || KEY); } catch (e) { return null; } }
   function storageSet(v) { try { window.localStorage.setItem(KEY, v); return true; } catch (e) { return false; } }
   function freshState() {
-    return { v: 1, name: '', xp: 0, done: {}, hints: {}, wrong: {}, errors: {}, badges: {}, visited: {},
-      stats: { formulas: 0, queries: 0, compat: 0, noHint: 0 }, wb: {}, db: null, files: null, colw: {}, ui: {} };
+    return { v: 2, name: '', sid: '', xp: 0, done: {}, hints: {}, wrong: {}, errors: {}, badges: {}, visited: {},
+      stats: { formulas: 0, queries: 0, compat: 0, noHint: 0 }, certs: {}, tests: {}, created: 0,
+      wb: {}, db: null, files: null, colw: {}, ui: {} };
   }
+  UI.freshState = freshState;
+  // Once a name is set it can never be changed: the property becomes read-only for the life of the page.
+  function lockIdentity(st) {
+    if (!st.name) return st;
+    ['name', 'sid'].forEach(function (k) { Object.defineProperty(st, k, { value: st[k], writable: false, enumerable: true, configurable: false }); });
+    return st;
+  }
+  UI.lockIdentity = lockIdentity;
+  function serialize(st) {
+    var core = {}; CORE.forEach(function (k) { core[k] = st[k]; });
+    var coreJson = JSON.stringify(core);
+    return JSON.stringify({ v: 2, core: coreJson, sig: SX.seal.mac('save|' + coreJson), wb: st.wb, db: st.db, files: st.files, colw: st.colw, ui: st.ui });
+  }
+  UI.serializeState = serialize;
+  UI.loadNotice = null;
+  function loadState(raw) {
+    var st = freshState();
+    if (!raw) return st;
+    var o = JSON.parse(raw);
+    if (!o || o.v !== 2 || typeof o.core !== 'string' || typeof o.sig !== 'string' || SX.seal.mac('save|' + o.core) !== o.sig) {
+      UI.loadNotice = 'The progress saved in this browser was changed outside SheetEX, so it could not be loaded. You are starting fresh. If you have a progress code, you can load it.';
+      return st;
+    }
+    var core = JSON.parse(o.core);
+    CORE.forEach(function (k) { if (core[k] !== undefined) st[k] = core[k]; });
+    ['wb', 'db', 'files', 'colw', 'ui'].forEach(function (k) { if (o[k] != null) st[k] = o[k]; });
+    return lockIdentity(st);
+  }
+  UI.loadState = loadState;
   UI.state = freshState();
-  try { var raw = storageGet(); if (raw) { var parsed = JSON.parse(raw); if (parsed && parsed.v === 1) UI.state = Object.assign(freshState(), parsed); } } catch (e) { /* start fresh */ }
-  UI.storageOk = storageSet(JSON.stringify(UI.state));
+  try { UI.state = loadState(storageGet()); } catch (e) { UI.state = freshState(); }
+  UI.storageOk = storageSet(serialize(UI.state));
 
   var saveTimer = null;
-  UI.save = function () {
+  function saveNow() {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(function () {
-      Object.keys(UI.wbs).forEach(function (p) { UI.state.wb[p] = UI.wbs[p].serialize(); });
-      if (UI.db) UI.state.db = UI.db.serialize();
-      if (UI.files) UI.state.files = UI.files;
-      storageSet(JSON.stringify(UI.state));
-    }, 300);
+    Object.keys(UI.wbs).forEach(function (p) { UI.state.wb[p] = UI.wbs[p].serialize(); });
+    if (UI.db) UI.state.db = UI.db.serialize();
+    if (UI.files) UI.state.files = UI.files;
+    storageSet(serialize(UI.state));
+  }
+  UI.saveNow = saveNow;
+  UI.save = function () { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 300); };
+  // Replace everything on this computer (used by "start over" and when loading someone's code on a fresh identity).
+  UI.replaceState = function (st) {
+    UI.state = st; UI.wbs = {}; UI.db = null; UI.files = null; saveNow();
   };
 
   // Workbooks / database / files live in memory, loaded lazily from saved state.
@@ -6167,6 +6860,10 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     { id: 'researcher', icon: '📚', name: 'Researcher', desc: 'Run 10 examples in the Interactive Cheat Sheet.', xp: 15 },
     { id: 'ai-ready', icon: '🤖', name: 'AI-Ready Data', desc: 'Reach an AI-readiness score of 100 in the Data Wrangling Lab.', xp: 40 },
     { id: 'done-rdbms', icon: '🗃️', name: 'Database Architect', desc: 'Finish Lesson 9: What is an RDBMS?', xp: 30 },
+    { id: 'done-ml', icon: '🧠', name: 'Data Scientist', desc: 'Finish Lesson 10: Databases for Machine Learning.', xp: 30 },
+    { id: 'certified', icon: '🎓', name: 'Certified', desc: 'Pass your first certification test.', xp: 25 },
+    { id: 'ace', icon: '💯', name: 'Perfect Score', desc: 'Score 100% on a certification test.', xp: 40 },
+    { id: 'cert-5', icon: '🏛️', name: 'Five Certificates', desc: 'Earn 5 certificates.', xp: 50 },
     { id: 'done-wr1', icon: '🧽', name: 'Data Janitor', desc: 'Finish Data Wrangling I: Cleaning.', xp: 30 },
     { id: 'done-wr2', icon: '🔗', name: 'Data Joiner', desc: 'Finish Data Wrangling II: Combining & Lookups.', xp: 30 },
     { id: 'done-compare', icon: '🔭', name: 'Big Picture', desc: 'Answer every Compare quiz.', xp: 20 },
@@ -6180,7 +6877,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     UI.state.xp += n;
     var after = UI.level(UI.state.xp);
     if (!silent) UI.toast('+' + n + ' XP', why, 'xp');
-    if (after.n > before.n) setTimeout(function () { levelUp(after); }, 600);
+    if (after.n > before.n) { clearTimeout(levelTimer); levelTimer = setTimeout(function () { whenFree(function () { levelUp(UI.level(UI.state.xp)); }); }, 600); }
     UI.save(); UI.refreshHeader();
   };
   UI.badge = function (id) {
@@ -6225,7 +6922,6 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     if (SX.challenges.LIST.every(function (c) { return UI.state.done[c.id]; })) UI.badge('all');
     if (window.confettiBurst) window.confettiBurst(30);
     UI.save();
-    if (UI.cloudAutoSave) UI.cloudAutoSave();
     if (UI.lessonFinished && mine.every(function (c) { return UI.state.done[c.id]; })) setTimeout(function () { UI.lessonFinished(ch.plat); }, 1800);
     return true;
   };
@@ -6279,7 +6975,15 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     return { close: close, el: box };
   };
 
+  var levelTimer = null, shownLevel = 0;
+  // Celebrate only when nothing else is on screen (a test result, a certificate), and only once per level.
+  function whenFree(fn) {
+    if (document.querySelector('.modal-overlay, #cert-overlay, .test-overlay')) { setTimeout(function () { whenFree(fn); }, 700); return; }
+    fn();
+  }
   function levelUp(lv) {
+    if (lv.n <= shownLevel) return;
+    shownLevel = lv.n;
     window.confettiBurst(80);
     UI.modal('Level up!', [
       h('div.levelup', null, [
@@ -6313,37 +7017,98 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     if (old) old.replaceWith(UI.header());
   };
 
-  // ---------- Profile & progress code ----------
-  function checksum(s) { var x = 7; for (var i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) % 1000003; return x.toString(36); }
-  UI.progressCode = function () {
-    var p = { n: UI.state.name, x: UI.state.xp, d: Object.keys(UI.state.done).map(function (k) { return k + ':' + UI.state.done[k].xp + ':' + (UI.state.done[k].hints || 0); }).join(','),
-      b: Object.keys(UI.state.badges).join(','), e: Object.keys(UI.state.errors).join(' '), t: Date.now() };
-    var json = JSON.stringify(p);
-    return 'SX1-' + btoa(unescape(encodeURIComponent(json))) + '-' + checksum(json);
+  // ---------- Identity, progress codes and profile ----------
+  // A name is First + Last, letters only (plus spaces, hyphens, apostrophes and periods).
+  UI.validName = function (v) {
+    v = String(v || '').trim().replace(/\s+/g, ' ');
+    if (v.length < 3 || v.length > 40) return null;
+    if (!/^[A-Za-zÀ-ÖØ-öø-ÿ'’.\- ]+$/.test(v) || !/\S+ \S+/.test(v)) return null;
+    return v;
   };
-  UI.decodeCode = function (code) {
-    var m = /^SX1-([A-Za-z0-9+/=]+)-([a-z0-9]+)$/.exec(String(code).trim());
-    if (!m) return null;
-    try {
-      var json = decodeURIComponent(escape(atob(m[1])));
-      if (checksum(json) !== m[2]) return null;
-      return JSON.parse(json);
-    } catch (e) { return null; }
-  };
-  // Merge a progress code into this browser (never lowers XP or removes anything)
-  UI.restoreFromCode = function (code) {
-    var p = UI.decodeCode(code), st = UI.state;
-    if (!p) return false;
-    st.name = p.n || st.name; st.xp = Math.max(st.xp, p.x);
-    (p.d ? p.d.split(',') : []).forEach(function (s) { var q = s.split(':'); if (q[0] && !st.done[q[0]]) st.done[q[0]] = { xp: +q[1], at: p.t, hints: q[2] ? +q[2] : 0 }; });
-    (p.b ? p.b.split(',') : []).forEach(function (b) { if (b) st.badges[b] = st.badges[b] || p.t; });
-    (p.e ? p.e.split(' ') : []).forEach(function (e) { if (e) st.errors[e] = st.errors[e] || p.t; });
-    UI.save();
+  function newSid() {
+    var b = [];
+    try { var a = new Uint8Array(9); window.crypto.getRandomValues(a); b = Array.prototype.slice.call(a); }
+    catch (e) { for (var i = 0; i < 9; i++) b.push(Math.floor(Math.random() * 256)); }
+    return SX.seal.b64u(b);
+  }
+  UI.setIdentity = function (name, sid) {
+    if (UI.state.name) return false; // already locked — never changes
+    UI.state.name = name; UI.state.sid = sid || newSid(); UI.state.created = UI.state.created || Date.now();
+    lockIdentity(UI.state); saveNow();
     return true;
   };
+
+  var ID_RE = /^[A-Za-z0-9_-]{12}$/;
+  function isInt(x, lo, hi) { return typeof x === 'number' && Math.floor(x) === x && x >= lo && x <= hi; }
+  function onlyKeys(o, allowed) { return o && typeof o === 'object' && !Array.isArray(o) && Object.keys(o).every(function (k) { return allowed.indexOf(k) >= 0; }); }
+  function lessonIds() { return SX.lessons.LIST.map(function (l) { return l.id; }); }
+  // Strict shape check: a code must look EXACTLY like one SheetEX makes, or it is refused.
+  UI.validProgress = function (p) {
+    if (!onlyKeys(p, ['n', 'i', 'x', 'd', 'b', 'e', 'c', 'ts', 't'])) return 'unexpected fields';
+    if (UI.validName(p.n) !== p.n) return 'bad name';
+    if (typeof p.i !== 'string' || !ID_RE.test(p.i)) return 'bad id';
+    if (!isInt(p.x, 0, 100000) || !isInt(p.t, 1.6e12, 4e12)) return 'bad numbers';
+    if (!onlyKeys(p.d, Object.keys(p.d || {}))) return 'bad challenges';
+    var ok = Object.keys(p.d).every(function (k) { var v = p.d[k]; return SX.challenges.byId(k) && Array.isArray(v) && v.length === 2 && isInt(v[0], 0, 1000) && isInt(v[1], 0, 10); });
+    if (!ok) return 'bad challenges';
+    var badgeIds = BADGES.map(function (x) { return x.id; });
+    if (!Array.isArray(p.b) || !p.b.every(function (x) { return badgeIds.indexOf(x) >= 0; })) return 'bad badges';
+    if (!Array.isArray(p.e) || !p.e.every(function (x) { return UI.ERROR_CODES.indexOf(x) >= 0; })) return 'bad errors';
+    var L = lessonIds();
+    if (!onlyKeys(p.c, L) || !Object.keys(p.c).every(function (k) { return isInt(p.c[k], 1.6e12, 4e12); })) return 'bad certificates';
+    if (!onlyKeys(p.ts, L)) return 'bad tests';
+    ok = Object.keys(p.ts).every(function (k) {
+      var t = p.ts[k];
+      return onlyKeys(t, ['b', 'q', 'a', 'p', 's']) && isInt(t.q, 1, 50) && isInt(t.b, 0, t.q) && isInt(t.a, 1, 999) && isInt(t.s, 0, 86400) && (t.p === 0 || isInt(t.p, 1.6e12, 4e12));
+    });
+    return ok ? '' : 'bad tests';
+  };
+  UI.progressCode = function () {
+    var st = UI.state, d = {}, c = {}, ts = {};
+    Object.keys(st.done).forEach(function (k) { d[k] = [st.done[k].xp | 0, st.done[k].hints | 0]; });
+    Object.keys(st.certs || {}).forEach(function (k) { if (st.certs[k] && st.certs[k].t) c[k] = st.certs[k].t; });
+    Object.keys(st.tests || {}).forEach(function (k) { var t = st.tests[k]; if (t && t.attempts) ts[k] = { b: t.best | 0, q: t.of | 0, a: t.attempts | 0, p: t.passed || 0, s: t.secs | 0 }; });
+    return SX.seal.pack('SXP2', { n: st.name, i: st.sid, x: st.xp | 0, d: d, b: Object.keys(st.badges), e: Object.keys(st.errors), c: c, ts: ts, t: Date.now() });
+  };
+  // -> { ok, p } or { ok:false, why }
+  UI.readProgress = function (code) {
+    var r = SX.seal.unpack('SXP2', code);
+    if (!r.ok) return r;
+    var bad = UI.validProgress(r.obj);
+    if (bad) return { ok: false, why: 'This code does not have the exact format SheetEX makes (' + bad + '). It cannot be used.' };
+    return { ok: true, p: r.obj };
+  };
+  function applyProgress(st, p) {
+    st.xp = Math.max(st.xp, p.x);
+    Object.keys(p.d).forEach(function (k) { if (!st.done[k]) st.done[k] = { xp: p.d[k][0], at: p.t, hints: p.d[k][1] }; });
+    p.b.forEach(function (b) { st.badges[b] = st.badges[b] || p.t; });
+    p.e.forEach(function (e) { st.errors[e] = st.errors[e] || p.t; });
+    Object.keys(p.ts).forEach(function (k) {
+      var t = p.ts[k], mine = st.tests[k] || { best: 0, of: t.q, attempts: 0, passed: 0, secs: 0 };
+      if (t.b / t.q > mine.best / Math.max(1, mine.of)) { mine.best = t.b; mine.of = t.q; mine.secs = t.s; }
+      mine.attempts = Math.max(mine.attempts, t.a);
+      if (t.p && (!mine.passed || t.p < mine.passed)) mine.passed = t.p;
+      st.tests[k] = mine;
+    });
+  }
+  // Load a progress code. Same student: merge (never lowers anything). Nobody here yet: become that student.
+  // A different student: replace everything (the name in a code can never be changed).
+  UI.restoreFromCode = function (code, opts) {
+    var r = UI.readProgress(code);
+    if (!r.ok) return r;
+    var p = r.p;
+    if (UI.state.name && UI.state.sid === p.i) { applyProgress(UI.state, p); saveNow(); return { ok: true, merged: true, name: p.n }; }
+    if (UI.state.name && !(opts && opts.replace)) return { ok: false, other: true, name: p.n, why: 'This code belongs to ' + p.n + '.' };
+    var st = freshState();
+    st.name = p.n; st.sid = p.i; st.created = p.t;
+    applyProgress(st, p);
+    if (UI.state.ui) st.ui = { guideSeen: UI.state.ui.guideSeen, wrIntro: UI.state.ui.wrIntro, wrIntroDone: UI.state.ui.wrIntroDone };
+    UI.replaceState(lockIdentity(st));
+    return { ok: true, name: p.n };
+  };
+
   UI.profile = function () {
     var st = UI.state, lv = UI.level(st.xp);
-    var nameIn = h('input.input', { value: st.name, maxlength: 30, placeholder: 'First name or nickname' });
     var badgeGrid = h('div.badge-grid', null, BADGES.map(function (b) {
       var got = !!st.badges[b.id];
       return h('div.badge' + (got ? '.got' : ''), { title: b.desc }, [h('div.badge-icon', { text: got ? b.icon : '🔒' }), h('div.badge-name', { text: b.name }), h('div.badge-desc', { text: b.desc })]);
@@ -6354,43 +7119,42 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     }));
     var code = UI.progressCode();
     var codeBox = h('textarea.input.code-box', { readonly: true, rows: 3 }, code);
-    var loadIn = h('textarea.input.code-box', { rows: 2, placeholder: 'Paste a progress code here (SX1-…)' });
+    var loadIn = h('textarea.input.code-box', { rows: 2, placeholder: 'Paste a progress code here (SXP2-…)' });
     var loadMsg = h('div.small');
     UI.modal('Your profile', [
       h('div.profile-top', null, [
         h('div.big-level', null, [h('div.big-level-n', { text: lv.n }), h('div', { text: lv.title })]),
-        h('div', null, [h('label.lbl', { text: 'Display name' }), nameIn, h('div.small', { text: st.xp + ' XP total · ' + Object.keys(st.done).length + '/' + SX.challenges.LIST.length + ' challenges' })])
+        h('div', null, [h('div.lbl', { text: 'Name on your certificates' }), h('div.locked-name', null, [h('span', { text: '🔒 ' }), h('b', { text: st.name })]),
+          h('div.small', { text: st.xp + ' XP total · ' + Object.keys(st.done).length + '/' + SX.challenges.LIST.length + ' challenges' })])
       ]),
       h('h3', { text: 'Badges' }), badgeGrid,
       h('h3', { text: 'Error collection (' + Object.keys(st.errors).length + '/' + UI.ERROR_CODES.length + ')' }), errGrid,
       h('h3', { text: 'Certificates' }),
       h('div.cert-list', null, SX.lessons.LIST.map(function (L) {
-        var pr = UI.platProgress(L.id), done = pr.total && pr.done === pr.total;
-        return h('button.chip' + (done ? '' : '.chip-off'), { disabled: !done, text: (done ? '🎓 ' : '🔒 ') + L.n + '. ' + L.title, onclick: function () { UI.showCert(L.id); } });
+        var ok = UI.lessonCertified && UI.lessonCertified(L.id);
+        return h('button.chip' + (ok ? '' : '.chip-off'), { disabled: !ok, text: (ok ? '🎓 ' : '🔒 ') + L.n + '. ' + L.title, onclick: function () { UI.showCert(L.id); } });
       })),
-      UI.cloudPanel ? UI.cloudPanel() : null,
       h('h3', { text: 'Progress code' }),
-      h('p.small', { text: 'Paste this code into Canvas to show your teacher your progress, or use it to move your XP to another computer.' }),
+      h('p.small', { text: 'Your progress code carries your name, XP, challenges and test results. It is sealed: if anyone changes even one character, SheetEX refuses it. Use it to continue on another computer.' }),
       codeBox,
       h('div.row', null, [h('button.btn', { text: 'Copy code', onclick: function () { codeBox.select(); copyText(code); UI.toast('Copied!', 'Progress code copied to the clipboard.'); } })]),
-      h('details.load-code', null, [h('summary', { text: 'Load or check a progress code' }), loadIn, h('div.row', null, [
-        h('button.btn', { text: 'Check code', onclick: function () {
-          var p = UI.decodeCode(loadIn.value);
-          loadMsg.textContent = p ? (p.n || 'Unnamed') + ': ' + p.x + ' XP, level ' + UI.level(p.x).n + ', ' + (p.d ? p.d.split(',').length : 0) + ' challenges, ' + (p.b ? p.b.split(',').length : 0) + ' badges (saved ' + new Date(p.t).toLocaleString() + ').' : 'That code is not valid (it may have been changed).';
-        } }),
-        h('button.btn', { text: 'Restore my progress from code', onclick: function () {
-          if (!UI.restoreFromCode(loadIn.value)) { loadMsg.textContent = 'That code is not valid.'; return; }
-          UI.render(); loadMsg.textContent = 'Progress restored!';
+      h('details.load-code', null, [h('summary', { text: 'Load a progress code from another computer' }), loadIn, h('div.row', null, [
+        h('button.btn', { text: 'Load progress', onclick: function () {
+          var r = UI.restoreFromCode(loadIn.value);
+          if (r.ok) { UI.render(); loadMsg.className = 'small good'; loadMsg.textContent = 'Progress loaded and merged.'; return; }
+          loadMsg.className = 'small bad';
+          loadMsg.textContent = r.other ? 'That code belongs to ' + r.name + ', not to you. Your name cannot be changed, so it was not loaded.' : r.why;
         } })
       ]), loadMsg]),
-      h('details.danger-zone', null, [h('summary', { text: 'Start over' }), h('p.small', { text: 'Erase all XP, badges, and your work in every app on this computer.' }),
-        h('button.btn.btn-danger', { text: 'Erase everything', onclick: function () {
-          UI.confirm('Erase everything?', 'All XP, badges and your work in every app will be deleted from this browser. This cannot be undone.', 'Erase everything', function () {
-            UI.state = freshState(); UI.wbs = {}; UI.db = null; UI.files = null; storageSet(JSON.stringify(UI.state));
+      h('details.danger-zone', null, [h('summary', { text: 'Wrong name? Start over' }),
+        h('p.small', { text: 'Your name is locked once it is set. If it is misspelled, the only fix is to erase everything on this computer (XP, badges, test results, certificates and your work) and start again with the right name.' }),
+        h('button.btn.btn-danger', { text: 'Erase everything and start over', onclick: function () {
+          UI.confirm('Erase everything?', 'All XP, badges, test results, certificates and your work in every app will be deleted from this browser. This cannot be undone.', 'Erase everything', function () {
+            UI.replaceState(freshState());
             document.querySelectorAll('.modal-overlay').forEach(function (m) { m.remove(); }); UI.go('home'); UI.start();
           });
         } })])
-    ], [{ text: 'Done', primary: true, onclick: function () { st.name = nameIn.value.trim(); UI.save(); UI.refreshHeader(); } }], { cls: 'wide' });
+    ], [{ text: 'Done', primary: true }], { cls: 'wide' });
   };
   // Clipboard that also works inside sandboxed iframes (Apps Script / Canvas), where navigator.clipboard may be blocked.
   function copyText(t) {
@@ -6412,49 +7176,72 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       h('p', { html: '<b>Same store data, five different tools.</b> Pick a workspace on the home page. Each one behaves like the real thing — including the errors.' }),
       h('ul', null, [
         h('li', { html: '<b>Challenges</b> (right-side panel) give XP. Hints cost 20% of a challenge\'s XP; wrong quiz answers cost 25%.' }),
+        h('li', { html: 'Finish a lesson\'s practice to unlock its <b>certification test</b>: 10 questions, no hints, 80% to pass. Passing earns the certificate.' }),
         h('li', { html: '<b>Cheat Sheet</b> lists what is different on that platform, plus every function it supports.' }),
         h('li', { html: '<b>Will it work elsewhere?</b> runs your formula in Excel 365, Excel 2013 and Google Sheets at the same time and suggests a rewrite.' }),
         h('li', { html: 'Discover new error types (like <code>#SPILL!</code>) for bonus XP.' }),
-        h('li', { html: 'Your work saves automatically in this browser. Use your <b>progress code</b> (click your name) to move to another computer or turn it in.' })
+        h('li', { html: 'Your work saves automatically in this browser. Your name is locked once you type it. Use your <b>progress code</b> (click your name) to continue on another computer.' })
       ]),
+      h('p.small', { text: 'Privacy: SheetEX sends nothing anywhere. Your progress stays in this browser until you copy your own code.' }),
       h('p.small', { text: 'SheetEX is a practice simulator. It copies how these apps behave for the functions it supports, but it is not the real software. When in doubt, test it in the real app!' }),
       UI.storageOk ? null : h('p.warn', { text: 'Heads up: this browser is blocking saving. Your progress will be lost when you close the page — copy your progress code before leaving!' }),
-      h('details.load-code', null, [h('summary', { text: 'For teachers: check a class set of progress codes' }), teacherTool()])
+      h('details.load-code', null, [h('summary', { text: 'For teachers: check codes and certificates' }), teacherTool()])
     ], [{ text: 'Got it', primary: true }], { cls: 'wide' });
   };
   function teacherTool() {
-    var ta = h('textarea.input.code-box', { rows: 5, placeholder: 'Paste progress codes here — one per line, or the whole Canvas export. Anything that is not a code is ignored.' });
+    var ta = h('textarea.input.code-box', { rows: 5, placeholder: 'Paste codes here — one per line, or a whole Canvas export. Anything that is not a code is ignored.' });
     var out = h('div');
-    var certOut = h('div');
-    function runCerts() {
-      var codes = ta.value.match(/SXC1-[A-Za-z0-9_-]+-[a-z0-9]+/g) || [];
-      certOut.innerHTML = '';
-      if (!codes.length) return;
-      var t = h('table.cs-keys', null, [h('tr', null, ['Certificate', 'Name', 'Lesson', 'XP', 'Hints', 'Date'].map(function (x) { return h('th', { text: x }); }))]);
-      codes.forEach(function (c) {
-        var d = SX.lessons.readCert(c);
-        if (!d) { t.appendChild(h('tr', null, [h('td', { colspan: 6, text: '⚠ Invalid or edited certificate code: ' + c.slice(0, 24) + '…' })])); return; }
-        t.appendChild(h('tr', null, ['✓ ' + SX.lessons.shortId(c), d.name, d.title, d.xp + '/' + d.maxXp, d.hints, new Date(d.time).toLocaleDateString()].map(function (x) { return h('td', { text: String(x) }); })));
-      });
-      certOut.appendChild(h('h4', { text: 'Certificates' })); certOut.appendChild(t);
+    function fmtD(t) { return new Date(t).toLocaleDateString(); }
+    function table(head, rows) {
+      return h('table.cs-keys', null, [h('tr', null, head.map(function (x) { return h('th', { text: x }); }))].concat(rows));
     }
     function run() {
-      runCerts();
-      var codes = ta.value.match(/(?:^|[^C])(SX1-[A-Za-z0-9+/=]+-[a-z0-9]+)/g) || [];
-      codes = codes.map(function (c) { return c.replace(/^[^S]/, ''); });
-      var rows = codes.map(function (c) { var p = UI.decodeCode(c); return p ? p : { bad: c }; });
       out.innerHTML = '';
-      if (!rows.length) { if (!certOut.childNodes.length) out.appendChild(h('p.small', { text: 'No codes found yet.' })); return; }
-      var t = h('table.cs-keys', null, [h('tr', null, ['Name', 'Level', 'XP', 'Challenges', 'Badges', 'Errors', 'Saved'].map(function (x) { return h('th', { text: x }); }))]);
-      rows.forEach(function (p) {
-        if (p.bad) { t.appendChild(h('tr', null, [h('td', { colspan: 7, text: '⚠ Invalid or edited code: ' + p.bad.slice(0, 24) + '…' })])); return; }
-        t.appendChild(h('tr', null, [p.n || '?', UI.level(p.x).n + ' ' + UI.level(p.x).title, p.x, p.d ? p.d.split(',').length + '/' + SX.challenges.LIST.length : 0,
-          p.b ? p.b.split(',').length : 0, p.e ? p.e.split(' ').filter(Boolean).length : 0, new Date(p.t).toLocaleDateString()].map(function (x) { return h('td', { text: String(x) }); })));
+      var found = ta.value.match(/SX[A-Z0-9]*-[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]*)?/g) || [];
+      if (!found.length) { out.appendChild(h('p.small', { text: 'No codes found yet.' })); return; }
+      var certRows = [], progRows = [], badRows = [];
+      found.forEach(function (c) {
+        if (c.indexOf('SXC2-') === 0) {
+          var d = SX.lessons.readCert(c);
+          if (!d.ok) { badRows.push([c, d.why]); return; }
+          d = d.cert;
+          certRows.push(h('tr', null, ['✓ ' + SX.seal.printId(d.name, d.lesson), d.name, d.n + '. ' + d.title, d.score + '/' + d.of + ' (' + Math.round(100 * d.score / d.of) + '%)',
+            d.attempts, d.xp + '/' + d.maxXp, d.hints, fmtD(d.time)].map(function (x) { return h('td', { text: String(x) }); })));
+        } else if (c.indexOf('SXP2-') === 0) {
+          var r = UI.readProgress(c);
+          if (!r.ok) { badRows.push([c, r.why]); return; }
+          var p = r.p, passed = Object.keys(p.ts).filter(function (k) { return p.ts[k].p; });
+          progRows.push(h('tr', null, [p.n, UI.level(p.x).n + ' ' + UI.level(p.x).title, p.x, Object.keys(p.d).length + '/' + SX.challenges.LIST.length,
+            passed.length + '/' + SX.lessons.LIST.length, p.b.length, fmtD(p.t)].map(function (x) { return h('td', { text: String(x) }); })));
+        } else badRows.push([c, 'Old or unknown kind of code — not made by this version of SheetEX.']);
       });
-      out.appendChild(t);
+      if (certRows.length) { out.appendChild(h('h4', { text: 'Certificates' })); out.appendChild(table(['ID', 'Name', 'Lesson', 'Test', 'Attempts', 'XP', 'Hints', 'Date'], certRows)); }
+      if (progRows.length) { out.appendChild(h('h4', { text: 'Progress codes' })); out.appendChild(table(['Name', 'Level', 'XP', 'Challenges', 'Tests passed', 'Badges', 'Saved'], progRows)); }
+      if (badRows.length) {
+        out.appendChild(h('h4', { text: '⚠ Rejected codes' }));
+        out.appendChild(table(['Code', 'Why'], badRows.map(function (b) { return h('tr.bad-row', null, [h('td', { text: b[0].slice(0, 28) + '…' }), h('td', { text: b[1] })]); })));
+      }
     }
     ta.addEventListener('input', run);
-    return h('div', null, [h('p.small', { text: 'Paste progress codes (SX1-…) and/or certificate codes (SXC1-…) — one per line, or a whole Canvas export. Codes are checksummed, so hand-edited codes show as invalid.' }), ta, certOut, out]);
+    // Check a printed / image certificate by name + lesson + ID
+    var nm = h('input.input', { placeholder: 'Student name exactly as printed' });
+    var ls = h('select.input', null, SX.lessons.LIST.map(function (l) { return h('option', { value: l.id, text: l.n + '. ' + l.title }); }));
+    var idIn = h('input.input', { placeholder: 'ID, e.g. K7QX-M2PA', maxlength: 9 });
+    var pmsg = h('div.small');
+    function checkPrint() {
+      var want = SX.seal.printId(nm.value, ls.value), got = idIn.value.trim().toUpperCase();
+      if (!nm.value.trim() || got.length < 9) { pmsg.className = 'small'; pmsg.textContent = ''; return; }
+      pmsg.className = 'small ' + (want === got ? 'good' : 'bad');
+      pmsg.textContent = want === got ? '✓ Genuine: this ID was issued to ' + nm.value.trim() + ' for that lesson.' : '✗ Does not match. Check the spelling of the name and the lesson — or the certificate was not issued by this SheetEX.';
+    }
+    [nm, ls, idIn].forEach(function (x) { x.addEventListener('input', checkPrint); x.addEventListener('change', checkPrint); });
+    return h('div', null, [
+      h('p.small', { html: 'Paste progress codes (<code>SXP2-…</code>) and certificate codes (<code>SXC2-…</code>). Every code is sealed with this class\'s key (fingerprint <b>' + SX.seal.fingerprint() + '</b>): an edited code, or one made by a different copy of SheetEX, is listed under <i>Rejected</i>.' }),
+      SX.seal.isDefaultKey() ? h('p.small.warn', { text: 'This copy is not running from your Apps Script deployment, so it uses the built-in key. Check codes in the same copy your students use.' }) : null,
+      ta, out,
+      h('h4', { text: 'Check a printed certificate' }),
+      h('div.print-check', null, [nm, ls, idIn]), pmsg
+    ]);
   }
 
   // ---------- Home ----------
@@ -6469,13 +7256,15 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
         blurb: 'A real-world messy order feed: lost leading zeros, four date formats, fake nulls, messy names. Clean it, join it with VLOOKUP/HLOOKUP, get it AI-ready. NEW in v2.' },
       rdbms: { id: 'rdbms', name: 'What is an RDBMS?', icon: 'DB', tagline: 'Tables, keys & transactions', lessons: ['rdbms'],
         blurb: 'Why real data lives in a relational database: break a spreadsheet, follow keys across tables, watch the database refuse bad data, and survive a power failure with a transaction.' },
+      ml: { id: 'ml', name: 'ML Data Lab', icon: 'ML', tagline: 'Databases for machine learning', lessons: ['ml'],
+        blurb: 'Get a real training table ready for an AI model: find the label, count the classes, catch test rows that leaked into training, spot a cheating column, and grade a model with a confusion matrix.' },
       reference: { id: 'reference', name: 'Interactive Cheat Sheet', icon: '?!', tagline: 'Every task, every tool', lessons: [],
         blurb: 'Look up a task like "pad leading zeros" or "find nulls" and see the answer in Excel 365, Excel 2013, Google Sheets, SQL and CSV — then run it live.' }
     };
     function sumProgress(ids) {
       return ids.reduce(function (a, id) { var p = UI.platProgress(id); return { done: a.done + p.done, total: a.total + p.total, xp: a.xp + p.xp, maxXp: a.maxXp + p.maxXp }; }, { done: 0, total: 0, xp: 0, maxXp: 0 });
     }
-    var cards = SX.platforms.ORDER.slice(0, 4).concat(['wrangle', 'rdbms', 'sql', 'reference']).map(function (id) {
+    var cards = SX.platforms.ORDER.slice(0, 4).concat(['wrangle', 'sql', 'rdbms', 'ml', 'reference']).map(function (id) {
       var p = PL[id] || EXTRA[id], pr = EXTRA[id] ? sumProgress(EXTRA[id].lessons) : UI.platProgress(id);
       return h('button.plat-card.pc-' + id, { onclick: function () { UI.go(id); } }, [
         h('div.pc-top', null, [platIcon(p, true), h('div', null, [h('div.pc-name', { text: p.name }), h('div.pc-tag', { text: p.tagline })])]),
@@ -6504,7 +7293,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       h('h2.section-title', { text: 'Choose your workspace' }),
       h('div.plat-grid', null, cards),
       h('h2.section-title', { text: '🎓 Lessons & certificates' }),
-      h('p.section-sub', { text: 'Finish every challenge in a lesson to earn its certificate. Print it, save it as a PDF or image, or paste its code into Canvas.' }),
+      h('p.section-sub', { text: 'Practice first — hints are always there. Then pass the lesson\'s certification test (no hints, ' + SX.certtest.SIZE + ' questions, ' + Math.round(SX.certtest.PASS * 100) + '% to pass) to earn its certificate.' }),
       h('div.lesson-grid', null, SX.lessons.LIST.map(lessonTile)),
       h('div.extra-grid', null, [
         h('button.extra-card.cmp-card', { onclick: function () { UI.go('compare'); } }, [
@@ -6524,13 +7313,14 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
   }
   function lessonTile(L) {
     var pr = UI.platProgress(L.id), done = pr.total && pr.done === pr.total;
-    var has = UI.state.certs && UI.state.certs[L.id];
-    return h('div.lesson-tile' + (done ? '.done' : ''), null, [
+    var cert = UI.lessonCertified(L.id), t = UI.state.tests[L.id];
+    return h('div.lesson-tile' + (cert ? '.done' : done ? '.ready' : ''), null, [
       h('div.lt-top', null, [h('span.lt-n', { text: L.n }), h('div', null, [h('div.lt-title', { text: L.title }), h('div.lt-tool', null, [L.tool, ' · ', h('button.linkish', { text: '📖 Guide', onclick: function () { UI.showGuide(L.id); } })])])]),
       h('div.pbar', null, h('div.pfill', { style: { width: (100 * pr.done / Math.max(1, pr.total)) + '%' } })),
       h('div.lt-foot', null, [
-        h('span.small', { text: pr.done + '/' + pr.total + ' challenges' }),
-        done ? h('button.btn.btn-sm.btn-primary', { text: has ? '🎓 Certificate' : '🎓 Claim certificate', onclick: function () { UI.showCert(L.id); } })
+        h('span.small', { text: cert ? '✓ Test passed ' + t.best + '/' + t.of : done ? (t && t.attempts ? 'Test: best ' + t.best + '/' + t.of : 'Practice done') : pr.done + '/' + pr.total + ' practice' }),
+        cert ? h('button.btn.btn-sm.btn-primary', { text: '🎓 Certificate', onclick: function () { UI.showCert(L.id); } })
+          : done ? h('button.btn.btn-sm.btn-primary.test-btn', { text: '📝 Take the test', onclick: function () { UI.startTest(L.id); } })
           : h('button.btn.btn-sm', { text: pr.done ? 'Continue →' : 'Start →', onclick: function () { UI.go(L.workspace); } })
       ])
     ]);
@@ -6563,6 +7353,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     else if (view === 'wrangle') UI.activeView = UI.wrangleView(host);
     else if (view === 'reference') UI.activeView = new UI.ReferenceView(host);
     else if (view === 'rdbms') UI.activeView = new UI.RdbmsView(host);
+    else if (view === 'ml') UI.activeView = new UI.MlView(host);
     // first visit: open the lesson guide (after the view exists)
     var lessonsHere = SX.lessons.LIST.filter(function (l) { return l.workspace === view; }).map(function (l) { return l.id; });
     if (lessonsHere.length && UI.maybeGuide && !(view === 'wrangle' && !UI.state.ui.wrIntroDone)) UI.maybeGuide(lessonsHere);
@@ -6570,18 +7361,39 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
 
   UI.start = function () {
     UI.render();
-    if (!UI.state.name) {
-      var inp = h('input.input', { maxlength: 40, placeholder: 'First and last name' });
-      var done = function () { UI.state.name = inp.value.trim() || 'Analyst'; UI.save(); UI.refreshHeader(); UI.render(); };
-      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { done(); document.querySelector('.modal-overlay').remove(); } });
-      UI.modal('Welcome to ' + SX.data.COMPANY + '!', [
-        h('p', { text: 'You were just hired as our new data analyst. Our data lives in five different tools, and they do not all speak the same language.' }),
-        h('p', { text: 'Earn XP by solving challenges, discovering errors, and translating formulas between apps.' }),
-        h('label.lbl', { text: 'What should we call you?' }), inp,
-        SX.cloud && SX.cloud.available() ? h('p.small', null, [h('b', { text: 'Coming back? ' }), 'Type your name, start, then click your name ▸ Class cloud save ▸ Load.']) : null
-      ], [{ text: 'Start my first day', primary: true, onclick: done }], { sticky: true, noX: true });
-    }
+    if (UI.loadNotice) { var n = UI.loadNotice; UI.loadNotice = null; UI.modal('Saved progress not loaded', [h('p', { text: n })], [{ text: 'OK', primary: true, onclick: function () { setTimeout(UI.start, 50); } }], { sticky: true }); return; }
+    if (!UI.state.name) welcome();
   };
+  // First visit: a permanent name, or load an existing progress code.
+  function welcome() {
+    var inp = h('input.input', { maxlength: 40, placeholder: 'First and last name', 'aria-label': 'First and last name' });
+    var err = h('div.small.bad');
+    var codeIn = h('textarea.input.code-box', { rows: 2, placeholder: 'Paste your progress code (SXP2-…)' });
+    var codeMsg = h('div.small.bad.code-msg');
+    function next() {
+      var v = UI.validName(inp.value);
+      if (!v) { err.textContent = 'Type your first AND last name, using letters only — for example: Jordan Smith'; inp.focus(); return false; }
+      document.querySelectorAll('.modal-overlay').forEach(function (m) { m.remove(); });
+      UI.modal('Is this exactly right?', [
+        h('div.name-confirm', { text: v }),
+        h('p', { html: 'This name goes on every certificate you earn. <b>Once you continue it can never be changed</b> — not even by you. Check the spelling and capital letters.' })
+      ], [{ text: '← Fix it', onclick: function () { setTimeout(welcome, 30); } }, { text: 'Yes, lock it in', primary: true, onclick: function () { UI.setIdentity(v); UI.refreshHeader(); UI.render(); } }], { sticky: true, noX: true });
+      return false;
+    }
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); next(); } });
+    UI.modal('Welcome to ' + SX.data.COMPANY + '!', [
+      h('p', { text: 'You were just hired as our new data analyst. Our data lives in several different tools, and they do not all speak the same language.' }),
+      h('p', { text: 'Earn XP by solving challenges, then pass each lesson\'s certification test to earn its certificate.' }),
+      h('label.lbl', { text: 'Your first and last name (as your teacher knows you)' }), inp, err,
+      h('details.load-code', null, [h('summary', { text: 'Coming back on a different computer? Load your progress code' }), codeIn,
+        h('div.row', null, h('button.btn', { text: 'Load my progress', onclick: function () {
+          var r = UI.restoreFromCode(codeIn.value);
+          if (!r.ok) { codeMsg.textContent = r.why; return; }
+          document.querySelectorAll('.modal-overlay').forEach(function (m) { m.remove(); });
+          UI.refreshHeader(); UI.render(); UI.toast('Welcome back, ' + r.name + '!', 'Your progress was loaded.');
+        } })), codeMsg])
+    ], [{ text: 'Continue', primary: true, onclick: next }], { sticky: true, noX: true });
+  }
 
   // Shared side panel for challenges ---------------------------------------
   UI.challengePanel = function (plat, helpersFn, opts) {
@@ -6653,8 +7465,12 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
             lesson.guide ? h('button.linkish.guide-link', { text: '📖 Guide', onclick: function () { UI.showGuide(lp); } }) : null]) : null,
           h('div', { text: pr.done + ' of ' + pr.total + ' complete · ' + pr.xp + ' XP earned' }),
           h('div.pbar', null, h('div.pfill', { style: { width: (100 * pr.done / Math.max(1, pr.total)) + '%' } })),
-          lesson ? h('button.btn.btn-sm.cert-btn' + (complete ? '.btn-primary' : ''), { disabled: !complete, title: complete ? 'Open your certificate' : 'Finish every challenge in this lesson to unlock it',
-            text: complete ? '🎓 View my certificate' : '🔒 Certificate (finish all ' + pr.total + ')', onclick: function () { UI.showCert(lp); } }) : null
+          lesson ? (function () {
+            var certified = UI.lessonCertified(lp);
+            return h('button.btn.btn-sm.cert-btn' + (complete ? '.btn-primary' : ''), { disabled: !complete, title: complete ? '' : 'Finish every practice challenge to unlock the certification test',
+              text: certified ? '🎓 View my certificate' : complete ? '📝 Take the certification test' : '🔒 Certification test (finish all ' + pr.total + ')',
+              onclick: function () { if (certified) UI.showCert(lp); else UI.startTest(lp); } });
+          })() : null
         ]));
         list.forEach(function (ch) {
           var c = card(ch);
@@ -8514,64 +9330,45 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
 })(globalThis.SX = globalThis.SX || {});
 
 // ---- ui-cert.js ----
-/* SheetEX v2 — lesson certificates and the optional Apps Script cloud (gradebook + save/load). */
+/* SheetEX v2 — lesson guides and certificates. Nothing here leaves the browser. */
 (function (SX) {
   'use strict';
   var UI = SX.ui, h = UI.h, L = SX.lessons;
-
-  // ---------- Cloud (only when served by Google Apps Script) ----------
-  var cloud = SX.cloud = {
-    available: function () { try { return !!(window.google && window.google.script && window.google.script.run); } catch (e) { return false; } },
-    call: function (fn, args) {
-      return new Promise(function (resolve, reject) {
-        var r = window.google.script.run.withSuccessHandler(resolve).withFailureHandler(function (e) { reject(e && e.message ? e : new Error(String(e))); });
-        r[fn].apply(r, args || []);
-      });
-    }
-  };
 
   // ---------- Lessons ----------
   UI.lessonProgress = function (id) { return UI.platProgress(id); };
   UI.lessonComplete = function (id) { var p = UI.platProgress(id); return p.total > 0 && p.done === p.total; };
 
-  function needRealName(then) {
-    var nm = (UI.state.name || '').trim();
-    if (nm && nm !== 'Analyst' && /\s/.test(nm)) { then(); return; }
-    var inp = h('input.input', { value: nm === 'Analyst' ? '' : nm, maxlength: 40, placeholder: 'First and last name' });
-    UI.modal('Name on your certificate', [
-      h('p', { text: 'Certificates show your full name so your teacher knows they are yours. Type your first and last name exactly as your teacher knows you.' }), inp
-    ], [{ text: 'Cancel' }, { text: 'Use this name', primary: true, onclick: function () {
-      var v = inp.value.trim().replace(/\s+/g, ' ');
-      if (!/\S+\s+\S+/.test(v)) { UI.toast('First AND last name, please', 'Example: Jordan Smith'); return false; }
-      UI.state.name = v; UI.save(); UI.refreshHeader(); setTimeout(then, 50);
-    } }]);
-  }
+  // A certificate needs every practice challenge done AND the certification test passed.
+  UI.lessonCertified = function (id) { var t = UI.state.tests && UI.state.tests[id]; return UI.lessonComplete(id) && !!(t && t.passed); };
 
   UI.issueCert = function (id) {
-    var lesson = L.byId(id), list = SX.challenges.forPlat(id), pr = UI.platProgress(id);
+    var list = SX.challenges.forPlat(id), pr = UI.platProgress(id), t = UI.state.tests[id];
     var hints = list.reduce(function (a, c) { return a + (UI.state.done[c.id] ? UI.state.done[c.id].hints || 0 : 0); }, 0);
-    var cert = { name: UI.state.name, lesson: id, xp: pr.xp, maxXp: pr.maxXp, hints: hints, count: pr.total, time: Date.now() };
-    cert.code = L.certCode(cert);
+    var cert = { name: UI.state.name, sid: UI.state.sid, lesson: id, xp: pr.xp, maxXp: pr.maxXp, hints: hints, count: pr.total,
+      score: t.passScore != null ? t.passScore : t.best, of: t.of, attempts: t.passAttempt || t.attempts || 1,
+      secs: t.passSecs != null ? t.passSecs : t.secs || 0, time: t.passed };
     UI.state.certs = UI.state.certs || {};
-    UI.state.certs[id] = { code: cert.code, t: cert.time, sent: false };
-    UI.save();
-    if (cloud.available()) {
-      cloud.call('sxRecordCertificate', [{ name: cert.name, lesson: lesson.title, lessonId: id, xp: cert.xp, maxXp: cert.maxXp, hints: hints, challenges: cert.count, code: cert.code }])
-        .then(function () { UI.state.certs[id].sent = true; UI.save(); UI.toast('🎓 Sent to your teacher', 'Your certificate was recorded in the class gradebook.'); refreshSent(); })
-        .catch(function (e) { UI.toast('Could not reach the gradebook', (e && e.message) || 'Copy your certificate code instead.', 'err'); });
-    }
+    UI.state.certs[id] = { code: L.certCode(cert), t: cert.time };
+    UI.saveNow();
     return cert;
   };
-  var sentBox = null;
-  function refreshSent() { if (sentBox && sentBox.isConnected) sentBox.textContent = '✓ Recorded in your teacher\'s gradebook'; }
 
   UI.lessonFinished = function (id) {
     var lesson = L.byId(id); if (!lesson) return;
-    window.confettiBurst(120);
-    UI.modal('🎓 Lesson ' + lesson.n + ' complete!', [
-      h('div.levelup', null, [h('div.levelup-title', { text: lesson.title }),
-        h('p', { text: 'You finished every challenge in this lesson. Claim your certificate — print it, save it, or copy its code into Canvas.' })])
-    ], [{ text: 'Later' }, { text: 'Get my certificate', primary: true, onclick: function () { setTimeout(function () { UI.showCert(id); }, 50); } }]);
+    // Shown when the screen is free, and never once a test has been started (it would only get in the way).
+    function started() { var t = UI.state.tests && UI.state.tests[id]; return UI.lessonCertified(id) || !!(t && t.attempts) || !!document.querySelector('.test-overlay'); }
+    function show() {
+      if (started()) return;
+      if (document.querySelector('.modal-overlay, #cert-overlay')) { setTimeout(show, 700); return; }
+      window.confettiBurst(120);
+      UI.modal('Practice complete: Lesson ' + lesson.n, [
+        h('div.levelup', null, [h('div.levelup-title', { text: lesson.title }),
+          h('p', { text: 'You finished every practice challenge. One step left: pass the certification test to earn your certificate.' }),
+          h('p.small', { text: 'The test has no hints and no cheat sheet. Take a minute to review first if you need to.' })])
+      ], [{ text: 'Later' }, { text: 'Take the test', primary: true, onclick: function () { setTimeout(function () { UI.startTest(id); }, 50); } }]);
+    }
+    show();
   };
 
   // ---------- Lesson guide ----------
@@ -8587,7 +9384,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       h('ul.guide-traps', null, g.traps.map(function (t) { return h('li', { text: t }); })),
       h('h3', { text: 'You will practice' }),
       h('ul.cert-skills.guide-skills', null, lesson.skills.map(function (s) { return h('li', { text: s }); })),
-      h('p.small.muted', { text: 'Finish every challenge in this lesson to earn its certificate. Hints are always there if you get stuck.' })
+      h('p.small.muted', { text: 'Practice challenges have hints whenever you get stuck. To earn the certificate, pass the certification test at the end — no hints there.' })
     ], [{ text: 'Start the challenges', primary: true }], { cls: 'wide' });
   };
   UI.maybeGuide = function (ids) {
@@ -8597,14 +9394,12 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
   };
 
   UI.showCert = function (id) {
-    if (!UI.lessonComplete(id)) { UI.toast('Not yet!', 'Finish every challenge in this lesson to earn its certificate.'); return; }
-    needRealName(function () {
-      var saved = UI.state.certs && UI.state.certs[id];
-      var data = saved && L.readCert(saved.code);
-      // Re-issue if the name changed since the certificate was made
-      if (!data || data.name !== UI.state.name) { UI.issueCert(id); saved = UI.state.certs[id]; data = L.readCert(saved.code); }
-      render(id, data, saved);
-    });
+    if (!UI.lessonComplete(id)) { UI.toast('Not yet!', 'Finish every practice challenge, then pass the certification test.'); return; }
+    if (!UI.lessonCertified(id)) { UI.startTest(id); return; }
+    var saved = UI.state.certs && UI.state.certs[id];
+    var r = saved && L.readCert(saved.code);
+    if (!r || !r.ok || r.cert.name !== UI.state.name) { UI.issueCert(id); saved = UI.state.certs[id]; r = L.readCert(saved.code); }
+    render(id, r.cert, saved);
   };
 
   function fmtDate(t) { return new Date(t).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }); }
@@ -8624,18 +9419,17 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
         h('div.cert-tool', { text: lesson.tool }),
         h('ul.cert-skills', null, lesson.skills.map(function (s) { return h('li', { text: s }); })),
         h('div.cert-stats', null, [
-          stat(c.count, 'challenges'), stat(c.xp + ' / ' + c.maxXp, 'XP earned'), stat(c.hints, c.hints === 1 ? 'hint used' : 'hints used')
+          stat(c.score + ' / ' + c.of, 'certification test'), stat(c.count, 'practice challenges'), stat(c.hints, c.hints === 1 ? 'hint in practice' : 'hints in practice')
         ]),
         h('div.cert-foot', null, [
           h('div', null, [h('div.cert-line'), h('div.cert-small', { text: 'Date: ' + fmtDate(c.time) })]),
           h('div.cert-seal', { text: '★' }),
           h('div', null, [h('div.cert-line'), h('div.cert-small', { text: 'Instructor' })])
         ]),
-        h('div.cert-verify', { text: 'Verification ID ' + L.shortId(saved.code) + ' · check the full code at SheetEX ▸ ? ▸ For teachers' })
+        h('div.cert-verify', { text: 'Verification ID ' + SX.seal.printId(c.name, c.lesson) + ' · test attempt ' + c.attempts + ' · teachers: SheetEX ▸ ? ▸ For teachers' })
       ])
     ]);
     var codeBox = h('textarea.input.code-box', { readonly: true, rows: 2 }, saved.code);
-    sentBox = h('div.small.cert-sent', { text: saved.sent ? '✓ Recorded in your teacher\'s gradebook' : (cloud.available() ? 'Sending to your teacher\'s gradebook…' : '') });
     var imgHolder = h('div');
     var bar = h('div.cert-bar', null, [
       h('button.btn.btn-primary', { text: '🖨 Print / Save as PDF', onclick: function () { printCert(); } }),
@@ -8644,7 +9438,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       h('button.btn', { text: 'Close', onclick: close })
     ]);
     overlay.appendChild(h('div.cert-wrap', null, [bar, paper,
-      h('div.cert-howto', null, [h('b', { text: 'Turning it in: ' }), 'print it (choose "Save as PDF"), download the image, or paste this code into Canvas:', codeBox, sentBox, imgHolder])]));
+      h('div.cert-howto', null, [h('b', { text: 'Turning it in: ' }), 'print it (choose "Save as PDF"), download the image, or paste this code into Canvas:', codeBox, imgHolder])]));
     overlay.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
     document.body.appendChild(overlay);
     overlay.tabIndex = -1; overlay.focus();
@@ -8677,11 +9471,11 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     t('Lesson ' + lesson.n + ': ' + lesson.title, 570, 'bold 42px Arial');
     t(lesson.tool, 618, '28px Arial', '#667085');
     t(lesson.skills.join('  •  '), 680, '22px Arial', '#344054');
-    t(c.count + ' challenges   •   ' + c.xp + ' / ' + c.maxXp + ' XP   •   ' + c.hints + ' hints used', 760, 'bold 30px Arial', '#172033');
+    t('Certification test ' + c.score + ' / ' + c.of + '   •   ' + c.count + ' practice challenges   •   ' + c.hints + ' hints in practice', 760, 'bold 30px Arial', '#172033');
     t('Date: ' + fmtDate(c.time), 900, '28px Arial', '#344054');
     g.beginPath(); g.moveTo(1050, 905); g.lineTo(1400, 905); g.strokeStyle = '#98a2b3'; g.lineWidth = 2; g.stroke();
     g.font = '22px Arial'; g.fillStyle = '#667085'; g.fillText('Instructor', 1225, 940);
-    t('Verification ID ' + L.shortId(code), 1010, '20px monospace', '#667085');
+    t('Verification ID ' + SX.seal.printId(c.name, c.lesson) + '  ·  test attempt ' + c.attempts, 1010, '20px monospace', '#667085');
     g.beginPath(); g.arc(300, 900, 70, 0, Math.PI * 2); g.fillStyle = '#f26b1d'; g.fill();
     g.font = 'bold 70px Arial'; g.fillStyle = '#fff'; g.fillText('★', 300, 925);
     var url = cv.toDataURL('image/png');
@@ -8692,50 +9486,6 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     holder.appendChild(h('img.cert-img', { src: url, alt: 'Certificate image' }));
   }
 
-  // ---------- Cloud save / load (profile + welcome) ----------
-  UI.cloudPanel = function () {
-    if (!cloud.available()) return null;
-    var nameIn = h('input.input', { value: UI.state.name || '', placeholder: 'First and last name' });
-    var pinIn = h('input.input', { type: 'password', inputmode: 'numeric', maxlength: 8, value: UI.state.ui.pin || '', placeholder: '4–8 digit PIN you will remember' });
-    var msg = h('div.small');
-    function creds() {
-      var n = nameIn.value.trim().replace(/\s+/g, ' '), p = pinIn.value.trim();
-      if (!/\S+\s+\S+/.test(n)) { msg.textContent = 'Type your first and last name.'; return null; }
-      if (!/^\d{4,8}$/.test(p)) { msg.textContent = 'Your PIN must be 4–8 digits.'; return null; }
-      return { n: n, p: p };
-    }
-    return h('div.cloud-box', null, [
-      h('h3', { text: '☁ Class cloud save' }),
-      h('p.small', { text: 'Save your XP, challenges and certificates to your class so you can keep going on another day or another computer. Use the same name + PIN every time. (Your formulas and files stay on this computer.)' }),
-      h('div.cloud-row', null, [nameIn, pinIn]),
-      h('div.row', null, [
-        h('button.btn.btn-primary', { text: 'Save to class cloud', onclick: function () {
-          var c = creds(); if (!c) return;
-          msg.textContent = 'Saving…';
-          UI.state.name = c.n; UI.state.ui.pin = c.p; UI.save(); UI.refreshHeader();
-          cloud.call('sxSaveProgress', [c.n, c.p, UI.progressCode()]).then(function (r) {
-            msg.textContent = r && r.ok ? '✓ Saved ' + new Date().toLocaleTimeString() : (r && r.error) || 'Could not save.';
-          }).catch(function (e) { msg.textContent = 'Could not save: ' + e.message; });
-        } }),
-        h('button.btn', { text: 'Load from class cloud', onclick: function () {
-          var c = creds(); if (!c) return;
-          msg.textContent = 'Loading…';
-          cloud.call('sxLoadProgress', [c.n, c.p]).then(function (r) {
-            if (!r || !r.ok) { msg.textContent = (r && r.error) || 'Nothing saved under that name and PIN.'; return; }
-            if (!UI.restoreFromCode(r.code)) { msg.textContent = 'The saved data could not be read.'; return; }
-            UI.state.name = c.n; UI.state.ui.pin = c.p; UI.save();
-            msg.textContent = '✓ Progress loaded (saved ' + new Date(r.savedAt).toLocaleString() + ')';
-            UI.render();
-          }).catch(function (e) { msg.textContent = 'Could not load: ' + e.message; });
-        } })
-      ]), msg
-    ]);
-  };
-  // Quietly push progress after each challenge when the student has set up cloud save.
-  UI.cloudAutoSave = function () {
-    if (!cloud.available() || !UI.state.ui.pin || !UI.state.name) return;
-    cloud.call('sxSaveProgress', [UI.state.name, UI.state.ui.pin, UI.progressCode()]).catch(function () { /* manual save still available */ });
-  };
 })(globalThis.SX = globalThis.SX || {});
 
 // ---- ui-reference.js ----
@@ -8908,6 +9658,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     if (out.error) box.appendChild(h('div.sql-err', null, [h('div.sql-err-msg', { text: 'Error: ' + out.error.message }), out.error.hint ? h('div.sql-hint', { text: '💡 ' + out.error.hint }) : null]));
     return box;
   }
+  UI.sqlResultView = resultView;
   RdbmsView.prototype.console = function (initial, rows) {
     var self = this;
     var ta = h('textarea.sql-editor.rd-console', { spellcheck: 'false', rows: rows || 3, 'aria-label': 'SQL' }, initial || '');
@@ -9211,6 +9962,478 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       ])
     ]);
   };
+})(globalThis.SX = globalThis.SX || {});
+
+// ---- ui-ml.js ----
+/* SheetEX v2 — ML Data Lab (Lesson 10): getting a database table ready for a machine-learning model.
+ * Runs on its own sandbox database (same tables as the SQL workspace, plus ml_examples and predictions). */
+(function (SX) {
+  'use strict';
+  var UI = SX.ui, h = UI.h, M = SX.mldata;
+  var ROLES = [['', 'Choose…'], ['id', 'Row ID'], ['feature', 'Feature (input)'], ['label', 'Label (the answer)'], ['split', 'Train/test bookkeeping'], ['leak', 'Known only afterwards']];
+  var ROLE_OK = { week: ['split', 'feature'] };
+
+  function MlView(host) {
+    this.host = host;
+    this.db = SX.sql.makeStoreDb();
+    this.last = null; this.rolesOk = false; this.sawLeak = false; this.sawBaseline = false;
+    this.build();
+    UI.state.visited.ml = UI.state.visited.ml || Date.now(); UI.save();
+  }
+  UI.MlView = MlView;
+
+  MlView.prototype.exec = function (sql) {
+    var self = this, out = { results: [], error: null };
+    try {
+      SX.sql.execute(this.db, sql).forEach(function (r) { out.results.push(r); if (r.type === 'rows') self.last = { columns: r.columns, rows: r.rows }; });
+    } catch (e) {
+      if (!(e instanceof SX.sql.SqlError)) throw e;
+      out.error = e;
+    }
+    UI.state.stats.queries = (UI.state.stats.queries || 0) + 1;
+    return out;
+  };
+  MlView.prototype.console = function (initial, rows) {
+    var self = this;
+    var ta = h('textarea.sql-editor.rd-console', { spellcheck: 'false', rows: rows || 3, 'aria-label': 'SQL' });
+    ta.value = initial || '';
+    var out = h('div');
+    function go() { out.innerHTML = ''; out.appendChild(UI.sqlResultView(self.exec(ta.value))); }
+    ta.addEventListener('keydown', function (e) { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); go(); } });
+    return h('div.rd-console-wrap', null, [ta, h('div.row', null, [h('button.btn.btn-primary.btn-sm', { text: '▶ Run (Ctrl+Enter)', onclick: go }),
+      h('span.small.muted', { text: 'Your own copy of the data — it resets when you leave the page.' })]), out]);
+  };
+  MlView.prototype.q = function (sql) { return SX.sql.execute(this.db, sql).pop().rows; };
+  MlView.prototype.helpers = function () {
+    var db = this.db;
+    return { db: db, table: function (n) { return db.tables[n.toLowerCase()] || null; }, last: this.last, rolesOk: this.rolesOk, sawLeak: this.sawLeak };
+  };
+
+  MlView.prototype.build = function () {
+    var self = this;
+    var sections = [
+      ['examples', '1. Examples, features & a label', this.secExamples()],
+      ['balance', '2. Is the data balanced?', this.secBalance()],
+      ['missing', '3. Missing values', this.secMissing()],
+      ['leak', '4. Train, test & leakage', this.secLeak()],
+      ['features', '5. Build the training table', this.secFeatures()],
+      ['grade', '6. Grade the model', this.secGrade()]
+    ];
+    var nav = h('nav.rd-nav', null, sections.map(function (s) { return h('button.chip', { text: s[1], onclick: function () { document.getElementById('ml-' + s[0]).scrollIntoView({ behavior: 'smooth', block: 'start' }); } }); }));
+    this.host.appendChild(h('main.compare.rdbms.mllab', null, [
+      h('div.cmp-hero.rd-hero.ml-hero', null, [
+        h('button.back-btn.light', { onclick: function () { UI.go('home'); } }, '← Home'),
+        h('h1', { html: 'Databases for <span>Machine Learning</span>' }),
+        h('p', { html: SX.data.COMPANY + ' wants an AI model that warns a store <b>before a product runs out</b>. The training data is a database table, <code>ml_examples</code> — and it has problems that would quietly ruin the model. Find them with SQL.' }),
+        nav
+      ])
+    ].concat(sections.map(function (s) { return h('section.cmp-section.rd-section#ml-' + s[0], null, [h('h2', { text: s[1] }), s[2]]); })).concat([
+      h('section.cmp-section#ml-play', null, [h('h2', { text: '🧪 Free play' }),
+        h('p.small', { html: 'Tables: <code>ml_examples</code>, <code>predictions</code>, plus <code>products</code>, <code>sales</code>, <code>stores</code>. Try <code>PRAGMA table_info(ml_examples);</code>' }),
+        this.console('SELECT * FROM ml_examples LIMIT 8;', 4)]),
+      h('section.cmp-section#ml-challenges', null, [h('h2', { text: '🏆 Lesson 10 challenges' }),
+        UI.challengePanel('ml', function () { return self.helpers(); })])
+    ])));
+  };
+
+  // ---------- 1. Examples, features & a label ----------
+  MlView.prototype.secExamples = function () {
+    var self = this, cols = M.COLUMNS;
+    var preview = h('div.tq-scroll', null, h('table.tq-grid.res.ml-preview', null, [h('tr', null, cols.map(function (c) { return h('th', { text: c.name }); }))].concat(
+      M.ROWS.slice(0, 6).map(function (r) { return h('tr', null, r.map(function (v) { return h('td' + (v === null ? '.null' : ''), { text: v === null ? 'NULL' : String(v) }); })); }))));
+    var picks = {}, msg = h('div.rd-status');
+    var rows = cols.map(function (c) {
+      var fb = h('span.ml-fb');
+      var sel = h('select.input.ml-role', { 'aria-label': 'Job of ' + c.name, 'data-col': c.name, onchange: function () { picks[c.name] = sel.value; fb.textContent = ''; fb.className = 'ml-fb'; } },
+        ROLES.map(function (r) { return h('option', { value: r[0], text: r[1] }); }));
+      return { c: c, sel: sel, fb: fb, el: h('div.ml-rolerow', null, [h('code', { text: c.name }), h('span.small.muted', { text: c.type }), sel, fb]) };
+    });
+    function check() {
+      var right = 0;
+      rows.forEach(function (r) {
+        var good = (ROLE_OK[r.c.name] || [r.c.role]).indexOf(r.sel.value) >= 0;
+        if (good) right++;
+        r.fb.className = 'ml-fb ' + (good ? 'good' : 'bad');
+        r.fb.textContent = good ? '✓ ' + r.c.about : (r.sel.value ? '✗ Not quite.' : '✗ Pick one.');
+      });
+      self.rolesOk = right === rows.length;
+      msg.className = 'rd-status ' + (self.rolesOk ? 'good' : 'bad');
+      msg.textContent = self.rolesOk ? 'All ' + rows.length + ' right. A model may only learn from the features — and must never see restock_after.' : right + ' of ' + rows.length + ' right. Read the feedback and try again.';
+    }
+    return h('div', null, [
+      h('p', { html: 'Each row is one <b>example</b>: one product, at one store, in one week. The model reads the <b>features</b> and guesses the <b>label</b>. Some columns are neither — and one would let the model cheat.' }),
+      preview,
+      h('h3', { text: 'What is each column for?' }),
+      h('div.ml-roles', null, rows.map(function (r) { return r.el; })),
+      h('div.row', null, h('button.btn.btn-primary.btn-sm', { text: 'Check my sorting', onclick: check })), msg
+    ]);
+  };
+
+  // ---------- 2. Balance ----------
+  function bars(items, max) {
+    var W = 340, L = 120, rowH = 34, H = items.length * rowH + 8, out = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="' + items.map(function (i) { return i[0] + ': ' + i[1]; }).join(', ') + '">';
+    items.forEach(function (it, i) {
+      var y = 4 + i * rowH, w = Math.max(2, (W - L - 40) * it[1] / max);
+      out += '<text x="' + (L - 8) + '" y="' + (y + 19) + '" text-anchor="end" class="ml-bar-label">' + it[0] + '</text>' +
+        '<g><title>' + it[0] + ': ' + it[1] + '</title><rect x="' + L + '" y="' + (y + 4) + '" width="' + w + '" height="22" rx="4" class="' + it[2] + '"/></g>' +
+        '<text x="' + (L + w + 6) + '" y="' + (y + 20) + '" class="ml-bar-val">' + it[1] + '</text>';
+    });
+    return out + '</svg>';
+  }
+  MlView.prototype.secBalance = function () {
+    var self = this, F = M.FACTS, chart = h('div.ml-chart'), result = h('div');
+    function draw(split) {
+      var where = split ? " WHERE split = '" + split + "'" : '';
+      var r = self.q('SELECT SUM(stockout = 0), SUM(stockout = 1) FROM ml_examples' + where + ';')[0];
+      chart.innerHTML = bars([['No stockout (0)', r[0], 'ml-neg'], ['Stockout (1)', r[1], 'ml-pos']], Math.max(r[0], r[1]));
+    }
+    var tabs = h('div.chips', null, [['', 'All rows'], ['train', 'Train'], ['test', 'Test']].map(function (t, i) {
+      var b = h('button.chip' + (i === 0 ? '.on' : ''), { text: t[1], onclick: function () { Array.prototype.forEach.call(tabs.children, function (x) { x.classList.remove('on'); }); b.classList.add('on'); draw(t[0]); } });
+      return b;
+    }));
+    draw('');
+    return h('div', null, [
+      h('p', { html: 'Stockouts are <b>rare</b>: about 1 in 4 examples overall, and only <b>' + (F.cm.tp + F.cm.fn) + ' of ' + F.test + '</b> test rows. When one answer is rare, the classes are <b>imbalanced</b>.' }),
+      h('div.rd-two', null, [
+        h('div', null, [tabs, chart]),
+        h('div.ml-card', null, [h('b', { text: 'The lazy "baseline" model' }), h('p.small', { text: 'It ignores every feature and ALWAYS answers "no stockout".' }),
+          h('button.btn.btn-sm', { text: 'Score it on the test rows', onclick: function () {
+            self.sawBaseline = true;
+            result.innerHTML = '';
+            result.appendChild(h('div.ml-metrics', null, [metric(Math.round(F.baseline * 100) + '%', 'accuracy'), metric('0 of ' + (F.cm.tp + F.cm.fn), 'stockouts caught')]));
+            result.appendChild(h('p.small', { html: 'High accuracy, <b>zero usefulness</b>. Any real model has to beat this — and accuracy alone cannot tell you if it does.' }));
+          } }), result])
+      ]),
+      h('h3', { text: 'Count it yourself' }),
+      this.console('SELECT stockout, COUNT(*) AS examples\nFROM ml_examples\nGROUP BY stockout;', 3)
+    ]);
+  };
+  function metric(v, l) { return h('div.ml-metric', null, [h('b', { text: v }), h('span', { text: l })]); }
+
+  // ---------- 3. Missing values ----------
+  MlView.prototype.secMissing = function () {
+    var self = this, out = h('div');
+    var opts = [
+      ['Drop the rows', 'Simple, but you lose data — and if values are missing for a reason, you bias the model.', "SELECT COUNT(*) AS rows_left FROM ml_examples WHERE units_last_week IS NOT NULL AND split = 'train';"],
+      ['Fill with the average', 'Keeps every row. Use the TRAINING average only — the test rows must stay unseen.', "SELECT example_id, units_last_week,\n  COALESCE(units_last_week, (SELECT ROUND(AVG(units_last_week)) FROM ml_examples WHERE split = 'train')) AS filled\nFROM ml_examples WHERE units_last_week IS NULL;"],
+      ['Add a "was missing" flag', 'Fill the value AND add a 0/1 column, so the model can learn whether "missing" itself means something.', 'SELECT example_id, COALESCE(units_last_week, 0) AS units, units_last_week IS NULL AS was_missing\nFROM ml_examples LIMIT 8;']
+    ];
+    return h('div', null, [
+      h('p', { html: 'A model cannot do math with <code>NULL</code>. Find the gaps first — then choose a fix <b>and write down which one you chose</b>.' }),
+      h('div.ml-opts', null, opts.map(function (o) {
+        return h('div.rd-no', null, [h('b', { text: o[0] }), h('p.small', { text: o[1] }), h('pre.cs-pre', { text: o[2] }),
+          h('button.btn.btn-sm', { text: '▶ Try it', onclick: function () { out.innerHTML = ''; out.appendChild(h('div.small.muted', { text: o[0] + ':' })); out.appendChild(UI.sqlResultView(self.exec(o[2]))); } })]);
+      })),
+      out,
+      h('h3', { text: 'Find them yourself' }),
+      this.console('SELECT example_id, store_id, sku, units_last_week\nFROM ml_examples\nWHERE units_last_week IS NULL;', 3)
+    ]);
+  };
+
+  // ---------- 4. Train, test & leakage ----------
+  MlView.prototype.secLeak = function () {
+    var self = this, F = M.FACTS;
+    var keyOf = function (r) { return r[1] + '|' + r[2] + '|' + r[3]; };
+    var grid = h('div.ml-split');
+    M.ROWS.forEach(function (r) {
+      grid.appendChild(h('span.ml-sq.' + (r[10] === 'train' ? 'tr' : 'te'), { 'data-key': keyOf(r), title: '#' + r[0] + ' · week ' + r[1] + ' · ' + r[2] + ' · ' + r[3] + ' · ' + r[10] }));
+    });
+    var found = h('div.small');
+    var leakOut = h('div');
+    return h('div', null, [
+      h('p', { html: '<b>Training</b> rows teach the model; <b>test</b> rows are its final exam. If any test row is a <b>copy</b> of a training row, the model has seen the answers — and its score is a lie.' }),
+      h('div.ml-legend', null, [h('span.ml-sq.tr'), ' train (' + F.train + ')  ', h('span.ml-sq.te'), ' test (' + F.test + ')  ', h('span.ml-sq.te.dup'), ' copied between splits']),
+      grid,
+      h('div.row', null, [h('button.btn.btn-sm.btn-primary', { text: '🔍 Find copies across the split', onclick: function () {
+        var sql = 'SELECT week, store_id, sku FROM ml_examples GROUP BY week, store_id, sku HAVING COUNT(DISTINCT split) > 1;';
+        var rows = self.q(sql), keys = rows.map(function (r) { return r.join('|'); });
+        Array.prototype.forEach.call(grid.children, function (sq) { sq.classList.toggle('dup', keys.indexOf(sq.dataset.key) >= 0); });
+        found.innerHTML = '';
+        found.appendChild(h('span', { html: '<b>' + rows.length + ' leaked examples</b> — each appears in BOTH splits. The query that found them:' }));
+        found.appendChild(h('pre.cs-pre', { text: sql.replace(' GROUP', '\nGROUP').replace(' HAVING', '\nHAVING') }));
+      } })]), found,
+      h('h3', { text: 'Target leakage: a column from the future' }),
+      h('p', { html: '<code>restock_after</code> is filled in <b>after</b> the week ends — and it is only above 0 when the product ran out. A model trained with it will look perfect.' }),
+      h('div.row', null, [
+        h('button.btn.btn-sm', { text: 'Train a model that uses restock_after', onclick: function () {
+          var r = self.q('SELECT AVG((restock_after > 0) = stockout) FROM ml_examples WHERE split = \'test\';')[0][0];
+          self.sawLeak = true;
+          leakOut.innerHTML = '';
+          leakOut.appendChild(h('div.ml-metrics', null, [metric(Math.round(r * 100) + '%', 'test accuracy (cheating)'), metric(Math.round(F.accuracy * 100) + '%', 'honest model')]));
+          leakOut.appendChild(h('p.rd-status.bad', { html: '<b>Too good to be true.</b> On Monday morning, nobody knows next week\'s restock order yet — so in real use this model has nothing to go on. A perfect score is a reason to look for leakage, not to celebrate.' }));
+        } })]),
+      leakOut,
+      h('h3', { text: 'Try it' }),
+      this.console("SELECT split, COUNT(*) AS examples, SUM(stockout) AS stockouts\nFROM ml_examples\nGROUP BY split;", 3)
+    ]);
+  };
+
+  // ---------- 5. Build the training table ----------
+  MlView.prototype.secFeatures = function () {
+    return h('div', null, [
+      h('p', { html: 'A model learns from ONE table. Build it with a query: keep the <b>training rows</b>, keep the <b>features</b> and the <b>label</b>, drop the leaky column, and <b>JOIN</b> in useful facts from other tables (like the product\'s category). <code>CREATE TABLE … AS SELECT …</code> saves the result as a new table.' }),
+      h('div.ml-pipe', null, ['ml_examples', '+ JOIN products', "WHERE split = 'train'", '− restock_after', 'train_set'].map(function (s, i, a) {
+        return [h('span.ml-step', { text: s }), i < a.length - 1 ? h('span.ml-arrow', { text: '→' }) : null];
+      }).reduce(function (x, y) { return x.concat(y); }, [])),
+      this.console("CREATE TABLE train_set AS\nSELECT e.example_id, e.promo, e.price, e.units_last_week, e.in_stock_start, e.stockout\nFROM ml_examples e\nWHERE e.split = 'train';\n\nSELECT * FROM train_set LIMIT 5;", 7),
+      h('p.small.muted', { html: 'This starter is missing something: the product <b>category</b>. Add a JOIN to products. (Made a mistake? <code>DROP TABLE train_set;</code> and run it again.)' })
+    ]);
+  };
+
+  // ---------- 6. Grade the model ----------
+  MlView.prototype.secGrade = function () {
+    var F = M.FACTS, cm = F.cm, detail = h('div.small.ml-detail', { text: 'Click a box to see what it means.' });
+    var self = this;
+    function box(cls, n, title, about, actual, pred) {
+      return h('button.ml-cell.' + cls, { onclick: function () {
+        var ids = self.q('SELECT e.example_id FROM predictions p JOIN ml_examples e ON p.example_id = e.example_id WHERE e.stockout = ' + actual + ' AND p.predicted = ' + pred + ';').map(function (r) { return '#' + r[0]; });
+        detail.innerHTML = '<b>' + title + '</b> — ' + about + ' Examples: ' + (ids.join(', ') || 'none') + '.';
+      } }, [h('b', { text: String(n) }), h('span', { text: title })]);
+    }
+    var precision = cm.tp / Math.max(1, cm.tp + cm.fp), recall = cm.tp / Math.max(1, cm.tp + cm.fn);
+    return h('div', null, [
+      h('p', { html: 'The <code>predictions</code> table holds a simple model\'s guesses for the ' + F.test + ' test rows. JOIN it to the real answers to grade it.' }),
+      h('div.rd-two', null, [
+        h('div', null, [
+          h('div.ml-cm', null, [
+            h('span'), h('span.ml-cmh', { text: 'Predicted 1' }), h('span.ml-cmh', { text: 'Predicted 0' }),
+            h('span.ml-cmh.side', { text: 'Really 1' }), box('tp', cm.tp, 'True positives', 'stockouts the model caught.', 1, 1), box('fn', cm.fn, 'False negatives', 'stockouts the model MISSED — empty shelves nobody was warned about.', 1, 0),
+            h('span.ml-cmh.side', { text: 'Really 0' }), box('fp', cm.fp, 'False positives', 'false alarms: the model warned, but nothing ran out.', 0, 1), box('tn', cm.tn, 'True negatives', 'correctly predicted no stockout.', 0, 0)
+          ]), detail]),
+        h('div', null, [
+          h('div.ml-metrics', null, [metric(Math.round(F.accuracy * 100) + '%', 'accuracy'), metric(Math.round(precision * 100) + '%', 'precision'), metric(Math.round(recall * 100) + '%', 'recall')]),
+          h('table.cs-keys.small', null, [
+            ['Accuracy', '(TP + TN) ÷ all', 'How often is it right?'], ['Precision', 'TP ÷ (TP + FP)', 'When it warns, is it right?'], ['Recall', 'TP ÷ (TP + FN)', 'How many stockouts does it catch?']
+          ].map(function (r) { return h('tr', null, r.map(function (x, i) { return h(i ? 'td' : 'th', { text: x }); })); })),
+          h('p.small', { html: 'The lazy baseline scores <b>' + Math.round(F.baseline * 100) + '%</b> accuracy — better than this model\'s ' + Math.round(F.accuracy * 100) + '% — but its recall is <b>0%</b>. Which one would a store manager want?' })
+        ])
+      ]),
+      h('h3', { text: 'Grade it with SQL' }),
+      this.console('SELECT e.example_id, e.stockout, p.predicted\nFROM predictions p\nJOIN ml_examples e ON p.example_id = e.example_id;', 3)
+    ]);
+  };
+})(globalThis.SX = globalThis.SX || {});
+
+// ---- ui-test.js ----
+/* SheetEX — certification tests. A full-screen test with no hints and no cheat sheet. An attempt counts the moment it
+ * starts (closing or reloading the page counts as a failed attempt), a failed attempt has a short cooldown, and the
+ * certificate records the score and the attempt number. */
+(function (SX) {
+  'use strict';
+  var UI = SX.ui, h = UI.h, CT = SX.certtest, L = SX.lessons;
+  var BANK = SX.TESTBANK || {};
+
+  function tstate(id) {
+    UI.state.tests = UI.state.tests || {};
+    return UI.state.tests[id] || (UI.state.tests[id] = { attempts: 0, best: 0, of: CT.SIZE, passed: 0, secs: 0, open: 0, lastFail: 0 });
+  }
+  function cooldownLeft(t) { return t.passed ? 0 : Math.max(0, Math.ceil((t.lastFail + CT.COOLDOWN * 1000 - Date.now()) / 1000)); }
+  function mmss(s) { return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+  function platName(p) { return SX.platforms.PLATFORMS[p] ? SX.platforms.PLATFORMS[p].name : p; }
+
+  UI.testBank = function (id) { return BANK[id] || []; };
+
+  UI.startTest = function (id) {
+    var lesson = L.byId(id);
+    if (!lesson) return;
+    if (!UI.lessonComplete(id)) { UI.toast('Not yet', 'Finish every practice challenge in this lesson first.'); return; }
+    if (UI.lessonCertified(id)) { UI.showCert(id); return; }
+    var t = tstate(id);
+    if (t.open) { t.lastFail = t.open; t.open = 0; UI.saveNow(); } // an attempt that was closed without submitting
+    var wait = cooldownLeft(t);
+    if (wait) { UI.toast('Review time', 'You can retake the test in ' + mmss(wait) + '. Use it to review the lesson guide and your practice challenges.'); return; }
+    var bank = UI.testBank(id), n = Math.min(CT.SIZE, bank.length);
+    UI.modal('📝 Certification test — Lesson ' + lesson.n, [
+      h('p', { html: '<b>' + UI.esc(lesson.title) + '</b>' }),
+      h('ul', null, [
+        h('li', { html: '<b>' + n + ' questions</b> drawn at random. You need <b>' + CT.needed(n) + ' correct</b> (' + Math.round(CT.PASS * 100) + '%) to earn the certificate.' }),
+        h('li', { html: '<b>No hints, no cheat sheet.</b> Hands-on questions run your formula or query just like the real app, so you can see what it returns before you move on.' }),
+        h('li', { html: 'Your attempt counts as soon as you start. Leaving or reloading the page counts as a failed attempt. After a failed attempt there is a ' + Math.round(CT.COOLDOWN / 60) + '-minute review break.' }),
+        h('li', { html: 'Your certificate shows your score and which attempt you passed on.' + (t.attempts ? ' <b>This will be attempt ' + (t.attempts + 1) + '.</b>' : '') })
+      ])
+    ], [{ text: 'Not yet' }, { text: 'Start the test', primary: true, onclick: function () { setTimeout(function () { run(id); }, 30); } }], { cls: 'wide' });
+  };
+
+  // ---------- previews of the data a question uses ----------
+  function sheetPreview(spec, plat, book) {
+    var wb = CT.book(book || 'store', plat || 'xl365', 0), F = SX.f;
+    var m = /^([A-Z]+):([A-Z]+)$/.exec(spec.cols), c1 = F.colToIdx(m[1]), c2 = F.colToIdx(m[2]);
+    var head = [h('th', { text: '' })];
+    for (var c = c1; c <= c2; c++) head.push(h('th', { text: F.idxToCol(c) }));
+    var rows = [h('tr', null, head)];
+    for (var r = 0; r <= spec.rows; r++) {
+      var tds = [h('th', { text: String(r + 1) })];
+      for (c = c1; c <= c2; c++) { var d = wb.display(spec.sheet, r, c); tds.push(h('td' + (r === 0 ? '.hdr' : ''), { text: d && typeof d === 'object' ? String(d.text) : String(d == null ? '' : d) })); }
+      rows.push(h('tr', null, tds));
+    }
+    rows.push(h('tr', null, [h('th', { text: '⋮' }), h('td.more', { colspan: c2 - c1 + 1, text: '… rows continue to row ' + spec.last })]));
+    return h('div.tq-sheet', null, [h('div.tq-sheet-name', { text: spec.sheet }), h('div.tq-scroll', null, h('table.tq-grid', null, rows))]);
+  }
+  var schemaDb = null;
+  function schema(names) {
+    schemaDb = schemaDb || SX.sql.makeStoreDb();
+    return h('div.tq-schema', null, names.map(function (n) {
+      var t = schemaDb.tables[n];
+      return h('div.tq-table', null, [h('b', { text: n }), h('span.small', { text: ' (' + t.cols.map(function (c) { return c.name; }).join(', ') + ')' })]);
+    }));
+  }
+  function resultPreview(p) {
+    if (!p) return null;
+    if (p.error) return h('div.tq-out.bad', { text: p.error });
+    if (p.grid) {
+      var g = p.grid.slice(0, 8);
+      return h('div.tq-out', null, [h('div.small.muted', { text: p.fill ? 'Your formula in the first rows:' : 'Your formula returns:' }),
+        h('table.tq-grid.res', null, g.map(function (row) { return h('tr', null, row.slice(0, 6).map(function (v) { return h('td', { text: v === '' ? ' ' : v }); })); })),
+        p.grid.length > 8 ? h('div.small.muted', { text: '… ' + p.grid.length + ' rows in total' }) : null,
+        p.errMsg ? h('div.small.bad', { text: p.errMsg }) : null]);
+    }
+    if (p.columns) {
+      return h('div.tq-out', null, [h('table.tq-grid.res', null, [h('tr', null, p.columns.map(function (c) { return h('th', { text: c }); }))].concat(
+        p.rows.map(function (r) { return h('tr', null, r.map(function (v) { return h('td', { text: v === '' ? 'NULL' : v }); })); }))),
+        h('div.small.muted', { text: p.total + ' row' + (p.total === 1 ? '' : 's') })]);
+    }
+    if (p.fields) {
+      return h('div.tq-out', null, [h('div.small.muted', { text: 'A program reading your file sees these fields:' }),
+        h('table.tq-grid.res', null, p.fields.map(function (r) { return h('tr', null, r.map(function (v) { return h('td', { text: v === '' ? '(empty)' : v }); })); }))]);
+    }
+    if (p.msg != null) return h('div.tq-out', { text: '✓ Ran. ' + p.msg });
+    return null;
+  }
+
+  // ---------- the test itself ----------
+  function run(id) {
+    var lesson = L.byId(id), t = tstate(id);
+    var qs = CT.draw(UI.testBank(id)), answers = qs.map(function () { return { text: '', cse: false }; });
+    var started = Date.now(), cur = 0;
+    t.attempts++; t.open = started; t.of = qs.length; UI.saveNow();
+    document.querySelectorAll('.modal-overlay, #cert-overlay').forEach(function (m) { m.remove(); }); // the test takes over the screen
+
+    var overlay = h('div.test-overlay#test-overlay', { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Certification test' });
+    var dots = h('div.tq-dots'), body = h('div.tq-body'), timer = h('span.tq-timer'), foot = h('div.tq-foot');
+    overlay.appendChild(h('div.tq-wrap', null, [
+      h('div.tq-head', null, [h('div', null, [h('div.tq-kicker', { text: 'Certification test · Lesson ' + lesson.n + ' · attempt ' + t.attempts }), h('div.tq-title', { text: lesson.title })]),
+        h('div.tq-right', null, [h('span.tq-nohint', { text: 'No hints' }), timer])]),
+      dots, body, foot]));
+    document.body.appendChild(overlay);
+    document.body.classList.add('testing');
+    var tick = setInterval(function () { timer.textContent = '⏱ ' + mmss(Math.floor((Date.now() - started) / 1000)); }, 1000);
+    timer.textContent = '⏱ 0:00';
+
+    var counter = h('span.small.muted');
+    function answered(i) { return String(answers[i].text || '').trim() !== ''; }
+    function drawDots() {
+      counter.textContent = answers.filter(function (x, i) { return answered(i); }).length + ' of ' + qs.length + ' answered';
+      dots.innerHTML = '';
+      qs.forEach(function (q, i) {
+        dots.appendChild(h('button.tq-dot' + (i === cur ? '.on' : '') + (answered(i) ? '.done' : ''), { text: String(i + 1), 'aria-label': 'Question ' + (i + 1), onclick: function () { cur = i; show(); } }));
+      });
+    }
+    function show() {
+      drawDots();
+      var q = qs[cur], a = answers[cur];
+      body.innerHTML = '';
+      body.appendChild(h('div.tq-qhead', null, [h('span.tq-qn', { text: 'Question ' + (cur + 1) + ' of ' + qs.length }),
+        q.plat ? h('span.tq-plat.pc-' + q.plat, { text: platName(q.plat) }) : null,
+        CT.isHandsOn(q) ? h('span.tq-kind', { text: 'hands-on' }) : null]));
+      body.appendChild(h('div.tq-q', { html: q.q }));
+      var out = h('div.tq-outbox');
+      function preview() { out.innerHTML = ''; var e = CT.evaluate(q, a); var pv = resultPreview(e.preview); if (pv) out.appendChild(pv); }
+      if (q.kind === 'mc') {
+        body.appendChild(h('div.tq-opts', null, q.opts.map(function (o) {
+          return h('button.tq-opt' + (a.text === o ? '.sel' : ''), { html: UI.esc(o), onclick: function () { a.text = o; show(); } });
+        })));
+      } else if (q.kind === 'text') {
+        var ti = h('input.input.tq-input', { value: a.text, placeholder: 'Type your answer', 'aria-label': 'Answer' });
+        ti.addEventListener('input', function () { a.text = ti.value; drawDots(); });
+        ti.addEventListener('keydown', function (e) { if (e.key === 'Enter') next(); });
+        body.appendChild(ti); setTimeout(function () { ti.focus(); }, 30);
+      } else if (q.kind === 'formula') {
+        (q.show || []).forEach(function (s) { body.appendChild(sheetPreview(s, q.plat, q.book)); });
+        var where = (q.sheet || 'Scratch') + '!' + q.at + (q.fill ? ' (filled down to row ' + q.fill + ')' : '');
+        var cseMark = h('span.tq-cse', { text: a.cse ? 'array formula { }' : '' });
+        var fi = h('input.input.tq-formula', { spellcheck: 'false', 'aria-label': 'Formula', autocomplete: 'off', placeholder: '=' });
+        fi.value = a.text || '';
+        fi.addEventListener('input', function () { a.text = fi.value; a.cse = false; cseMark.textContent = ''; drawDots(); });
+        fi.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            a.cse = !!(e.ctrlKey && e.shiftKey && q.plat === 'xl2013');
+            cseMark.textContent = a.cse ? 'array formula { }' : '';
+            preview();
+          }
+        });
+        body.appendChild(h('div.tq-cell', null, [h('span.tq-addr', { text: where }), fi, cseMark]));
+        body.appendChild(h('div.row', null, [h('button.btn.btn-sm', { text: '▶ Run (Enter)', onclick: function () { a.cse = false; cseMark.textContent = ''; preview(); } }),
+          q.plat === 'xl2013' ? h('span.small.muted', { text: 'Just like Excel 2013: Enter enters a normal formula, Ctrl+Shift+Enter enters an array formula.' }) : null]));
+        body.appendChild(out);
+        setTimeout(function () { fi.focus(); fi.setSelectionRange(fi.value.length, fi.value.length); }, 30);
+        if (a.text) preview();
+      } else {
+        if (q.show) body.appendChild(schema(q.show));
+        var ta = h('textarea.input.tq-code' + (q.kind === 'csv' ? '.csv' : ''), { rows: q.kind === 'csv' ? 3 : 4, spellcheck: 'false', 'aria-label': 'Answer', placeholder: q.kind === 'csv' ? 'Type the file contents' : 'Type your SQL' });
+        ta.value = a.text;
+        ta.addEventListener('input', function () { a.text = ta.value; drawDots(); });
+        ta.addEventListener('keydown', function (e) {
+          if (q.kind === 'csv' && e.key === 'Tab') { e.preventDefault(); var st = ta.selectionStart; ta.value = ta.value.slice(0, st) + '\t' + ta.value.slice(ta.selectionEnd); ta.selectionStart = ta.selectionEnd = st + 1; a.text = ta.value; }
+          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); preview(); }
+        });
+        body.appendChild(ta);
+        body.appendChild(h('div.row', null, [h('button.btn.btn-sm', { text: q.kind === 'csv' ? '▶ Read it like a program would (Ctrl+Enter)' : '▶ Run (Ctrl+Enter)', onclick: preview })]));
+        body.appendChild(out);
+        setTimeout(function () { ta.focus(); }, 30);
+        if (a.text) preview();
+      }
+      foot.innerHTML = '';
+      foot.appendChild(h('button.btn', { text: '← Back', disabled: cur === 0, onclick: function () { cur--; show(); } }));
+      foot.appendChild(counter);
+      if (cur < qs.length - 1) foot.appendChild(h('button.btn.btn-primary', { text: 'Next →', onclick: next }));
+      foot.appendChild(h('button.btn' + (cur === qs.length - 1 ? '.btn-primary' : ''), { text: 'Finish & submit', onclick: submit }));
+    }
+    function next() { if (cur < qs.length - 1) { cur++; show(); } }
+    function close() { clearInterval(tick); overlay.remove(); document.body.classList.remove('testing'); }
+    function submit() {
+      var blank = qs.filter(function (q, i) { return !answered(i); }).length;
+      if (blank) {
+        UI.modal('Submit with ' + blank + ' unanswered?', [h('p', { text: 'Unanswered questions count as wrong.' })],
+          [{ text: 'Keep working' }, { text: 'Submit anyway', primary: true, onclick: function () { setTimeout(grade, 30); } }]);
+        return;
+      }
+      grade();
+    }
+    function grade() {
+      var results = qs.map(function (q, i) { return answered(i) && CT.isCorrect(q, answers[i]); });
+      var score = results.filter(Boolean).length, need = CT.needed(qs.length), pass = score >= need;
+      var secs = Math.min(86400, Math.round((Date.now() - started) / 1000));
+      t.open = 0;
+      if (score / qs.length > t.best / Math.max(1, t.of) || !t.best) { t.best = score; t.of = qs.length; t.secs = secs; }
+      if (pass) {
+        t.passed = Date.now(); t.passScore = score; t.passAttempt = t.attempts; t.passSecs = secs; t.best = Math.max(t.best, score);
+      } else t.lastFail = Date.now();
+      UI.saveNow();
+      close();
+      if (pass) {
+        UI.issueCert(id);
+        UI.badge('certified');
+        if (score === qs.length) UI.badge('ace');
+        if (L.LIST.filter(function (l) { return UI.lessonCertified(l.id); }).length >= 5) UI.badge('cert-5');
+        UI.addXP(50, 'Passed the Lesson ' + lesson.n + ' test');
+        window.confettiBurst(140);
+      }
+      UI.saveNow();
+      var missed = [];
+      qs.forEach(function (q, i) { if (!results[i] && missed.indexOf(q.topic) < 0) missed.push(q.topic); });
+      UI.modal(pass ? '🎓 Passed! ' + score + ' / ' + qs.length : 'Not yet: ' + score + ' / ' + qs.length, [
+        h('div.tq-score' + (pass ? '.pass' : '.fail'), null, [h('b', { text: Math.round(100 * score / qs.length) + '%' }), h('span', { text: pass ? 'You earned the Lesson ' + lesson.n + ' certificate.' : 'You need ' + need + ' correct to pass.' })]),
+        h('div.tq-review', null, qs.map(function (q, i) { return h('div.tq-rv' + (results[i] ? '.ok' : '.no'), { text: (results[i] ? '✓ ' : '✗ ') + (i + 1) + '. ' + q.topic }); })),
+        missed.length ? h('p', { html: '<b>Review before your next attempt:</b> ' + missed.map(UI.esc).join(', ') + '. (Answers are not shown, so the test stays fair.)' }) : null,
+        pass ? null : h('p.small', { text: 'Your next attempt opens in ' + Math.round(CT.COOLDOWN / 60) + ' minutes and draws a new mix of questions. Re-read the lesson guide and redo a practice challenge on each topic you missed.' })
+      ], pass ? [{ text: 'Later' }, { text: 'View my certificate', primary: true, onclick: function () { setTimeout(function () { UI.showCert(id); }, 30); } }]
+        : [{ text: 'Open the lesson guide', onclick: function () { setTimeout(function () { UI.showGuide(id); }, 30); } }, { text: 'Back to practice', primary: true }], { cls: 'wide' });
+      if (UI.current === 'home') UI.render();
+      UI.refreshHeader();
+    }
+    show();
+  }
 })(globalThis.SX = globalThis.SX || {});
 
 // ---- main.js ----

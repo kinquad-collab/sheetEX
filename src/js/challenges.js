@@ -644,6 +644,101 @@
     task: 'In a database transaction, <b>atomic</b> means…', options: ['The data is very small', 'Either every change happens or none of them do', 'It runs as fast as possible', 'The data is encrypted'], answer: 1,
     hints: ['Remember the lunch-money power failure.'], learn: 'Atomic = indivisible. ACID: Atomic, Consistent, Isolated, Durable.' });
 
+  // ===== Lesson 10: Databases for Machine Learning (ML Data Lab) =====
+  var MF = SX.mldata ? SX.mldata.FACTS : null;
+  function mlRows(h) { return h.last && h.last.rows ? h.last.rows : null; }
+  function mlSingle(h) { var r = mlRows(h); return r && r.length === 1 && r[0].length === 1 ? r[0][0] : undefined; }
+  function mlNeedLast(h) { return mlRows(h) ? null : no('Run a SELECT query in any console on this page first — the check looks at your most recent result.'); }
+  add({ id: 'ml-quiz-label', plat: 'ml', type: 'quiz', title: 'Find the Label', xp: 10, level: 1,
+    task: 'The model will predict whether a product <b>runs out</b> this week. Which column of <code>ml_examples</code> is the <b>label</b>?',
+    options: ['example_id', 'promo', 'stockout', 'split'], answer: 2,
+    hints: ['The label is the answer the model is trying to guess.'], learn: 'The label is the answer column. Everything the model may look at to guess it is a feature.' });
+  add({ id: 'ml-roles', plat: 'ml', title: 'Sort the Columns', xp: 20, level: 2,
+    task: 'In section <b>1</b>, give every column its job — ID, feature, label, split, or "known only afterwards" — and press <b>Check my sorting</b>.',
+    hints: ['example_id is just a row number; split and week decide train vs test.', 'One column is filled in AFTER the week is over. A model could never know it in time.'],
+    learn: 'Before any AI work, decide what each column is for. IDs and after-the-fact columns must never be features.',
+    check: function (h) { return h.rolesOk ? ok() : no('Sort every column in section 1 and press "Check my sorting" until all are right.'); } });
+  add({ id: 'ml-balance', plat: 'ml', title: 'Count the Classes', xp: 15, level: 1,
+    task: 'Write a query that shows <b>how many examples have each stockout value</b> (0 and 1).',
+    hints: ['GROUP BY the label column.', 'SELECT stockout, COUNT(*) FROM ml_examples GROUP BY stockout;'],
+    learn: 'Only about 1 in 4 examples is a stockout. With imbalanced classes, "accuracy" alone can fool you.',
+    check: function (h) {
+      var miss = mlNeedLast(h); if (miss) return miss;
+      var r = mlRows(h), m = {}; r.forEach(function (row) { if (row.length >= 2) m[String(row[0])] = row[row.length - 1]; });
+      return r.length === 2 && m['0'] === MF.neg && m['1'] === MF.pos ? ok(MF.neg + ' non-stockouts and ' + MF.pos + ' stockouts.') : no('Your last result should have 2 rows: each stockout value (0, 1) and how many examples have it.');
+    } });
+  add({ id: 'ml-nulls', plat: 'ml', title: 'Hunt the Missing Values', xp: 15, level: 1,
+    task: 'Write a query that counts the examples where <code>units_last_week</code> is <b>missing</b>.',
+    hints: ['Missing in SQL is NULL — and you test it with IS NULL.', 'SELECT COUNT(*) FROM ml_examples WHERE units_last_week IS NULL;'],
+    learn: 'Models cannot use NULL directly. You must drop those rows, fill them in (for example with the average), or add a "was missing" flag — and write down which you chose.',
+    check: function (h) { var miss = mlNeedLast(h); if (miss) return miss; return mlSingle(h) === MF.nulls ? ok(MF.nulls + ' missing values.') : no('Your last result should be ONE number: how many rows have units_last_week IS NULL.'); } });
+  add({ id: 'ml-split', plat: 'ml', title: 'Check the Split', xp: 15, level: 1,
+    task: 'Show <b>how many examples are in each split</b> (train and test).',
+    hints: ['GROUP BY split.'],
+    learn: 'The test rows are the model’s final exam. It must never study them.',
+    check: function (h) {
+      var miss = mlNeedLast(h); if (miss) return miss;
+      var r = mlRows(h), m = {}; r.forEach(function (row) { if (row.length >= 2) m[String(row[0])] = row[row.length - 1]; });
+      return r.length === 2 && m.train === MF.train && m.test === MF.test ? ok(MF.train + ' training and ' + MF.test + ' test examples.') : no('Your last result should have 2 rows: train and test, each with its count.');
+    } });
+  add({ id: 'ml-dupes', plat: 'ml', title: 'Catch the Leak', xp: 30, level: 3,
+    task: 'Some test rows are <b>copies of training rows</b> (same week, store_id and sku). Write a query that lists the <b>week, store_id and sku</b> of every example that appears in <b>both</b> splits.',
+    hints: ['GROUP BY week, store_id, sku — then keep only the groups that have more than one split.', 'HAVING COUNT(DISTINCT split) > 1'],
+    learn: 'If the model is tested on rows it already studied, its test score is a lie. Removing duplicates across splits is a basic step in every real ML project.',
+    check: function (h) {
+      var miss = mlNeedLast(h); if (miss) return miss;
+      var r = mlRows(h), want = MF.leakedKeys.map(function (k) { return k.join('|'); }).sort();
+      var got = r.map(function (row) { return row.slice(0, 3).join('|'); }).sort();
+      return JSON.stringify(got) === JSON.stringify(want) ? ok('Found all ' + want.length + ' leaked copies.') : no('Your last result has ' + r.length + ' row(s). It should list exactly the (week, store_id, sku) combinations that appear in BOTH train and test — the first three columns, in that order.');
+    } });
+  add({ id: 'ml-quiz-leak', plat: 'ml', type: 'quiz', title: 'Too Good to Be True', xp: 15, level: 2,
+    task: 'Which column would let a model "cheat", because it is only known <b>after</b> the week is over?',
+    options: ['promo', 'in_stock_start', 'restock_after', 'price'], answer: 2,
+    hints: ['Read the column descriptions in section 1.'], learn: 'restock_after is filled in after a stockout happens. Using it is target leakage: perfect in testing, useless in real life.' });
+  add({ id: 'ml-leakdemo', plat: 'ml', title: 'Watch a Model Cheat', xp: 15, level: 1,
+    task: 'In section <b>4</b>, run the model that uses <code>restock_after</code> and see its "perfect" score.',
+    hints: ['Press "Train a model that uses restock_after".'],
+    learn: 'A perfect score is a warning sign. Real models are never perfect — check for leakage first.',
+    check: function (h) { return h.sawLeak ? ok() : no('Run the cheating model in section 4.'); } });
+  add({ id: 'ml-features', plat: 'ml', title: 'Build the Training Table', xp: 35, level: 3,
+    task: 'Create a table <code>train_set</code> with <b>only the training rows</b>, <b>without</b> the leaky <code>restock_after</code> column, and with the product\'s <b>category</b> joined in from <code>products</code>.',
+    hints: ['CREATE TABLE train_set AS SELECT … FROM ml_examples e JOIN products p ON e.sku = p.sku WHERE …', "Pick the columns you want, e.g. e.example_id, e.promo, e.price, e.units_last_week, e.in_stock_start, p.category, e.stockout — and WHERE e.split = 'train'."],
+    learn: 'A "feature table" is a JOIN that gathers every input the model may use — and nothing it must not see.',
+    check: function (h) {
+      var t = h.table('train_set'); if (!t) return no('There is no train_set table yet. Use CREATE TABLE train_set AS SELECT …');
+      var names = t.cols.map(function (c) { return c.name.toLowerCase(); });
+      if (names.indexOf('restock_after') >= 0) return no('train_set still has restock_after — leave the leaky column out.');
+      if (names.indexOf('category') < 0) return no('train_set needs a category column (JOIN products).');
+      if (names.indexOf('stockout') < 0) return no('Keep the label (stockout) — the model learns from it.');
+      var si = names.indexOf('split');
+      if (si >= 0 && t.rows.some(function (r) { return r[si] !== 'train'; })) return no('Some test rows got into train_set.');
+      return t.rows.length === MF.train ? ok('train_set has ' + MF.train + ' training rows and ' + names.length + ' columns.') : no('train_set has ' + t.rows.length + ' rows; it should have exactly the ' + MF.train + ' training rows.');
+    } });
+  add({ id: 'ml-accuracy', plat: 'ml', title: 'Grade the Model', xp: 25, level: 2,
+    task: 'The <code>predictions</code> table holds a model\'s guesses for the test rows. Write ONE query that returns the model\'s <b>accuracy</b>: the fraction (or percent) of predictions that match the real <code>stockout</code>.',
+    hints: ['JOIN predictions to ml_examples on example_id.', 'In SQLite, (predicted = stockout) is 1 when right and 0 when wrong — so AVG of it is the accuracy.', 'SELECT AVG(p.predicted = e.stockout) FROM predictions p JOIN ml_examples e ON p.example_id = e.example_id;'],
+    learn: 'Accuracy = right guesses ÷ all guesses. It is the first number everyone asks about — and often not the most important one.',
+    check: function (h) {
+      var miss = mlNeedLast(h); if (miss) return miss;
+      var v = mlSingle(h);
+      return typeof v === 'number' && (near(v, MF.accuracy, 0.001) || near(v, MF.accuracy * 100, 0.1)) ? ok('Accuracy: ' + Math.round(MF.accuracy * 100) + '%.') : no('Your last result should be ONE number: the share of predictions that equal stockout.');
+    } });
+  add({ id: 'ml-confusion', plat: 'ml', title: 'Build a Confusion Matrix', xp: 30, level: 3,
+    task: 'Write a query that counts the test predictions for <b>every combination of real stockout and predicted value</b> (columns: stockout, predicted, count).',
+    hints: ['JOIN predictions to ml_examples, then GROUP BY two columns.', 'SELECT e.stockout, p.predicted, COUNT(*) FROM predictions p JOIN ml_examples e ON p.example_id = e.example_id GROUP BY e.stockout, p.predicted;'],
+    learn: 'The confusion matrix shows WHICH mistakes a model makes: missed stockouts (false negatives) and false alarms (false positives).',
+    check: function (h) {
+      var miss = mlNeedLast(h); if (miss) return miss;
+      var cm = MF.cm, want = { '1|1': cm.tp, '0|1': cm.fp, '1|0': cm.fn, '0|0': cm.tn }, r = mlRows(h), ok2 = true, seen = 0;
+      r.forEach(function (row) { var k = row[0] + '|' + row[1]; if (want[k] === undefined || want[k] !== row[2]) ok2 = false; else seen++; });
+      var need = Object.keys(want).filter(function (k) { return want[k] > 0; }).length;
+      return ok2 && seen === need ? ok('Right: ' + (cm.tp + cm.tn) + ', missed stockouts: ' + cm.fn + ', false alarms: ' + cm.fp + '.') : no('Each row should be: real stockout, predicted value, and the count for that pair — one row per pair that occurs.');
+    } });
+  add({ id: 'ml-quiz-baseline', plat: 'ml', type: 'quiz', title: 'Beat the Baseline', xp: 15, level: 2,
+    task: 'On the test rows, "always predict 0 (no stockout)" is right <b>' + (MF ? Math.round(MF.baseline * 100) : 83) + '%</b> of the time. The real model is right <b>' + (MF ? Math.round(MF.accuracy * 100) : 75) + '%</b> of the time. What does this tell you?',
+    options: ['The model is great — 75% is a passing grade', 'With rare stockouts, accuracy is misleading: the model is worse than doing nothing', 'The test set is too big', 'Baselines are always 83%'], answer: 1,
+    hints: ['Would the "always 0" model ever warn the store about a stockout?'], learn: 'Always compare with a baseline, and look at the confusion matrix. A model that never predicts the rare class can still have high accuracy.' });
+
   // ===== Compare-page quizzes =====
   add({ id: 'cmp-name', plat: 'compare', type: 'quiz', title: 'Who Says #NAME?', xp: 10, level: 1,
     task: 'Where does <code>=XLOOKUP(A2, B:B, C:C)</code> give a <b>#NAME?</b> error?',

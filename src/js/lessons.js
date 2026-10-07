@@ -19,6 +19,8 @@
       skills: ['SELECT, WHERE, ORDER BY', 'GROUP BY and HAVING', 'JOIN (the SQL VLOOKUP)', 'Integer division', 'UPDATE safely'] },
     { id: 'rdbms', n: 9, title: 'Databases 101: What is an RDBMS?', tool: 'RDBMS Explorer', workspace: 'rdbms',
       skills: ['Tables, rows, columns and data types', 'Primary keys and foreign keys', 'Relationships and JOINs', 'Constraints that refuse bad data', 'Transactions and ACID'] },
+    { id: 'ml', n: 10, title: 'Databases for Machine Learning', tool: 'ML Data Lab', workspace: 'ml',
+      skills: ['Examples, features and labels', 'Class balance and baselines', 'Missing values', 'Train/test splits and data leakage', 'Grading a model: accuracy and the confusion matrix'] },
     { id: 'compare', n: 8, title: 'Cross-Platform Translator', tool: 'Compare', workspace: 'compare',
       skills: ['Which functions exist where', 'Silent differences between apps', 'Spreadsheet ideas in SQL'] }
   ];
@@ -117,6 +119,20 @@
       ],
       traps: ['A spreadsheet that repeats the same fact in many rows will eventually disagree with itself.', 'A foreign key must point at a row that already exists — add the parent first.', 'Nothing inside BEGIN is permanent until COMMIT.']
     },
+    ml: {
+      why: 'A machine-learning model only knows what its training table shows it. Most AI mistakes are really data mistakes: the wrong rows, a column that gives away the answer, or a test that was secretly part of the training. SQL is how data scientists find them.',
+      terms: [
+        ['Example', 'One row the model learns from.', 'Product SKU-101 at store S03 in week 2'],
+        ['Feature', 'An input column the model may use to make its guess.', 'promo, price, units_last_week'],
+        ['Label', 'The answer the model is trying to predict.', 'stockout (1 = ran out, 0 = did not)'],
+        ['Class imbalance', 'One answer is much rarer than the other.', '17 stockouts vs 47 non-stockouts'],
+        ['Train / test split', 'Learn from some rows; check on rows the model has never seen.', "WHERE split = 'test'"],
+        ['Data leakage', 'The model sees the answer during training — test copies, or a column only known afterwards.', 'restock_after'],
+        ['Baseline', 'The score of a "dumb" model. A real model must beat it.', 'Always predict 0'],
+        ['Confusion matrix', 'Counts of right and wrong guesses for each answer.', 'GROUP BY stockout, predicted']
+      ],
+      traps: ['High accuracy can be meaningless when one answer is rare — compare with a baseline.', 'If a model looks perfect, look for leakage before celebrating.', 'Never let test rows (or copies of them) into the training table.']
+    },
     compare: {
       why: 'The same formula can work, fail, or silently give a different answer depending on the app. Checking before you share is a professional habit.',
       terms: [
@@ -132,45 +148,23 @@
 
   function byId(id) { return LESSONS.filter(function (l) { return l.id === id; })[0]; }
 
-  // --- tiny base64 (works in browsers and in tests) ---
-  var B = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-  function utf8(s) { return unescape(encodeURIComponent(s)); }
-  function b64(s) {
-    s = utf8(s); var out = '';
-    for (var i = 0; i < s.length; i += 3) {
-      var n = (s.charCodeAt(i) << 16) | ((s.charCodeAt(i + 1) || 0) << 8) | (s.charCodeAt(i + 2) || 0);
-      out += B[(n >> 18) & 63] + B[(n >> 12) & 63] + (i + 1 < s.length ? B[(n >> 6) & 63] : '') + (i + 2 < s.length ? B[n & 63] : '');
-    }
-    return out;
-  }
-  function unb64(s) {
-    var bytes = '';
-    for (var i = 0; i < s.length; i += 4) {
-      var n = 0, k;
-      for (k = 0; k < 4; k++) { var ch = s[i + k]; n = n * 64 + (ch === undefined ? 0 : B.indexOf(ch)); }
-      var len = Math.min(3, Math.floor((s.length - i) * 3 / 4));
-      for (k = 0; k < len; k++) bytes += String.fromCharCode((n >> (16 - 8 * k)) & 255);
-    }
-    return decodeURIComponent(escape(bytes));
-  }
-  // Tamper-evidence only: anyone who reads the source can recompute this.
-  function sum(s) { var x = 2026; for (var i = 0; i < s.length; i++) x = (x * 33 + s.charCodeAt(i)) % 2147483629; return x.toString(36); }
-
+  // ---- Certificate codes: sealed with SX.seal (see seal.js), strictly validated when read ----
   function certCode(c) {
-    var json = JSON.stringify({ n: c.name, l: c.lesson, x: c.xp, m: c.maxXp, h: c.hints, c: c.count, t: c.time });
-    return 'SXC1-' + b64(json) + '-' + sum(json);
+    return SX.seal.pack('SXC2', { n: c.name, i: c.sid, l: c.lesson, x: c.xp, m: c.maxXp, h: c.hints, c: c.count, s: c.score, q: c.of, a: c.attempts, d: c.secs, t: c.time });
   }
+  function isInt(x, lo, hi) { return typeof x === 'number' && Math.floor(x) === x && x >= lo && x <= hi; }
   function readCert(code) {
-    var m = /^SXC1-([A-Za-z0-9_-]+)-([a-z0-9]+)$/.exec(String(code).trim());
-    if (!m) return null;
-    try {
-      var json = unb64(m[1]);
-      if (sum(json) !== m[2]) return null;
-      var o = JSON.parse(json), L = byId(o.l);
-      return { name: o.n, lesson: o.l, title: L ? L.title : o.l, xp: o.x, maxXp: o.m, hints: o.h, count: o.c, time: o.t };
-    } catch (e) { return null; }
+    var r = SX.seal.unpack('SXC2', code);
+    if (!r.ok) return r;
+    var o = r.obj, L = byId(o.l), keys = ['n', 'i', 'l', 'x', 'm', 'h', 'c', 's', 'q', 'a', 'd', 't'];
+    var exact = o && typeof o === 'object' && Object.keys(o).length === keys.length && keys.every(function (k) { return k in o; });
+    var ok = exact && L && typeof o.n === 'string' && o.n.length >= 3 && o.n.length <= 40 && /^[A-Za-z0-9_-]{12}$/.test(o.i) &&
+      isInt(o.x, 0, 10000) && isInt(o.m, 1, 10000) && o.x <= o.m && isInt(o.h, 0, 500) && isInt(o.c, 1, 100) &&
+      isInt(o.q, 1, 50) && isInt(o.s, 0, o.q) && isInt(o.a, 1, 999) && isInt(o.d, 0, 86400) && isInt(o.t, 1.6e12, 4e12);
+    if (!ok) return { ok: false, why: 'This certificate code does not have the exact format SheetEX makes. It cannot be used.' };
+    return { ok: true, cert: { name: o.n, sid: o.i, lesson: o.l, title: L.title, n: L.n, xp: o.x, maxXp: o.m, hints: o.h, count: o.c,
+      score: o.s, of: o.q, attempts: o.a, secs: o.d, time: o.t } };
   }
-  function shortId(code) { return code.split('-').pop().toUpperCase(); }
 
-  SX.lessons = { LIST: LESSONS, byId: byId, certCode: certCode, readCert: readCert, shortId: shortId };
+  SX.lessons = { LIST: LESSONS, byId: byId, certCode: certCode, readCert: readCert };
 })(globalThis.SX = globalThis.SX || {});

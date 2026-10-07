@@ -56,6 +56,7 @@
     if (out.error) box.appendChild(h('div.sql-err', null, [h('div.sql-err-msg', { text: 'Error: ' + out.error.message }), out.error.hint ? h('div.sql-hint', { text: '💡 ' + out.error.hint }) : null]));
     return box;
   }
+  UI.sqlResultView = resultView;
   RdbmsView.prototype.console = function (initial, rows) {
     var self = this;
     var ta = h('textarea.sql-editor.rd-console', { spellcheck: 'false', rows: rows || 3, 'aria-label': 'SQL' }, initial || '');

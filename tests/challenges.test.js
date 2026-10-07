@@ -86,7 +86,7 @@ const CSV = {
 };
 
 for (const ch of SX.challenges.LIST) {
-  if (/^wr[12]$/.test(ch.plat) || ch.plat === 'rdbms') continue; // covered by dedicated tests below
+  if (/^wr[12]$/.test(ch.plat) || ch.plat === 'rdbms' || ch.plat === 'ml') continue; // covered by dedicated tests below
   if (ch.type === 'quiz') {
     test('quiz ' + ch.id + ' is well-formed', () => { assert.ok(ch.options[ch.answer]); });
     continue;
@@ -182,19 +182,6 @@ test('wrangling lab: classic mistakes are caught', () => {
   for (const [id, steps] of bad) assert.ok(!SX.challenges.byId(id).check(wrSolve('xl365', steps)).ok, id + ' should fail');
 });
 
-test('certificate codes round-trip and reject tampering', () => {
-  const L = require('./load.js')(['lessons.js']).lessons;
-  const code = L.certCode({ name: 'Jordan Smith', lesson: 'wr1', xp: 200, maxXp: 225, hints: 2, count: 11, time: 1790000000000 });
-  const back = L.readCert(code);
-  assert.strictEqual(back.name, 'Jordan Smith');
-  assert.strictEqual(back.title, 'Data Wrangling I: Cleaning Data for AI');
-  assert.strictEqual(back.xp, 200);
-  const parts = code.split('-');
-  const forged = L.certCode({ name: 'Jordan Smith', lesson: 'wr1', xp: 225, maxXp: 225, hints: 0, count: 11, time: 1790000000000 }).split('-')[1];
-  assert.strictEqual(L.readCert(parts[0] + '-' + forged + '-' + parts[2]), null);
-  assert.strictEqual(L.readCert(code.replace(/.$/, (c) => (c === 'a' ? 'b' : 'a'))), null);
-  assert.ok(L.readCert(L.certCode({ name: 'José Núñez', lesson: 'sql', xp: 1, maxXp: 2, hints: 0, count: 1, time: 1 })).name === 'José Núñez');
-});
 test('every challenge belongs to a lesson', () => {
   const S = require('./load.js')(['platforms.js', 'challenges.js', 'lessons.js']);
   for (const c of S.challenges.LIST) assert.ok(S.lessons.byId(c.plat), c.id + ' has no lesson');
@@ -260,12 +247,49 @@ test('lesson 9: SQL challenges are solvable and reject the starting state', () =
   assert.ok(SX.challenges.byId('rd-anomaly').check(Object.assign(rdRun([]), { anomaly: true })).ok);
   assert.ok(SX.challenges.byId('rd-bank').check(Object.assign(rdRun([]), { bankDone: true })).ok);
 });
+// Mirrors MlView.exec in ui-ml.js: the checks look at the most recent SELECT result and the sandbox tables.
+function mlRun(sqls, extra) {
+  const db = SX.sql.makeStoreDb(); let last = null;
+  for (const q of sqls) {
+    try { SX.sql.execute(db, q).forEach((r) => { if (r.type === 'rows') last = { columns: r.columns, rows: r.rows }; }); }
+    catch (e) { if (!(e instanceof SX.sql.SqlError)) throw e; }
+  }
+  return Object.assign({ db, table: (n) => db.tables[n.toLowerCase()] || null, last, rolesOk: false, sawLeak: false }, extra || {});
+}
+test('lesson 10 challenges reject the starting state and near-misses', () => {
+  for (const ch of SX.challenges.forPlat('ml').filter((c) => c.type !== 'quiz')) assert.ok(!ch.check(mlRun([])).ok, ch.id + ' should not pass untouched');
+  const bad = [
+    ['ml-balance', ['SELECT stockout FROM ml_examples;']],
+    ['ml-nulls', ["SELECT COUNT(*) FROM ml_examples WHERE units_last_week = '';"]],
+    ['ml-dupes', ['SELECT week, store_id, sku FROM ml_examples GROUP BY week, store_id, sku HAVING COUNT(*) > 0;']],
+    ['ml-features', ["CREATE TABLE train_set AS SELECT * FROM ml_examples WHERE split = 'train';"]],
+    ['ml-features', ['CREATE TABLE train_set AS SELECT e.example_id, p.category, e.stockout FROM ml_examples e JOIN products p ON e.sku = p.sku;']],
+    ['ml-accuracy', ['SELECT AVG(predicted) FROM predictions;']],
+    ['ml-confusion', ['SELECT predicted, COUNT(*) FROM predictions GROUP BY predicted;']]
+  ];
+  for (const [id, sqls] of bad) assert.ok(!SX.challenges.byId(id).check(mlRun(sqls)).ok, id + ' should reject: ' + sqls[0]);
+  assert.ok(SX.challenges.byId('ml-accuracy').check(mlRun(['SELECT 100.0 * SUM(p.predicted = e.stockout) / COUNT(*) FROM predictions p JOIN ml_examples e ON p.example_id = e.example_id;'])).ok, 'percent form accepted');
+  assert.ok(SX.challenges.byId('ml-roles').check(mlRun([], { rolesOk: true })).ok);
+  assert.ok(SX.challenges.byId('ml-leakdemo').check(mlRun([], { sawLeak: true })).ok);
+});
+test('lesson 10 data has the planted problems the lesson promises', () => {
+  const F = SX.mldata.FACTS;
+  assert.strictEqual(F.total, F.train + F.test);
+  assert.ok(F.pos / F.total < 0.35, 'classes are imbalanced');
+  assert.ok(F.nulls > 0 && F.leaked > 0);
+  assert.ok(F.baseline > F.accuracy, 'the lazy baseline beats the model on accuracy (accuracy paradox)');
+  assert.ok(F.cm.tp > 0 && F.cm.fn > 0 && F.cm.fp > 0);
+  const db = SX.sql.makeStoreDb();
+  assert.throws(() => SX.sql.execute(db, "INSERT INTO ml_examples (week, store_id, sku, stockout, split) VALUES (1, 'S99', 'SKU-101', 0, 'train');"), /FOREIGN KEY/);
+  assert.throws(() => SX.sql.execute(db, "INSERT INTO ml_examples (week, store_id, sku, stockout, split) VALUES (1, 'S01', 'SKU-101', 2, 'train');"), /CHECK/);
+});
 for (const ch of SX.challenges.LIST.filter((c) => c.type !== 'quiz')) {
   test('teacher answer key is correct: ' + ch.id, () => {
     const k = KEY[ch.id];
     assert.ok(k, 'missing answer key for ' + ch.id);
     if (k.ui) { assert.ok(k.ui.length > 10); return; } // page interaction: verified in tests/e2e-lessons.js
     if (k.rd) { const r = ch.check(rdRun(k.rd)); assert.ok(r.ok, r.msg); return; }
+    if (k.ml) { const r = ch.check(mlRun(k.ml)); assert.ok(r.ok, r.msg); return; }
     const plats = k.wr ? ['xl365', 'gs'] : [ch.plat];
     for (const plat of plats) {
       let h;

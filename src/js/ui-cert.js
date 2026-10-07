@@ -1,61 +1,42 @@
-/* SheetEX v2 — lesson certificates and the optional Apps Script cloud (gradebook + save/load). */
+/* SheetEX v2 — lesson guides and certificates. Nothing here leaves the browser. */
 (function (SX) {
   'use strict';
   var UI = SX.ui, h = UI.h, L = SX.lessons;
-
-  // ---------- Cloud (only when served by Google Apps Script) ----------
-  var cloud = SX.cloud = {
-    available: function () { try { return !!(window.google && window.google.script && window.google.script.run); } catch (e) { return false; } },
-    call: function (fn, args) {
-      return new Promise(function (resolve, reject) {
-        var r = window.google.script.run.withSuccessHandler(resolve).withFailureHandler(function (e) { reject(e && e.message ? e : new Error(String(e))); });
-        r[fn].apply(r, args || []);
-      });
-    }
-  };
 
   // ---------- Lessons ----------
   UI.lessonProgress = function (id) { return UI.platProgress(id); };
   UI.lessonComplete = function (id) { var p = UI.platProgress(id); return p.total > 0 && p.done === p.total; };
 
-  function needRealName(then) {
-    var nm = (UI.state.name || '').trim();
-    if (nm && nm !== 'Analyst' && /\s/.test(nm)) { then(); return; }
-    var inp = h('input.input', { value: nm === 'Analyst' ? '' : nm, maxlength: 40, placeholder: 'First and last name' });
-    UI.modal('Name on your certificate', [
-      h('p', { text: 'Certificates show your full name so your teacher knows they are yours. Type your first and last name exactly as your teacher knows you.' }), inp
-    ], [{ text: 'Cancel' }, { text: 'Use this name', primary: true, onclick: function () {
-      var v = inp.value.trim().replace(/\s+/g, ' ');
-      if (!/\S+\s+\S+/.test(v)) { UI.toast('First AND last name, please', 'Example: Jordan Smith'); return false; }
-      UI.state.name = v; UI.save(); UI.refreshHeader(); setTimeout(then, 50);
-    } }]);
-  }
+  // A certificate needs every practice challenge done AND the certification test passed.
+  UI.lessonCertified = function (id) { var t = UI.state.tests && UI.state.tests[id]; return UI.lessonComplete(id) && !!(t && t.passed); };
 
   UI.issueCert = function (id) {
-    var lesson = L.byId(id), list = SX.challenges.forPlat(id), pr = UI.platProgress(id);
+    var list = SX.challenges.forPlat(id), pr = UI.platProgress(id), t = UI.state.tests[id];
     var hints = list.reduce(function (a, c) { return a + (UI.state.done[c.id] ? UI.state.done[c.id].hints || 0 : 0); }, 0);
-    var cert = { name: UI.state.name, lesson: id, xp: pr.xp, maxXp: pr.maxXp, hints: hints, count: pr.total, time: Date.now() };
-    cert.code = L.certCode(cert);
+    var cert = { name: UI.state.name, sid: UI.state.sid, lesson: id, xp: pr.xp, maxXp: pr.maxXp, hints: hints, count: pr.total,
+      score: t.passScore != null ? t.passScore : t.best, of: t.of, attempts: t.passAttempt || t.attempts || 1,
+      secs: t.passSecs != null ? t.passSecs : t.secs || 0, time: t.passed };
     UI.state.certs = UI.state.certs || {};
-    UI.state.certs[id] = { code: cert.code, t: cert.time, sent: false };
-    UI.save();
-    if (cloud.available()) {
-      cloud.call('sxRecordCertificate', [{ name: cert.name, lesson: lesson.title, lessonId: id, xp: cert.xp, maxXp: cert.maxXp, hints: hints, challenges: cert.count, code: cert.code }])
-        .then(function () { UI.state.certs[id].sent = true; UI.save(); UI.toast('🎓 Sent to your teacher', 'Your certificate was recorded in the class gradebook.'); refreshSent(); })
-        .catch(function (e) { UI.toast('Could not reach the gradebook', (e && e.message) || 'Copy your certificate code instead.', 'err'); });
-    }
+    UI.state.certs[id] = { code: L.certCode(cert), t: cert.time };
+    UI.saveNow();
     return cert;
   };
-  var sentBox = null;
-  function refreshSent() { if (sentBox && sentBox.isConnected) sentBox.textContent = '✓ Recorded in your teacher\'s gradebook'; }
 
   UI.lessonFinished = function (id) {
     var lesson = L.byId(id); if (!lesson) return;
-    window.confettiBurst(120);
-    UI.modal('🎓 Lesson ' + lesson.n + ' complete!', [
-      h('div.levelup', null, [h('div.levelup-title', { text: lesson.title }),
-        h('p', { text: 'You finished every challenge in this lesson. Claim your certificate — print it, save it, or copy its code into Canvas.' })])
-    ], [{ text: 'Later' }, { text: 'Get my certificate', primary: true, onclick: function () { setTimeout(function () { UI.showCert(id); }, 50); } }]);
+    // Shown when the screen is free, and never once a test has been started (it would only get in the way).
+    function started() { var t = UI.state.tests && UI.state.tests[id]; return UI.lessonCertified(id) || !!(t && t.attempts) || !!document.querySelector('.test-overlay'); }
+    function show() {
+      if (started()) return;
+      if (document.querySelector('.modal-overlay, #cert-overlay')) { setTimeout(show, 700); return; }
+      window.confettiBurst(120);
+      UI.modal('Practice complete: Lesson ' + lesson.n, [
+        h('div.levelup', null, [h('div.levelup-title', { text: lesson.title }),
+          h('p', { text: 'You finished every practice challenge. One step left: pass the certification test to earn your certificate.' }),
+          h('p.small', { text: 'The test has no hints and no cheat sheet. Take a minute to review first if you need to.' })])
+      ], [{ text: 'Later' }, { text: 'Take the test', primary: true, onclick: function () { setTimeout(function () { UI.startTest(id); }, 50); } }]);
+    }
+    show();
   };
 
   // ---------- Lesson guide ----------
@@ -71,7 +52,7 @@
       h('ul.guide-traps', null, g.traps.map(function (t) { return h('li', { text: t }); })),
       h('h3', { text: 'You will practice' }),
       h('ul.cert-skills.guide-skills', null, lesson.skills.map(function (s) { return h('li', { text: s }); })),
-      h('p.small.muted', { text: 'Finish every challenge in this lesson to earn its certificate. Hints are always there if you get stuck.' })
+      h('p.small.muted', { text: 'Practice challenges have hints whenever you get stuck. To earn the certificate, pass the certification test at the end — no hints there.' })
     ], [{ text: 'Start the challenges', primary: true }], { cls: 'wide' });
   };
   UI.maybeGuide = function (ids) {
@@ -81,14 +62,12 @@
   };
 
   UI.showCert = function (id) {
-    if (!UI.lessonComplete(id)) { UI.toast('Not yet!', 'Finish every challenge in this lesson to earn its certificate.'); return; }
-    needRealName(function () {
-      var saved = UI.state.certs && UI.state.certs[id];
-      var data = saved && L.readCert(saved.code);
-      // Re-issue if the name changed since the certificate was made
-      if (!data || data.name !== UI.state.name) { UI.issueCert(id); saved = UI.state.certs[id]; data = L.readCert(saved.code); }
-      render(id, data, saved);
-    });
+    if (!UI.lessonComplete(id)) { UI.toast('Not yet!', 'Finish every practice challenge, then pass the certification test.'); return; }
+    if (!UI.lessonCertified(id)) { UI.startTest(id); return; }
+    var saved = UI.state.certs && UI.state.certs[id];
+    var r = saved && L.readCert(saved.code);
+    if (!r || !r.ok || r.cert.name !== UI.state.name) { UI.issueCert(id); saved = UI.state.certs[id]; r = L.readCert(saved.code); }
+    render(id, r.cert, saved);
   };
 
   function fmtDate(t) { return new Date(t).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }); }
@@ -108,18 +87,17 @@
         h('div.cert-tool', { text: lesson.tool }),
         h('ul.cert-skills', null, lesson.skills.map(function (s) { return h('li', { text: s }); })),
         h('div.cert-stats', null, [
-          stat(c.count, 'challenges'), stat(c.xp + ' / ' + c.maxXp, 'XP earned'), stat(c.hints, c.hints === 1 ? 'hint used' : 'hints used')
+          stat(c.score + ' / ' + c.of, 'certification test'), stat(c.count, 'practice challenges'), stat(c.hints, c.hints === 1 ? 'hint in practice' : 'hints in practice')
         ]),
         h('div.cert-foot', null, [
           h('div', null, [h('div.cert-line'), h('div.cert-small', { text: 'Date: ' + fmtDate(c.time) })]),
           h('div.cert-seal', { text: '★' }),
           h('div', null, [h('div.cert-line'), h('div.cert-small', { text: 'Instructor' })])
         ]),
-        h('div.cert-verify', { text: 'Verification ID ' + L.shortId(saved.code) + ' · check the full code at SheetEX ▸ ? ▸ For teachers' })
+        h('div.cert-verify', { text: 'Verification ID ' + SX.seal.printId(c.name, c.lesson) + ' · test attempt ' + c.attempts + ' · teachers: SheetEX ▸ ? ▸ For teachers' })
       ])
     ]);
     var codeBox = h('textarea.input.code-box', { readonly: true, rows: 2 }, saved.code);
-    sentBox = h('div.small.cert-sent', { text: saved.sent ? '✓ Recorded in your teacher\'s gradebook' : (cloud.available() ? 'Sending to your teacher\'s gradebook…' : '') });
     var imgHolder = h('div');
     var bar = h('div.cert-bar', null, [
       h('button.btn.btn-primary', { text: '🖨 Print / Save as PDF', onclick: function () { printCert(); } }),
@@ -128,7 +106,7 @@
       h('button.btn', { text: 'Close', onclick: close })
     ]);
     overlay.appendChild(h('div.cert-wrap', null, [bar, paper,
-      h('div.cert-howto', null, [h('b', { text: 'Turning it in: ' }), 'print it (choose "Save as PDF"), download the image, or paste this code into Canvas:', codeBox, sentBox, imgHolder])]));
+      h('div.cert-howto', null, [h('b', { text: 'Turning it in: ' }), 'print it (choose "Save as PDF"), download the image, or paste this code into Canvas:', codeBox, imgHolder])]));
     overlay.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
     document.body.appendChild(overlay);
     overlay.tabIndex = -1; overlay.focus();
@@ -161,11 +139,11 @@
     t('Lesson ' + lesson.n + ': ' + lesson.title, 570, 'bold 42px Arial');
     t(lesson.tool, 618, '28px Arial', '#667085');
     t(lesson.skills.join('  •  '), 680, '22px Arial', '#344054');
-    t(c.count + ' challenges   •   ' + c.xp + ' / ' + c.maxXp + ' XP   •   ' + c.hints + ' hints used', 760, 'bold 30px Arial', '#172033');
+    t('Certification test ' + c.score + ' / ' + c.of + '   •   ' + c.count + ' practice challenges   •   ' + c.hints + ' hints in practice', 760, 'bold 30px Arial', '#172033');
     t('Date: ' + fmtDate(c.time), 900, '28px Arial', '#344054');
     g.beginPath(); g.moveTo(1050, 905); g.lineTo(1400, 905); g.strokeStyle = '#98a2b3'; g.lineWidth = 2; g.stroke();
     g.font = '22px Arial'; g.fillStyle = '#667085'; g.fillText('Instructor', 1225, 940);
-    t('Verification ID ' + L.shortId(code), 1010, '20px monospace', '#667085');
+    t('Verification ID ' + SX.seal.printId(c.name, c.lesson) + '  ·  test attempt ' + c.attempts, 1010, '20px monospace', '#667085');
     g.beginPath(); g.arc(300, 900, 70, 0, Math.PI * 2); g.fillStyle = '#f26b1d'; g.fill();
     g.font = 'bold 70px Arial'; g.fillStyle = '#fff'; g.fillText('★', 300, 925);
     var url = cv.toDataURL('image/png');
@@ -176,48 +154,4 @@
     holder.appendChild(h('img.cert-img', { src: url, alt: 'Certificate image' }));
   }
 
-  // ---------- Cloud save / load (profile + welcome) ----------
-  UI.cloudPanel = function () {
-    if (!cloud.available()) return null;
-    var nameIn = h('input.input', { value: UI.state.name || '', placeholder: 'First and last name' });
-    var pinIn = h('input.input', { type: 'password', inputmode: 'numeric', maxlength: 8, value: UI.state.ui.pin || '', placeholder: '4–8 digit PIN you will remember' });
-    var msg = h('div.small');
-    function creds() {
-      var n = nameIn.value.trim().replace(/\s+/g, ' '), p = pinIn.value.trim();
-      if (!/\S+\s+\S+/.test(n)) { msg.textContent = 'Type your first and last name.'; return null; }
-      if (!/^\d{4,8}$/.test(p)) { msg.textContent = 'Your PIN must be 4–8 digits.'; return null; }
-      return { n: n, p: p };
-    }
-    return h('div.cloud-box', null, [
-      h('h3', { text: '☁ Class cloud save' }),
-      h('p.small', { text: 'Save your XP, challenges and certificates to your class so you can keep going on another day or another computer. Use the same name + PIN every time. (Your formulas and files stay on this computer.)' }),
-      h('div.cloud-row', null, [nameIn, pinIn]),
-      h('div.row', null, [
-        h('button.btn.btn-primary', { text: 'Save to class cloud', onclick: function () {
-          var c = creds(); if (!c) return;
-          msg.textContent = 'Saving…';
-          UI.state.name = c.n; UI.state.ui.pin = c.p; UI.save(); UI.refreshHeader();
-          cloud.call('sxSaveProgress', [c.n, c.p, UI.progressCode()]).then(function (r) {
-            msg.textContent = r && r.ok ? '✓ Saved ' + new Date().toLocaleTimeString() : (r && r.error) || 'Could not save.';
-          }).catch(function (e) { msg.textContent = 'Could not save: ' + e.message; });
-        } }),
-        h('button.btn', { text: 'Load from class cloud', onclick: function () {
-          var c = creds(); if (!c) return;
-          msg.textContent = 'Loading…';
-          cloud.call('sxLoadProgress', [c.n, c.p]).then(function (r) {
-            if (!r || !r.ok) { msg.textContent = (r && r.error) || 'Nothing saved under that name and PIN.'; return; }
-            if (!UI.restoreFromCode(r.code)) { msg.textContent = 'The saved data could not be read.'; return; }
-            UI.state.name = c.n; UI.state.ui.pin = c.p; UI.save();
-            msg.textContent = '✓ Progress loaded (saved ' + new Date(r.savedAt).toLocaleString() + ')';
-            UI.render();
-          }).catch(function (e) { msg.textContent = 'Could not load: ' + e.message; });
-        } })
-      ]), msg
-    ]);
-  };
-  // Quietly push progress after each challenge when the student has set up cloud save.
-  UI.cloudAutoSave = function () {
-    if (!cloud.available() || !UI.state.ui.pin || !UI.state.name) return;
-    cloud.call('sxSaveProgress', [UI.state.name, UI.state.ui.pin, UI.progressCode()]).catch(function () { /* manual save still available */ });
-  };
 })(globalThis.SX = globalThis.SX || {});

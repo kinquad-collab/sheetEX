@@ -8,7 +8,6 @@ try { ({ chromium } = require('playwright')); } catch (e) { ({ chromium } = requ
 
 const DIST = 'file://' + path.join(__dirname, '..', 'dist', 'index.html');
 const cell = (r, c) => `td[data-r="${r}"][data-c="${c}"]`;
-const SXread = (code) => require('./load.js')(['lessons.js']).lessons.readCert(code);
 
 async function main() {
   const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
@@ -20,7 +19,12 @@ async function main() {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(DIST);
+  await page.fill('.modal input', 'Tester'); await page.keyboard.press('Enter');
+  check((await page.textContent('.modal .bad')).includes('first AND last'), 'a one-word name is refused');
   await page.fill('.modal input', 'Tester Person'); await page.keyboard.press('Enter');
+  check((await page.textContent('.name-confirm')) === 'Tester Person', 'name confirmation screen');
+  await page.click('text=Yes, lock it in');
+  check(await page.evaluate(() => { SX.ui.state.name = 'Someone Else'; return SX.ui.state.name; }) === 'Tester Person', 'name is locked');
   // first visit to a workspace opens its lesson guide
   await page.click('.pc-xl365'); await page.waitForSelector('.grid');
   await page.waitForSelector('.modal-title:has-text("Lesson 1")', { timeout: 3000 }).catch(() => {});
@@ -56,10 +60,30 @@ async function main() {
   await page.fill('.ref-search', 'fake nulls');
   await page.click('.ref-card >> nth=0 >> .rt-gs >> text=▶ Run');
   check((await page.textContent('.ref-card >> nth=0 >> .rt-gs .ref-out')).includes('3'), 'cheat sheet: Sheets example runs');
+  await page.click('.brand'); await page.click('.pc-ml'); await page.waitForSelector('#ml-grade');
+  await page.waitForTimeout(400); await clearModals();
+  await page.click('text=Train a model that uses restock_after');
+  check((await page.textContent('#ml-leak .ml-metrics')).includes('100%'), 'ML lab: the leaky model looks perfect');
+  // a certificate needs practice AND a passed test
   await page.evaluate(() => { SX.challenges.forPlat('compare').forEach((c) => { SX.ui.state.done[c.id] = { xp: c.xp, at: Date.now(), hints: 0 }; }); SX.ui.showCert('compare'); });
+  await page.waitForSelector('.modal-title:has-text("Certification test")');
+  check(true, 'finished practice opens the certification test, not the certificate');
+  await clearModals();
+  await page.evaluate(() => { SX.ui.state.tests.compare = { attempts: 1, best: 9, of: 10, passed: Date.now(), passScore: 9, passAttempt: 1, passSecs: 300, secs: 300, open: 0, lastFail: 0 }; SX.ui.showCert('compare'); });
   await page.waitForSelector('.cert-paper');
   check((await page.textContent('.cert-name')) === 'Tester Person', 'certificate shows the student name');
-  check(!!SXread(await page.inputValue('.cert-howto textarea')), 'certificate code is valid');
+  check((await page.textContent('.cert-stats')).includes('9 / 10'), 'certificate shows the test score');
+  const certCode = await page.inputValue('.cert-howto textarea');
+  check(await page.evaluate((c) => SX.lessons.readCert(c).ok, certCode), 'certificate code is valid');
+  // teacher tool: one real code, one edited code
+  await page.evaluate(() => document.querySelector('#cert-overlay').remove());
+  await page.click('button[title="Help"], .help-btn').catch(() => page.evaluate(() => SX.ui.help()));
+  await page.click('text=For teachers: check codes and certificates');
+  const forged = certCode.slice(0, 12) + (certCode[12] === 'A' ? 'B' : 'A') + certCode.slice(13);
+  await page.fill('.load-code textarea', certCode + '\n' + forged);
+  await page.dispatchEvent('.load-code textarea', 'input');
+  check((await page.textContent('.load-code')).includes('Tester Person'), 'teacher tool reads a real certificate');
+  check((await page.$$('tr.bad-row')).length === 1, 'teacher tool rejects the edited certificate');
   check(errors.length === 0, 'no page errors (' + errors.join(' | ') + ')');
 
   // ---- 2. Locked-down iframe: scripts only, no same-origin -> localStorage throws ----
@@ -72,9 +96,11 @@ async function main() {
   p2.on('pageerror', (e) => errs2.push(e.message));
   await p2.goto('file://' + wrapper);
   const frame = p2.frameLocator('#f');
-  await frame.locator('.modal input').fill('Sandboxed');
+  await frame.locator('.modal input').fill('Sandboxed Student');
   await frame.locator('.modal .btn-primary').click();
+  await frame.locator('text=Yes, lock it in').click();
   await frame.locator('.pc-xl365').click();
+  await frame.locator('text=Start the challenges').click({ timeout: 4000 }).catch(() => {});
   await frame.locator(cell(1, 0)).click();
   await p2.keyboard.type('=1+1'); await p2.keyboard.press('Enter');
   check((await frame.locator(cell(1, 0)).textContent()) === '2', 'sandboxed iframe: app works without storage');

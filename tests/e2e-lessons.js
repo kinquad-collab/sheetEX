@@ -4,6 +4,7 @@ const path = require('path');
 let chromium;
 try { ({ chromium } = require('playwright')); } catch (e) { ({ chromium } = require('/opt/node22/lib/node_modules/playwright')); }
 const DIST = 'file://' + path.join(__dirname, '..', 'dist', 'index.html');
+const BANK = require('../src/teacher/bank.js');
 const cell = (r, c) => `td[data-r="${r}"][data-c="${c}"]`;
 const colIdx = (s) => s.split('').reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1;
 
@@ -34,13 +35,62 @@ async function main() {
   const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
   const failures = [];
   const check = (cond, msg) => { if (!cond) failures.push(msg); console.log((cond ? '  ok   ' : '  FAIL ') + msg); };
+
+  // Take a lesson's certification test through the real test screen, typing the teacher-key answers.
+  // failFirst: submit an empty attempt first, check the review break, then pass on attempt 2.
+  async function passTest(page, lesson, failFirst) {
+    const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
+    const key = BANK[lesson];
+    const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+    const start = async () => { await clear(); await page.evaluate((L) => SX.ui.startTest(L), lesson); await page.click('text=Start the test'); await page.waitForSelector('.test-overlay'); };
+    if (failFirst) {
+      await start();
+      await page.click('text=Finish & submit'); await page.click('text=Submit anyway');
+      await page.waitForSelector('.tq-score.fail');
+      check(!(await page.evaluate((L) => SX.ui.lessonCertified(L), lesson)), lesson + ' test: an empty attempt fails');
+      await clear();
+      await page.evaluate((L) => SX.ui.startTest(L), lesson);
+      check(!(await page.isVisible('.test-overlay')) && (await page.textContent('#toasts')).includes('retake'), lesson + ' test: review break before a retake');
+      await page.evaluate((L) => { SX.ui.state.tests[L].lastFail -= 10 * 60 * 1000; }, lesson); // pretend the break is over
+    }
+    await start();
+    const n = await page.$$eval('.tq-dot', (d) => d.length);
+    let hands = 0;
+    for (let i = 0; i < n; i++) {
+      const html = await page.evaluate(() => document.querySelector('.tq-q').innerHTML);
+      const k = key.find((x) => x.q === html);
+      if (!k) { check(false, lesson + ' test: question not in the bank'); continue; }
+      if (k.kind === 'mc') await page.click(`.tq-opt:text-is("${k.a.replace(/"/g, '\\"')}")`);
+      else if (k.kind === 'text') await page.fill('.tq-input', k.a[0]);
+      else if (k.kind === 'formula') { hands++; await page.fill('.tq-formula', k.ref); await page.focus('.tq-formula'); await page.keyboard.press(k.cse ? 'Control+Shift+Enter' : 'Enter'); }
+      else { hands++; await page.fill('.tq-code', k.ref); }
+      if (i < n - 1) await page.click('.tq-foot >> text=Next →', { timeout: 5000 }).catch(async (e) => {
+        console.log('BLOCKED BY:', await page.evaluate(() => Array.from(document.querySelectorAll('.modal-overlay')).map((m) => m.textContent.slice(0, 120))));
+        throw e;
+      });
+    }
+    check(hands === n / 2, lesson + ' test: half the questions are hands-on (' + hands + '/' + n + ')');
+    await page.click('text=Finish & submit');
+    await page.waitForSelector('.tq-score');
+    const score = await page.textContent('.tq-score b');
+    check(score === '100%', lesson + ' test: teacher-key answers typed into the test score ' + score);
+    check(await page.evaluate((L) => SX.ui.lessonCertified(L), lesson), lesson + ' test passed -> certificate earned');
+    await clear();
+    await page.evaluate((L) => SX.ui.showCert(L), lesson);
+    await page.waitForSelector('.cert-paper');
+    const code = await page.inputValue('.cert-howto textarea');
+    const cert = await page.evaluate((c) => SX.lessons.readCert(c), code);
+    check(cert.ok && cert.cert.lesson === lesson && cert.cert.score === n && cert.cert.attempts === (failFirst ? 2 : 1), lesson + ' certificate code is sealed and correct (attempt ' + (cert.cert && cert.cert.attempts) + ')');
+    await page.evaluate(() => document.querySelector('#cert-overlay').remove());
+    check(errors.length === 0, lesson + ' test: no page errors ' + errors.join(' | '));
+  }
   for (const plat of ['xl365', 'gs']) {
     console.log('\n== Data Wrangling Lab on ' + plat + ' ==');
     const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Avery Johnson'); await page.keyboard.press('Enter'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
+    await page.fill('.modal input', 'Avery Johnson'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
     await page.evaluate((p) => { SX.ui.state.ui.wrPlat = p; SX.ui.state.ui.wrIntro = true; }, plat);
     await page.click('.pc-wrangle'); await page.waitForSelector('.grid');
     const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
@@ -84,13 +134,9 @@ async function main() {
     check((await page.textContent('.ai-score')).startsWith('100'), plat + ' AI-readiness score reaches 100 after cleaning');
     check((await page.textContent('.ai-stats')).includes('0.0'), plat + ' cleaned model matches the truth (0.0 off)');
     check(await page.evaluate(() => !!SX.ui.state.badges['ai-ready']), plat + ' AI-Ready Data badge earned');
-    for (const L of ['wr1', 'wr2']) {
-      await page.evaluate((L) => SX.ui.showCert(L), L);
-      await page.waitForSelector('.cert-paper');
-      check((await page.textContent('.cert-lesson')).includes(L === 'wr1' ? 'Cleaning' : 'Combining'), plat + ' certificate for ' + L);
-      await page.evaluate(() => document.querySelector('#cert-overlay').remove());
-    }
+    for (const L of ['wr1', 'wr2']) check(await page.evaluate((L) => SX.ui.lessonComplete(L) && !SX.ui.lessonCertified(L), L), plat + ' ' + L + ' practice done; certificate waits for the test');
     check(errors.length === 0, plat + ' no page errors ' + errors.join(' | '));
+    if (plat === 'xl365') { await passTest(page, 'wr1'); await passTest(page, 'wr2'); }
     await page.close();
   }
   // ---- Store spreadsheet lessons (Excel 365, Excel 2013 with Ctrl+Shift+Enter, Google Sheets) ----
@@ -116,7 +162,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
     const errors = []; page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Riley Brooks'); await page.keyboard.press('Enter'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
+    await page.fill('.modal input', 'Riley Brooks'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
     await page.click('.pc-' + plat); await page.waitForSelector('.grid');
     const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
     for (const [addr, formula, how] of STORE[plat]) {
@@ -142,8 +188,9 @@ async function main() {
       const done = await page.evaluate((id) => !!SX.ui.state.done[id], id);
       check(done, plat + ' ' + id + (done ? '' : ' — ' + await page.textContent(`.ch-card[data-id="${id}"] .ch-msg`)));
     }
-    check(await page.evaluate((p) => SX.ui.lessonComplete(p), plat), plat + ' lesson complete -> certificate unlocked');
+    check(await page.evaluate((p) => SX.ui.lessonComplete(p), plat), plat + ' practice complete -> test unlocked');
     check(errors.length === 0, plat + ' no page errors ' + errors.join(' | '));
+    await passTest(page, plat);
     await page.close();
   }
 
@@ -153,7 +200,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
     const errors = []; page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Sam Patel'); await page.keyboard.press('Enter'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
+    await page.fill('.modal input', 'Sam Patel'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
     await page.click('.pc-sql'); await page.waitForSelector('.sql-editor');
     const SQL = {
       'sql-star': 'SELECT * FROM products;',
@@ -176,8 +223,9 @@ async function main() {
       const done = await page.evaluate((id) => !!SX.ui.state.done[id], id);
       check(done, 'sql ' + id + (done ? '' : ' — ' + await page.textContent(`.ch-card[data-id="${id}"] .ch-msg`)));
     }
-    check(await page.evaluate(() => SX.ui.lessonComplete('sql')), 'sql lesson complete -> certificate unlocked');
+    check(await page.evaluate(() => SX.ui.lessonComplete('sql')), 'sql practice complete -> test unlocked');
     check(errors.length === 0, 'sql no page errors ' + errors.join(' | '));
+    await passTest(page, 'sql');
     await page.close();
   }
 
@@ -187,7 +235,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
     const errors = []; page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Casey Wright'); await page.keyboard.press('Enter'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
+    await page.fill('.modal input', 'Casey Wright'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
     await page.click('.pc-csv'); await page.waitForSelector('.csv-editor');
     const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
     const checkCh = async (id) => {
@@ -231,8 +279,9 @@ async function main() {
     check((await page.textContent('.modal')).includes('formula'), 'csv: export shows what was lost');
     await checkCh('csv-export');
     for (const q of ['csv-quiz-formula', 'csv-quiz-zero', 'csv-quiz-fields', 'csv-quiz-format']) await checkCh(q);
-    check(await page.evaluate(() => SX.ui.lessonComplete('csv')), 'csv lesson complete -> certificate unlocked');
+    check(await page.evaluate(() => SX.ui.lessonComplete('csv')), 'csv practice complete -> test unlocked');
     check(errors.length === 0, 'csv no page errors ' + errors.join(' | '));
+    await passTest(page, 'csv', true);
     await page.close();
   }
   // ---- Lesson 9: What is an RDBMS? — driven only through the page's own buttons, inputs and consoles ----
@@ -241,7 +290,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
     const errors = []; page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Riley Chen'); await page.keyboard.press('Enter'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
+    await page.fill('.modal input', 'Riley Chen'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
     await page.click('.pc-rdbms'); await page.waitForSelector('#rd-grid');
     const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
     const runIn = async (sel, sql) => { await clear(); await page.fill(sel + ' .rd-console', sql); await page.click(sel + ' .rd-console-wrap .btn-primary'); await page.waitForTimeout(60); };
@@ -285,11 +334,101 @@ async function main() {
       const done = await page.evaluate((id) => !!SX.ui.state.done[id], id);
       check(done, 'rdbms ' + id + (done ? '' : ' — ' + await page.textContent(`.ch-card[data-id="${id}"] .ch-msg`)));
     }
-    check(await page.evaluate(() => SX.ui.lessonComplete('rdbms')), 'rdbms lesson complete -> certificate unlocked');
+    check(await page.evaluate(() => SX.ui.lessonComplete('rdbms')), 'rdbms practice complete -> test unlocked');
     await page.waitForTimeout(1500); await clear();
+    check(errors.length === 0, 'rdbms no page errors ' + errors.join(' | '));
+    await passTest(page, 'rdbms');
     await page.evaluate(() => SX.ui.showCert('rdbms')); await page.waitForSelector('.cert-paper');
     check((await page.textContent('.cert-lesson')).includes('RDBMS'), 'rdbms certificate shows the lesson title');
-    check(errors.length === 0, 'rdbms no page errors ' + errors.join(' | '));
+    await page.close();
+  }
+  // ---- Lesson 8: Compare quizzes, then its test ----
+  {
+    console.log('\n== Compare lesson ==');
+    const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
+    await page.goto(DIST);
+    await page.fill('.modal input', 'Jamie Ortiz'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); });
+    await page.click('.cmp-card'); await page.waitForSelector('.cmp-cards');
+    for (const id of await page.$$eval('.ch-card', (cs) => cs.map((c) => c.dataset.id))) {
+      await page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
+      await page.evaluate((id) => { const c = document.querySelector(`.ch-card[data-id="${id}"]`); c.classList.add('open'); c.querySelectorAll('.quiz-opt')[SX.challenges.byId(id).answer].click(); }, id);
+      await page.waitForTimeout(60);
+    }
+    check(await page.evaluate(() => SX.ui.lessonComplete('compare')), 'compare practice complete -> test unlocked');
+    await passTest(page, 'compare');
+    await page.close();
+  }
+
+  // ---- Lesson 10: ML Data Lab — driven through the page's own controls and consoles ----
+  {
+    console.log('\n== ML lesson ==');
+    const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
+    const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(DIST);
+    await page.fill('.modal input', 'Morgan Lee'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); });
+    await page.click('.pc-ml'); await page.waitForSelector('#ml-examples');
+    const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
+    // celebrations (level-ups) can pop up at any moment: clear them and retry the click
+    const safeClick = async (sel) => { for (let t = 0; t < 6; t++) { await clear(); try { await page.click(sel, { timeout: 1500 }); return; } catch (e) { if (t === 5) throw e; } } };
+    const runIn = async (sel, sql) => { await clear(); await page.fill(sel + ' .rd-console', sql); await safeClick(sel + ' .rd-console-wrap .btn-primary'); await page.waitForTimeout(60); };
+    const checkCh = async (id) => {
+      await clear();
+      await page.evaluate((id) => { const c = document.querySelector(`.ch-card[data-id="${id}"]`); c.classList.add('open');
+        const q = c.querySelectorAll('.quiz-opt'); if (q.length) q[SX.challenges.byId(id).answer].click(); else c.querySelector('.btn-primary').click(); }, id);
+      await page.waitForTimeout(80);
+      const done = await page.evaluate((id) => !!SX.ui.state.done[id], id);
+      check(done, 'ml ' + id + (done ? '' : ' — ' + await page.textContent(`.ch-card[data-id="${id}"] .ch-msg`)));
+    };
+    // 1. sort the columns (one wrong first)
+    const roles = await page.evaluate(() => SX.mldata.COLUMNS.map((c) => [c.name, c.role]));
+    for (const [name, role] of roles) await page.selectOption(`select[data-col="${name}"]`, name === 'restock_after' ? 'feature' : role);
+    await safeClick('text=Check my sorting');
+    check((await page.textContent('#ml-examples .rd-status')).includes('10 of 11'), 'ml: a leaky column sorted as a feature is caught');
+    await page.selectOption('select[data-col="restock_after"]', 'leak');
+    await safeClick('text=Check my sorting');
+    await checkCh('ml-roles'); await checkCh('ml-quiz-label');
+    // 2–3. consoles in the sections
+    await runIn('#ml-balance', 'SELECT stockout, COUNT(*) FROM ml_examples GROUP BY stockout;'); await checkCh('ml-balance');
+    await safeClick('text=Score it on the test rows');
+    check((await page.textContent('#ml-balance .ml-metrics')).includes('0 of'), 'ml: the lazy baseline catches no stockouts');
+    await runIn('#ml-missing', 'SELECT COUNT(*) FROM ml_examples WHERE units_last_week IS NULL;'); await checkCh('ml-nulls');
+    await runIn('#ml-leak', 'SELECT split, COUNT(*) FROM ml_examples GROUP BY split;'); await checkCh('ml-split');
+    await safeClick('text=🔍 Find copies across the split');
+    check((await page.$$('#ml-leak .ml-split .ml-sq.dup')).length === 8, 'ml: 4 leaked pairs highlighted');
+    await runIn('#ml-leak', 'SELECT week, store_id, sku FROM ml_examples GROUP BY week, store_id, sku HAVING COUNT(DISTINCT split) > 1;'); await checkCh('ml-dupes');
+    await checkCh('ml-quiz-leak');
+    await safeClick('text=Train a model that uses restock_after'); await checkCh('ml-leakdemo');
+    // 5. the starter is missing the category JOIN: the check says so, then fix it
+    await safeClick('#ml-features .rd-console-wrap .btn-primary');
+    const msg = await page.evaluate(() => { const c = document.querySelector('.ch-card[data-id="ml-features"]'); c.classList.add('open'); c.querySelector('.btn-primary').click(); return c.querySelector('.ch-msg').textContent; });
+    check(msg.includes('category'), 'ml: the starter train_set is rejected for missing category');
+    await runIn('#ml-features', "DROP TABLE train_set; CREATE TABLE train_set AS SELECT e.example_id, e.promo, e.price, e.units_last_week, e.in_stock_start, p.category, e.stockout FROM ml_examples e JOIN products p ON e.sku = p.sku WHERE e.split = 'train';");
+    await checkCh('ml-features');
+    // 6. grade the model
+    await runIn('#ml-grade', 'SELECT AVG(p.predicted = e.stockout) FROM predictions p JOIN ml_examples e ON p.example_id = e.example_id;'); await checkCh('ml-accuracy');
+    await runIn('#ml-grade', 'SELECT e.stockout, p.predicted, COUNT(*) FROM predictions p JOIN ml_examples e ON p.example_id = e.example_id GROUP BY e.stockout, p.predicted;'); await checkCh('ml-confusion');
+    await checkCh('ml-quiz-baseline');
+    await safeClick('.ml-cell.fn');
+    check((await page.textContent('.ml-detail')).includes('MISSED'), 'ml: confusion-matrix box explains itself');
+    check(await page.evaluate(() => SX.ui.lessonComplete('ml')), 'ml practice complete -> test unlocked');
+    check(errors.length === 0, 'ml no page errors ' + errors.join(' | '));
+    await page.waitForTimeout(1500);
+    await passTest(page, 'ml');
+    // the sealed progress code carries the certificate to a fresh computer
+    const code = await page.evaluate(() => SX.ui.progressCode());
+    const p2 = await browser.newPage();
+    await p2.goto(DIST);
+    await p2.click('text=Coming back on a different computer? Load your progress code');
+    await p2.fill('.modal textarea', code.slice(0, -1) + (code.endsWith('A') ? 'B' : 'A'));
+    await p2.click('text=Load my progress');
+    check((await p2.textContent('.code-msg')).includes('changed'), 'restore: an edited progress code is refused');
+    await p2.fill('.modal textarea', code);
+    await p2.click('text=Load my progress');
+    await p2.waitForTimeout(200);
+    check(await p2.evaluate(() => SX.ui.state.name === 'Morgan Lee' && SX.ui.lessonCertified('ml')), 'restore: name and certificate move to a new computer');
+    await p2.evaluate(() => SX.ui.showCert('ml')); await p2.waitForSelector('.cert-paper');
+    check((await p2.textContent('.cert-name')) === 'Morgan Lee', 'restore: certificate re-issued with the locked name');
+    await p2.close();
     await page.close();
   }
   await browser.close();

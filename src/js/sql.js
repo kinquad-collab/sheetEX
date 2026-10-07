@@ -1,6 +1,6 @@
 /* SheetEX — a small SQLite-flavored SQL engine (plus Google Sheets QUERY language).
  * Supports: SELECT [DISTINCT] ... FROM ... [JOIN ... ON] WHERE GROUP BY HAVING ORDER BY LIMIT OFFSET,
- * scalar subqueries, IN (subquery), CASE, CAST, INSERT, UPDATE, DELETE, CREATE TABLE, DROP TABLE. */
+ * scalar subqueries, IN (subquery), CASE, CAST, INSERT, UPDATE, DELETE, CREATE TABLE [AS SELECT], DROP TABLE. */
 (function (SX) {
   'use strict';
 
@@ -219,6 +219,7 @@
     if (this.isWord('IF')) { this.p++; this.expectKw('NOT'); this.expectWord('EXISTS'); ifNot = true; }
     var table = this.ident('a table name');
     var spec = { type: 'create', table: table, ifNot: ifNot, cols: [], pk: [], uniques: [], fks: [], checks: [], notNull: [], strict: false };
+    if (this.acceptKw('AS')) { spec.asSelect = this.select(); return spec; }
     this.expectOp('(', 'Column definitions go in parentheses: CREATE TABLE t (id INTEGER PRIMARY KEY, name TEXT);');
     var self = this;
     function names() { self.expectOp('('); var a = []; do { a.push(self.ident('a column name')); } while (self.acceptOp(',')); self.expectOp(')'); return a; }
@@ -907,6 +908,19 @@
           if (st.ifNot) return { type: 'msg', message: 'Table ' + st.table + ' already exists — nothing changed.' };
           throw new SqlError('table ' + st.table + ' already exists', 'Use a different name, or DROP TABLE ' + st.table + ' first.');
         }
+        if (st.asSelect) {
+          var sel = this.select(st.asSelect, null), used = {};
+          var acols = sel.columns.map(function (n, i) {
+            var nm = String(n).replace(/^.*\./, '').replace(/[^A-Za-z0-9_]/g, '_') || 'col' + (i + 1);
+            while (used[nm.toLowerCase()]) nm += '_' + (i + 1);
+            used[nm.toLowerCase()] = true;
+            var vals = sel.rows.map(function (r) { return r[i]; }).filter(function (v) { return v !== null; });
+            var type = !vals.length ? '' : vals.every(function (v) { return typeof v === 'number' && Math.floor(v) === v; }) ? 'INTEGER' : vals.every(function (v) { return typeof v === 'number'; }) ? 'REAL' : 'TEXT';
+            return { name: nm, type: type };
+          });
+          db.create(st.table, acols, sel.rows.map(function (r) { return r.slice(); }), {});
+          return { type: 'msg', message: 'Table ' + st.table + ' created from a query: ' + sel.rows.length + ' row' + (sel.rows.length === 1 ? '' : 's') + ', ' + acols.length + ' columns.', changed: sel.rows.length };
+        }
         st.fks.forEach(function (f) { db.table(f.table); });
         st.checks.forEach(function (c) { new Parser(c.text, false).expr(); });
         if (st.strict) st.cols.forEach(function (c) {
@@ -1097,6 +1111,8 @@
       db.create('item_codes', [{ name: 'code', type: 'TEXT' }, { name: 'product', type: 'TEXT' }, { name: 'category', type: 'TEXT' }, { name: 'price', type: 'REAL' }],
         W.ITEMS.map(function (it) { return [it.code, it.product, it.category, it.price]; }));
     }
+    // v2 Lesson 10: machine-learning examples + a model's predictions
+    if (SX.mldata) SX.mldata.create(db);
     return db;
   }
 

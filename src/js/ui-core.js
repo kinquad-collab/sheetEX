@@ -27,26 +27,63 @@
   UI.esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
 
   // ---------- Persistence ----------
-  var KEY = 'sheetex.v1';
-  function storageGet() { try { return window.localStorage.getItem(KEY); } catch (e) { return null; } }
+  // The save is split in two: CORE (name, XP, challenges, tests, certificates) is sealed with SX.seal so editing it
+  // in the browser's storage makes the whole save invalid; the rest (spreadsheets, files, settings) is plain.
+  var KEY = 'sheetex.v2';
+  var CORE = ['name', 'sid', 'xp', 'done', 'hints', 'wrong', 'errors', 'badges', 'visited', 'stats', 'certs', 'tests', 'created'];
+  function storageGet(k) { try { return window.localStorage.getItem(k || KEY); } catch (e) { return null; } }
   function storageSet(v) { try { window.localStorage.setItem(KEY, v); return true; } catch (e) { return false; } }
   function freshState() {
-    return { v: 1, name: '', xp: 0, done: {}, hints: {}, wrong: {}, errors: {}, badges: {}, visited: {},
-      stats: { formulas: 0, queries: 0, compat: 0, noHint: 0 }, wb: {}, db: null, files: null, colw: {}, ui: {} };
+    return { v: 2, name: '', sid: '', xp: 0, done: {}, hints: {}, wrong: {}, errors: {}, badges: {}, visited: {},
+      stats: { formulas: 0, queries: 0, compat: 0, noHint: 0 }, certs: {}, tests: {}, created: 0,
+      wb: {}, db: null, files: null, colw: {}, ui: {} };
   }
+  UI.freshState = freshState;
+  // Once a name is set it can never be changed: the property becomes read-only for the life of the page.
+  function lockIdentity(st) {
+    if (!st.name) return st;
+    ['name', 'sid'].forEach(function (k) { Object.defineProperty(st, k, { value: st[k], writable: false, enumerable: true, configurable: false }); });
+    return st;
+  }
+  UI.lockIdentity = lockIdentity;
+  function serialize(st) {
+    var core = {}; CORE.forEach(function (k) { core[k] = st[k]; });
+    var coreJson = JSON.stringify(core);
+    return JSON.stringify({ v: 2, core: coreJson, sig: SX.seal.mac('save|' + coreJson), wb: st.wb, db: st.db, files: st.files, colw: st.colw, ui: st.ui });
+  }
+  UI.serializeState = serialize;
+  UI.loadNotice = null;
+  function loadState(raw) {
+    var st = freshState();
+    if (!raw) return st;
+    var o = JSON.parse(raw);
+    if (!o || o.v !== 2 || typeof o.core !== 'string' || typeof o.sig !== 'string' || SX.seal.mac('save|' + o.core) !== o.sig) {
+      UI.loadNotice = 'The progress saved in this browser was changed outside SheetEX, so it could not be loaded. You are starting fresh. If you have a progress code, you can load it.';
+      return st;
+    }
+    var core = JSON.parse(o.core);
+    CORE.forEach(function (k) { if (core[k] !== undefined) st[k] = core[k]; });
+    ['wb', 'db', 'files', 'colw', 'ui'].forEach(function (k) { if (o[k] != null) st[k] = o[k]; });
+    return lockIdentity(st);
+  }
+  UI.loadState = loadState;
   UI.state = freshState();
-  try { var raw = storageGet(); if (raw) { var parsed = JSON.parse(raw); if (parsed && parsed.v === 1) UI.state = Object.assign(freshState(), parsed); } } catch (e) { /* start fresh */ }
-  UI.storageOk = storageSet(JSON.stringify(UI.state));
+  try { UI.state = loadState(storageGet()); } catch (e) { UI.state = freshState(); }
+  UI.storageOk = storageSet(serialize(UI.state));
 
   var saveTimer = null;
-  UI.save = function () {
+  function saveNow() {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(function () {
-      Object.keys(UI.wbs).forEach(function (p) { UI.state.wb[p] = UI.wbs[p].serialize(); });
-      if (UI.db) UI.state.db = UI.db.serialize();
-      if (UI.files) UI.state.files = UI.files;
-      storageSet(JSON.stringify(UI.state));
-    }, 300);
+    Object.keys(UI.wbs).forEach(function (p) { UI.state.wb[p] = UI.wbs[p].serialize(); });
+    if (UI.db) UI.state.db = UI.db.serialize();
+    if (UI.files) UI.state.files = UI.files;
+    storageSet(serialize(UI.state));
+  }
+  UI.saveNow = saveNow;
+  UI.save = function () { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 300); };
+  // Replace everything on this computer (used by "start over" and when loading someone's code on a fresh identity).
+  UI.replaceState = function (st) {
+    UI.state = st; UI.wbs = {}; UI.db = null; UI.files = null; saveNow();
   };
 
   // Workbooks / database / files live in memory, loaded lazily from saved state.
@@ -126,6 +163,10 @@
     { id: 'researcher', icon: '📚', name: 'Researcher', desc: 'Run 10 examples in the Interactive Cheat Sheet.', xp: 15 },
     { id: 'ai-ready', icon: '🤖', name: 'AI-Ready Data', desc: 'Reach an AI-readiness score of 100 in the Data Wrangling Lab.', xp: 40 },
     { id: 'done-rdbms', icon: '🗃️', name: 'Database Architect', desc: 'Finish Lesson 9: What is an RDBMS?', xp: 30 },
+    { id: 'done-ml', icon: '🧠', name: 'Data Scientist', desc: 'Finish Lesson 10: Databases for Machine Learning.', xp: 30 },
+    { id: 'certified', icon: '🎓', name: 'Certified', desc: 'Pass your first certification test.', xp: 25 },
+    { id: 'ace', icon: '💯', name: 'Perfect Score', desc: 'Score 100% on a certification test.', xp: 40 },
+    { id: 'cert-5', icon: '🏛️', name: 'Five Certificates', desc: 'Earn 5 certificates.', xp: 50 },
     { id: 'done-wr1', icon: '🧽', name: 'Data Janitor', desc: 'Finish Data Wrangling I: Cleaning.', xp: 30 },
     { id: 'done-wr2', icon: '🔗', name: 'Data Joiner', desc: 'Finish Data Wrangling II: Combining & Lookups.', xp: 30 },
     { id: 'done-compare', icon: '🔭', name: 'Big Picture', desc: 'Answer every Compare quiz.', xp: 20 },
@@ -139,7 +180,7 @@
     UI.state.xp += n;
     var after = UI.level(UI.state.xp);
     if (!silent) UI.toast('+' + n + ' XP', why, 'xp');
-    if (after.n > before.n) setTimeout(function () { levelUp(after); }, 600);
+    if (after.n > before.n) { clearTimeout(levelTimer); levelTimer = setTimeout(function () { whenFree(function () { levelUp(UI.level(UI.state.xp)); }); }, 600); }
     UI.save(); UI.refreshHeader();
   };
   UI.badge = function (id) {
@@ -184,7 +225,6 @@
     if (SX.challenges.LIST.every(function (c) { return UI.state.done[c.id]; })) UI.badge('all');
     if (window.confettiBurst) window.confettiBurst(30);
     UI.save();
-    if (UI.cloudAutoSave) UI.cloudAutoSave();
     if (UI.lessonFinished && mine.every(function (c) { return UI.state.done[c.id]; })) setTimeout(function () { UI.lessonFinished(ch.plat); }, 1800);
     return true;
   };
@@ -238,7 +278,15 @@
     return { close: close, el: box };
   };
 
+  var levelTimer = null, shownLevel = 0;
+  // Celebrate only when nothing else is on screen (a test result, a certificate), and only once per level.
+  function whenFree(fn) {
+    if (document.querySelector('.modal-overlay, #cert-overlay, .test-overlay')) { setTimeout(function () { whenFree(fn); }, 700); return; }
+    fn();
+  }
   function levelUp(lv) {
+    if (lv.n <= shownLevel) return;
+    shownLevel = lv.n;
     window.confettiBurst(80);
     UI.modal('Level up!', [
       h('div.levelup', null, [
@@ -272,37 +320,98 @@
     if (old) old.replaceWith(UI.header());
   };
 
-  // ---------- Profile & progress code ----------
-  function checksum(s) { var x = 7; for (var i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) % 1000003; return x.toString(36); }
-  UI.progressCode = function () {
-    var p = { n: UI.state.name, x: UI.state.xp, d: Object.keys(UI.state.done).map(function (k) { return k + ':' + UI.state.done[k].xp + ':' + (UI.state.done[k].hints || 0); }).join(','),
-      b: Object.keys(UI.state.badges).join(','), e: Object.keys(UI.state.errors).join(' '), t: Date.now() };
-    var json = JSON.stringify(p);
-    return 'SX1-' + btoa(unescape(encodeURIComponent(json))) + '-' + checksum(json);
+  // ---------- Identity, progress codes and profile ----------
+  // A name is First + Last, letters only (plus spaces, hyphens, apostrophes and periods).
+  UI.validName = function (v) {
+    v = String(v || '').trim().replace(/\s+/g, ' ');
+    if (v.length < 3 || v.length > 40) return null;
+    if (!/^[A-Za-zÀ-ÖØ-öø-ÿ'’.\- ]+$/.test(v) || !/\S+ \S+/.test(v)) return null;
+    return v;
   };
-  UI.decodeCode = function (code) {
-    var m = /^SX1-([A-Za-z0-9+/=]+)-([a-z0-9]+)$/.exec(String(code).trim());
-    if (!m) return null;
-    try {
-      var json = decodeURIComponent(escape(atob(m[1])));
-      if (checksum(json) !== m[2]) return null;
-      return JSON.parse(json);
-    } catch (e) { return null; }
-  };
-  // Merge a progress code into this browser (never lowers XP or removes anything)
-  UI.restoreFromCode = function (code) {
-    var p = UI.decodeCode(code), st = UI.state;
-    if (!p) return false;
-    st.name = p.n || st.name; st.xp = Math.max(st.xp, p.x);
-    (p.d ? p.d.split(',') : []).forEach(function (s) { var q = s.split(':'); if (q[0] && !st.done[q[0]]) st.done[q[0]] = { xp: +q[1], at: p.t, hints: q[2] ? +q[2] : 0 }; });
-    (p.b ? p.b.split(',') : []).forEach(function (b) { if (b) st.badges[b] = st.badges[b] || p.t; });
-    (p.e ? p.e.split(' ') : []).forEach(function (e) { if (e) st.errors[e] = st.errors[e] || p.t; });
-    UI.save();
+  function newSid() {
+    var b = [];
+    try { var a = new Uint8Array(9); window.crypto.getRandomValues(a); b = Array.prototype.slice.call(a); }
+    catch (e) { for (var i = 0; i < 9; i++) b.push(Math.floor(Math.random() * 256)); }
+    return SX.seal.b64u(b);
+  }
+  UI.setIdentity = function (name, sid) {
+    if (UI.state.name) return false; // already locked — never changes
+    UI.state.name = name; UI.state.sid = sid || newSid(); UI.state.created = UI.state.created || Date.now();
+    lockIdentity(UI.state); saveNow();
     return true;
   };
+
+  var ID_RE = /^[A-Za-z0-9_-]{12}$/;
+  function isInt(x, lo, hi) { return typeof x === 'number' && Math.floor(x) === x && x >= lo && x <= hi; }
+  function onlyKeys(o, allowed) { return o && typeof o === 'object' && !Array.isArray(o) && Object.keys(o).every(function (k) { return allowed.indexOf(k) >= 0; }); }
+  function lessonIds() { return SX.lessons.LIST.map(function (l) { return l.id; }); }
+  // Strict shape check: a code must look EXACTLY like one SheetEX makes, or it is refused.
+  UI.validProgress = function (p) {
+    if (!onlyKeys(p, ['n', 'i', 'x', 'd', 'b', 'e', 'c', 'ts', 't'])) return 'unexpected fields';
+    if (UI.validName(p.n) !== p.n) return 'bad name';
+    if (typeof p.i !== 'string' || !ID_RE.test(p.i)) return 'bad id';
+    if (!isInt(p.x, 0, 100000) || !isInt(p.t, 1.6e12, 4e12)) return 'bad numbers';
+    if (!onlyKeys(p.d, Object.keys(p.d || {}))) return 'bad challenges';
+    var ok = Object.keys(p.d).every(function (k) { var v = p.d[k]; return SX.challenges.byId(k) && Array.isArray(v) && v.length === 2 && isInt(v[0], 0, 1000) && isInt(v[1], 0, 10); });
+    if (!ok) return 'bad challenges';
+    var badgeIds = BADGES.map(function (x) { return x.id; });
+    if (!Array.isArray(p.b) || !p.b.every(function (x) { return badgeIds.indexOf(x) >= 0; })) return 'bad badges';
+    if (!Array.isArray(p.e) || !p.e.every(function (x) { return UI.ERROR_CODES.indexOf(x) >= 0; })) return 'bad errors';
+    var L = lessonIds();
+    if (!onlyKeys(p.c, L) || !Object.keys(p.c).every(function (k) { return isInt(p.c[k], 1.6e12, 4e12); })) return 'bad certificates';
+    if (!onlyKeys(p.ts, L)) return 'bad tests';
+    ok = Object.keys(p.ts).every(function (k) {
+      var t = p.ts[k];
+      return onlyKeys(t, ['b', 'q', 'a', 'p', 's']) && isInt(t.q, 1, 50) && isInt(t.b, 0, t.q) && isInt(t.a, 1, 999) && isInt(t.s, 0, 86400) && (t.p === 0 || isInt(t.p, 1.6e12, 4e12));
+    });
+    return ok ? '' : 'bad tests';
+  };
+  UI.progressCode = function () {
+    var st = UI.state, d = {}, c = {}, ts = {};
+    Object.keys(st.done).forEach(function (k) { d[k] = [st.done[k].xp | 0, st.done[k].hints | 0]; });
+    Object.keys(st.certs || {}).forEach(function (k) { if (st.certs[k] && st.certs[k].t) c[k] = st.certs[k].t; });
+    Object.keys(st.tests || {}).forEach(function (k) { var t = st.tests[k]; if (t && t.attempts) ts[k] = { b: t.best | 0, q: t.of | 0, a: t.attempts | 0, p: t.passed || 0, s: t.secs | 0 }; });
+    return SX.seal.pack('SXP2', { n: st.name, i: st.sid, x: st.xp | 0, d: d, b: Object.keys(st.badges), e: Object.keys(st.errors), c: c, ts: ts, t: Date.now() });
+  };
+  // -> { ok, p } or { ok:false, why }
+  UI.readProgress = function (code) {
+    var r = SX.seal.unpack('SXP2', code);
+    if (!r.ok) return r;
+    var bad = UI.validProgress(r.obj);
+    if (bad) return { ok: false, why: 'This code does not have the exact format SheetEX makes (' + bad + '). It cannot be used.' };
+    return { ok: true, p: r.obj };
+  };
+  function applyProgress(st, p) {
+    st.xp = Math.max(st.xp, p.x);
+    Object.keys(p.d).forEach(function (k) { if (!st.done[k]) st.done[k] = { xp: p.d[k][0], at: p.t, hints: p.d[k][1] }; });
+    p.b.forEach(function (b) { st.badges[b] = st.badges[b] || p.t; });
+    p.e.forEach(function (e) { st.errors[e] = st.errors[e] || p.t; });
+    Object.keys(p.ts).forEach(function (k) {
+      var t = p.ts[k], mine = st.tests[k] || { best: 0, of: t.q, attempts: 0, passed: 0, secs: 0 };
+      if (t.b / t.q > mine.best / Math.max(1, mine.of)) { mine.best = t.b; mine.of = t.q; mine.secs = t.s; }
+      mine.attempts = Math.max(mine.attempts, t.a);
+      if (t.p && (!mine.passed || t.p < mine.passed)) mine.passed = t.p;
+      st.tests[k] = mine;
+    });
+  }
+  // Load a progress code. Same student: merge (never lowers anything). Nobody here yet: become that student.
+  // A different student: replace everything (the name in a code can never be changed).
+  UI.restoreFromCode = function (code, opts) {
+    var r = UI.readProgress(code);
+    if (!r.ok) return r;
+    var p = r.p;
+    if (UI.state.name && UI.state.sid === p.i) { applyProgress(UI.state, p); saveNow(); return { ok: true, merged: true, name: p.n }; }
+    if (UI.state.name && !(opts && opts.replace)) return { ok: false, other: true, name: p.n, why: 'This code belongs to ' + p.n + '.' };
+    var st = freshState();
+    st.name = p.n; st.sid = p.i; st.created = p.t;
+    applyProgress(st, p);
+    if (UI.state.ui) st.ui = { guideSeen: UI.state.ui.guideSeen, wrIntro: UI.state.ui.wrIntro, wrIntroDone: UI.state.ui.wrIntroDone };
+    UI.replaceState(lockIdentity(st));
+    return { ok: true, name: p.n };
+  };
+
   UI.profile = function () {
     var st = UI.state, lv = UI.level(st.xp);
-    var nameIn = h('input.input', { value: st.name, maxlength: 30, placeholder: 'First name or nickname' });
     var badgeGrid = h('div.badge-grid', null, BADGES.map(function (b) {
       var got = !!st.badges[b.id];
       return h('div.badge' + (got ? '.got' : ''), { title: b.desc }, [h('div.badge-icon', { text: got ? b.icon : '🔒' }), h('div.badge-name', { text: b.name }), h('div.badge-desc', { text: b.desc })]);
@@ -313,43 +422,42 @@
     }));
     var code = UI.progressCode();
     var codeBox = h('textarea.input.code-box', { readonly: true, rows: 3 }, code);
-    var loadIn = h('textarea.input.code-box', { rows: 2, placeholder: 'Paste a progress code here (SX1-…)' });
+    var loadIn = h('textarea.input.code-box', { rows: 2, placeholder: 'Paste a progress code here (SXP2-…)' });
     var loadMsg = h('div.small');
     UI.modal('Your profile', [
       h('div.profile-top', null, [
         h('div.big-level', null, [h('div.big-level-n', { text: lv.n }), h('div', { text: lv.title })]),
-        h('div', null, [h('label.lbl', { text: 'Display name' }), nameIn, h('div.small', { text: st.xp + ' XP total · ' + Object.keys(st.done).length + '/' + SX.challenges.LIST.length + ' challenges' })])
+        h('div', null, [h('div.lbl', { text: 'Name on your certificates' }), h('div.locked-name', null, [h('span', { text: '🔒 ' }), h('b', { text: st.name })]),
+          h('div.small', { text: st.xp + ' XP total · ' + Object.keys(st.done).length + '/' + SX.challenges.LIST.length + ' challenges' })])
       ]),
       h('h3', { text: 'Badges' }), badgeGrid,
       h('h3', { text: 'Error collection (' + Object.keys(st.errors).length + '/' + UI.ERROR_CODES.length + ')' }), errGrid,
       h('h3', { text: 'Certificates' }),
       h('div.cert-list', null, SX.lessons.LIST.map(function (L) {
-        var pr = UI.platProgress(L.id), done = pr.total && pr.done === pr.total;
-        return h('button.chip' + (done ? '' : '.chip-off'), { disabled: !done, text: (done ? '🎓 ' : '🔒 ') + L.n + '. ' + L.title, onclick: function () { UI.showCert(L.id); } });
+        var ok = UI.lessonCertified && UI.lessonCertified(L.id);
+        return h('button.chip' + (ok ? '' : '.chip-off'), { disabled: !ok, text: (ok ? '🎓 ' : '🔒 ') + L.n + '. ' + L.title, onclick: function () { UI.showCert(L.id); } });
       })),
-      UI.cloudPanel ? UI.cloudPanel() : null,
       h('h3', { text: 'Progress code' }),
-      h('p.small', { text: 'Paste this code into Canvas to show your teacher your progress, or use it to move your XP to another computer.' }),
+      h('p.small', { text: 'Your progress code carries your name, XP, challenges and test results. It is sealed: if anyone changes even one character, SheetEX refuses it. Use it to continue on another computer.' }),
       codeBox,
       h('div.row', null, [h('button.btn', { text: 'Copy code', onclick: function () { codeBox.select(); copyText(code); UI.toast('Copied!', 'Progress code copied to the clipboard.'); } })]),
-      h('details.load-code', null, [h('summary', { text: 'Load or check a progress code' }), loadIn, h('div.row', null, [
-        h('button.btn', { text: 'Check code', onclick: function () {
-          var p = UI.decodeCode(loadIn.value);
-          loadMsg.textContent = p ? (p.n || 'Unnamed') + ': ' + p.x + ' XP, level ' + UI.level(p.x).n + ', ' + (p.d ? p.d.split(',').length : 0) + ' challenges, ' + (p.b ? p.b.split(',').length : 0) + ' badges (saved ' + new Date(p.t).toLocaleString() + ').' : 'That code is not valid (it may have been changed).';
-        } }),
-        h('button.btn', { text: 'Restore my progress from code', onclick: function () {
-          if (!UI.restoreFromCode(loadIn.value)) { loadMsg.textContent = 'That code is not valid.'; return; }
-          UI.render(); loadMsg.textContent = 'Progress restored!';
+      h('details.load-code', null, [h('summary', { text: 'Load a progress code from another computer' }), loadIn, h('div.row', null, [
+        h('button.btn', { text: 'Load progress', onclick: function () {
+          var r = UI.restoreFromCode(loadIn.value);
+          if (r.ok) { UI.render(); loadMsg.className = 'small good'; loadMsg.textContent = 'Progress loaded and merged.'; return; }
+          loadMsg.className = 'small bad';
+          loadMsg.textContent = r.other ? 'That code belongs to ' + r.name + ', not to you. Your name cannot be changed, so it was not loaded.' : r.why;
         } })
       ]), loadMsg]),
-      h('details.danger-zone', null, [h('summary', { text: 'Start over' }), h('p.small', { text: 'Erase all XP, badges, and your work in every app on this computer.' }),
-        h('button.btn.btn-danger', { text: 'Erase everything', onclick: function () {
-          UI.confirm('Erase everything?', 'All XP, badges and your work in every app will be deleted from this browser. This cannot be undone.', 'Erase everything', function () {
-            UI.state = freshState(); UI.wbs = {}; UI.db = null; UI.files = null; storageSet(JSON.stringify(UI.state));
+      h('details.danger-zone', null, [h('summary', { text: 'Wrong name? Start over' }),
+        h('p.small', { text: 'Your name is locked once it is set. If it is misspelled, the only fix is to erase everything on this computer (XP, badges, test results, certificates and your work) and start again with the right name.' }),
+        h('button.btn.btn-danger', { text: 'Erase everything and start over', onclick: function () {
+          UI.confirm('Erase everything?', 'All XP, badges, test results, certificates and your work in every app will be deleted from this browser. This cannot be undone.', 'Erase everything', function () {
+            UI.replaceState(freshState());
             document.querySelectorAll('.modal-overlay').forEach(function (m) { m.remove(); }); UI.go('home'); UI.start();
           });
         } })])
-    ], [{ text: 'Done', primary: true, onclick: function () { st.name = nameIn.value.trim(); UI.save(); UI.refreshHeader(); } }], { cls: 'wide' });
+    ], [{ text: 'Done', primary: true }], { cls: 'wide' });
   };
   // Clipboard that also works inside sandboxed iframes (Apps Script / Canvas), where navigator.clipboard may be blocked.
   function copyText(t) {
@@ -371,49 +479,72 @@
       h('p', { html: '<b>Same store data, five different tools.</b> Pick a workspace on the home page. Each one behaves like the real thing — including the errors.' }),
       h('ul', null, [
         h('li', { html: '<b>Challenges</b> (right-side panel) give XP. Hints cost 20% of a challenge\'s XP; wrong quiz answers cost 25%.' }),
+        h('li', { html: 'Finish a lesson\'s practice to unlock its <b>certification test</b>: 10 questions, no hints, 80% to pass. Passing earns the certificate.' }),
         h('li', { html: '<b>Cheat Sheet</b> lists what is different on that platform, plus every function it supports.' }),
         h('li', { html: '<b>Will it work elsewhere?</b> runs your formula in Excel 365, Excel 2013 and Google Sheets at the same time and suggests a rewrite.' }),
         h('li', { html: 'Discover new error types (like <code>#SPILL!</code>) for bonus XP.' }),
-        h('li', { html: 'Your work saves automatically in this browser. Use your <b>progress code</b> (click your name) to move to another computer or turn it in.' })
+        h('li', { html: 'Your work saves automatically in this browser. Your name is locked once you type it. Use your <b>progress code</b> (click your name) to continue on another computer.' })
       ]),
+      h('p.small', { text: 'Privacy: SheetEX sends nothing anywhere. Your progress stays in this browser until you copy your own code.' }),
       h('p.small', { text: 'SheetEX is a practice simulator. It copies how these apps behave for the functions it supports, but it is not the real software. When in doubt, test it in the real app!' }),
       UI.storageOk ? null : h('p.warn', { text: 'Heads up: this browser is blocking saving. Your progress will be lost when you close the page — copy your progress code before leaving!' }),
-      h('details.load-code', null, [h('summary', { text: 'For teachers: check a class set of progress codes' }), teacherTool()])
+      h('details.load-code', null, [h('summary', { text: 'For teachers: check codes and certificates' }), teacherTool()])
     ], [{ text: 'Got it', primary: true }], { cls: 'wide' });
   };
   function teacherTool() {
-    var ta = h('textarea.input.code-box', { rows: 5, placeholder: 'Paste progress codes here — one per line, or the whole Canvas export. Anything that is not a code is ignored.' });
+    var ta = h('textarea.input.code-box', { rows: 5, placeholder: 'Paste codes here — one per line, or a whole Canvas export. Anything that is not a code is ignored.' });
     var out = h('div');
-    var certOut = h('div');
-    function runCerts() {
-      var codes = ta.value.match(/SXC1-[A-Za-z0-9_-]+-[a-z0-9]+/g) || [];
-      certOut.innerHTML = '';
-      if (!codes.length) return;
-      var t = h('table.cs-keys', null, [h('tr', null, ['Certificate', 'Name', 'Lesson', 'XP', 'Hints', 'Date'].map(function (x) { return h('th', { text: x }); }))]);
-      codes.forEach(function (c) {
-        var d = SX.lessons.readCert(c);
-        if (!d) { t.appendChild(h('tr', null, [h('td', { colspan: 6, text: '⚠ Invalid or edited certificate code: ' + c.slice(0, 24) + '…' })])); return; }
-        t.appendChild(h('tr', null, ['✓ ' + SX.lessons.shortId(c), d.name, d.title, d.xp + '/' + d.maxXp, d.hints, new Date(d.time).toLocaleDateString()].map(function (x) { return h('td', { text: String(x) }); })));
-      });
-      certOut.appendChild(h('h4', { text: 'Certificates' })); certOut.appendChild(t);
+    function fmtD(t) { return new Date(t).toLocaleDateString(); }
+    function table(head, rows) {
+      return h('table.cs-keys', null, [h('tr', null, head.map(function (x) { return h('th', { text: x }); }))].concat(rows));
     }
     function run() {
-      runCerts();
-      var codes = ta.value.match(/(?:^|[^C])(SX1-[A-Za-z0-9+/=]+-[a-z0-9]+)/g) || [];
-      codes = codes.map(function (c) { return c.replace(/^[^S]/, ''); });
-      var rows = codes.map(function (c) { var p = UI.decodeCode(c); return p ? p : { bad: c }; });
       out.innerHTML = '';
-      if (!rows.length) { if (!certOut.childNodes.length) out.appendChild(h('p.small', { text: 'No codes found yet.' })); return; }
-      var t = h('table.cs-keys', null, [h('tr', null, ['Name', 'Level', 'XP', 'Challenges', 'Badges', 'Errors', 'Saved'].map(function (x) { return h('th', { text: x }); }))]);
-      rows.forEach(function (p) {
-        if (p.bad) { t.appendChild(h('tr', null, [h('td', { colspan: 7, text: '⚠ Invalid or edited code: ' + p.bad.slice(0, 24) + '…' })])); return; }
-        t.appendChild(h('tr', null, [p.n || '?', UI.level(p.x).n + ' ' + UI.level(p.x).title, p.x, p.d ? p.d.split(',').length + '/' + SX.challenges.LIST.length : 0,
-          p.b ? p.b.split(',').length : 0, p.e ? p.e.split(' ').filter(Boolean).length : 0, new Date(p.t).toLocaleDateString()].map(function (x) { return h('td', { text: String(x) }); })));
+      var found = ta.value.match(/SX[A-Z0-9]*-[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]*)?/g) || [];
+      if (!found.length) { out.appendChild(h('p.small', { text: 'No codes found yet.' })); return; }
+      var certRows = [], progRows = [], badRows = [];
+      found.forEach(function (c) {
+        if (c.indexOf('SXC2-') === 0) {
+          var d = SX.lessons.readCert(c);
+          if (!d.ok) { badRows.push([c, d.why]); return; }
+          d = d.cert;
+          certRows.push(h('tr', null, ['✓ ' + SX.seal.printId(d.name, d.lesson), d.name, d.n + '. ' + d.title, d.score + '/' + d.of + ' (' + Math.round(100 * d.score / d.of) + '%)',
+            d.attempts, d.xp + '/' + d.maxXp, d.hints, fmtD(d.time)].map(function (x) { return h('td', { text: String(x) }); })));
+        } else if (c.indexOf('SXP2-') === 0) {
+          var r = UI.readProgress(c);
+          if (!r.ok) { badRows.push([c, r.why]); return; }
+          var p = r.p, passed = Object.keys(p.ts).filter(function (k) { return p.ts[k].p; });
+          progRows.push(h('tr', null, [p.n, UI.level(p.x).n + ' ' + UI.level(p.x).title, p.x, Object.keys(p.d).length + '/' + SX.challenges.LIST.length,
+            passed.length + '/' + SX.lessons.LIST.length, p.b.length, fmtD(p.t)].map(function (x) { return h('td', { text: String(x) }); })));
+        } else badRows.push([c, 'Old or unknown kind of code — not made by this version of SheetEX.']);
       });
-      out.appendChild(t);
+      if (certRows.length) { out.appendChild(h('h4', { text: 'Certificates' })); out.appendChild(table(['ID', 'Name', 'Lesson', 'Test', 'Attempts', 'XP', 'Hints', 'Date'], certRows)); }
+      if (progRows.length) { out.appendChild(h('h4', { text: 'Progress codes' })); out.appendChild(table(['Name', 'Level', 'XP', 'Challenges', 'Tests passed', 'Badges', 'Saved'], progRows)); }
+      if (badRows.length) {
+        out.appendChild(h('h4', { text: '⚠ Rejected codes' }));
+        out.appendChild(table(['Code', 'Why'], badRows.map(function (b) { return h('tr.bad-row', null, [h('td', { text: b[0].slice(0, 28) + '…' }), h('td', { text: b[1] })]); })));
+      }
     }
     ta.addEventListener('input', run);
-    return h('div', null, [h('p.small', { text: 'Paste progress codes (SX1-…) and/or certificate codes (SXC1-…) — one per line, or a whole Canvas export. Codes are checksummed, so hand-edited codes show as invalid.' }), ta, certOut, out]);
+    // Check a printed / image certificate by name + lesson + ID
+    var nm = h('input.input', { placeholder: 'Student name exactly as printed' });
+    var ls = h('select.input', null, SX.lessons.LIST.map(function (l) { return h('option', { value: l.id, text: l.n + '. ' + l.title }); }));
+    var idIn = h('input.input', { placeholder: 'ID, e.g. K7QX-M2PA', maxlength: 9 });
+    var pmsg = h('div.small');
+    function checkPrint() {
+      var want = SX.seal.printId(nm.value, ls.value), got = idIn.value.trim().toUpperCase();
+      if (!nm.value.trim() || got.length < 9) { pmsg.className = 'small'; pmsg.textContent = ''; return; }
+      pmsg.className = 'small ' + (want === got ? 'good' : 'bad');
+      pmsg.textContent = want === got ? '✓ Genuine: this ID was issued to ' + nm.value.trim() + ' for that lesson.' : '✗ Does not match. Check the spelling of the name and the lesson — or the certificate was not issued by this SheetEX.';
+    }
+    [nm, ls, idIn].forEach(function (x) { x.addEventListener('input', checkPrint); x.addEventListener('change', checkPrint); });
+    return h('div', null, [
+      h('p.small', { html: 'Paste progress codes (<code>SXP2-…</code>) and certificate codes (<code>SXC2-…</code>). Every code is sealed with this class\'s key (fingerprint <b>' + SX.seal.fingerprint() + '</b>): an edited code, or one made by a different copy of SheetEX, is listed under <i>Rejected</i>.' }),
+      SX.seal.isDefaultKey() ? h('p.small.warn', { text: 'This copy is not running from your Apps Script deployment, so it uses the built-in key. Check codes in the same copy your students use.' }) : null,
+      ta, out,
+      h('h4', { text: 'Check a printed certificate' }),
+      h('div.print-check', null, [nm, ls, idIn]), pmsg
+    ]);
   }
 
   // ---------- Home ----------
@@ -428,13 +559,15 @@
         blurb: 'A real-world messy order feed: lost leading zeros, four date formats, fake nulls, messy names. Clean it, join it with VLOOKUP/HLOOKUP, get it AI-ready. NEW in v2.' },
       rdbms: { id: 'rdbms', name: 'What is an RDBMS?', icon: 'DB', tagline: 'Tables, keys & transactions', lessons: ['rdbms'],
         blurb: 'Why real data lives in a relational database: break a spreadsheet, follow keys across tables, watch the database refuse bad data, and survive a power failure with a transaction.' },
+      ml: { id: 'ml', name: 'ML Data Lab', icon: 'ML', tagline: 'Databases for machine learning', lessons: ['ml'],
+        blurb: 'Get a real training table ready for an AI model: find the label, count the classes, catch test rows that leaked into training, spot a cheating column, and grade a model with a confusion matrix.' },
       reference: { id: 'reference', name: 'Interactive Cheat Sheet', icon: '?!', tagline: 'Every task, every tool', lessons: [],
         blurb: 'Look up a task like "pad leading zeros" or "find nulls" and see the answer in Excel 365, Excel 2013, Google Sheets, SQL and CSV — then run it live.' }
     };
     function sumProgress(ids) {
       return ids.reduce(function (a, id) { var p = UI.platProgress(id); return { done: a.done + p.done, total: a.total + p.total, xp: a.xp + p.xp, maxXp: a.maxXp + p.maxXp }; }, { done: 0, total: 0, xp: 0, maxXp: 0 });
     }
-    var cards = SX.platforms.ORDER.slice(0, 4).concat(['wrangle', 'rdbms', 'sql', 'reference']).map(function (id) {
+    var cards = SX.platforms.ORDER.slice(0, 4).concat(['wrangle', 'sql', 'rdbms', 'ml', 'reference']).map(function (id) {
       var p = PL[id] || EXTRA[id], pr = EXTRA[id] ? sumProgress(EXTRA[id].lessons) : UI.platProgress(id);
       return h('button.plat-card.pc-' + id, { onclick: function () { UI.go(id); } }, [
         h('div.pc-top', null, [platIcon(p, true), h('div', null, [h('div.pc-name', { text: p.name }), h('div.pc-tag', { text: p.tagline })])]),
@@ -463,7 +596,7 @@
       h('h2.section-title', { text: 'Choose your workspace' }),
       h('div.plat-grid', null, cards),
       h('h2.section-title', { text: '🎓 Lessons & certificates' }),
-      h('p.section-sub', { text: 'Finish every challenge in a lesson to earn its certificate. Print it, save it as a PDF or image, or paste its code into Canvas.' }),
+      h('p.section-sub', { text: 'Practice first — hints are always there. Then pass the lesson\'s certification test (no hints, ' + SX.certtest.SIZE + ' questions, ' + Math.round(SX.certtest.PASS * 100) + '% to pass) to earn its certificate.' }),
       h('div.lesson-grid', null, SX.lessons.LIST.map(lessonTile)),
       h('div.extra-grid', null, [
         h('button.extra-card.cmp-card', { onclick: function () { UI.go('compare'); } }, [
@@ -483,13 +616,14 @@
   }
   function lessonTile(L) {
     var pr = UI.platProgress(L.id), done = pr.total && pr.done === pr.total;
-    var has = UI.state.certs && UI.state.certs[L.id];
-    return h('div.lesson-tile' + (done ? '.done' : ''), null, [
+    var cert = UI.lessonCertified(L.id), t = UI.state.tests[L.id];
+    return h('div.lesson-tile' + (cert ? '.done' : done ? '.ready' : ''), null, [
       h('div.lt-top', null, [h('span.lt-n', { text: L.n }), h('div', null, [h('div.lt-title', { text: L.title }), h('div.lt-tool', null, [L.tool, ' · ', h('button.linkish', { text: '📖 Guide', onclick: function () { UI.showGuide(L.id); } })])])]),
       h('div.pbar', null, h('div.pfill', { style: { width: (100 * pr.done / Math.max(1, pr.total)) + '%' } })),
       h('div.lt-foot', null, [
-        h('span.small', { text: pr.done + '/' + pr.total + ' challenges' }),
-        done ? h('button.btn.btn-sm.btn-primary', { text: has ? '🎓 Certificate' : '🎓 Claim certificate', onclick: function () { UI.showCert(L.id); } })
+        h('span.small', { text: cert ? '✓ Test passed ' + t.best + '/' + t.of : done ? (t && t.attempts ? 'Test: best ' + t.best + '/' + t.of : 'Practice done') : pr.done + '/' + pr.total + ' practice' }),
+        cert ? h('button.btn.btn-sm.btn-primary', { text: '🎓 Certificate', onclick: function () { UI.showCert(L.id); } })
+          : done ? h('button.btn.btn-sm.btn-primary.test-btn', { text: '📝 Take the test', onclick: function () { UI.startTest(L.id); } })
           : h('button.btn.btn-sm', { text: pr.done ? 'Continue →' : 'Start →', onclick: function () { UI.go(L.workspace); } })
       ])
     ]);
@@ -522,6 +656,7 @@
     else if (view === 'wrangle') UI.activeView = UI.wrangleView(host);
     else if (view === 'reference') UI.activeView = new UI.ReferenceView(host);
     else if (view === 'rdbms') UI.activeView = new UI.RdbmsView(host);
+    else if (view === 'ml') UI.activeView = new UI.MlView(host);
     // first visit: open the lesson guide (after the view exists)
     var lessonsHere = SX.lessons.LIST.filter(function (l) { return l.workspace === view; }).map(function (l) { return l.id; });
     if (lessonsHere.length && UI.maybeGuide && !(view === 'wrangle' && !UI.state.ui.wrIntroDone)) UI.maybeGuide(lessonsHere);
@@ -529,18 +664,39 @@
 
   UI.start = function () {
     UI.render();
-    if (!UI.state.name) {
-      var inp = h('input.input', { maxlength: 40, placeholder: 'First and last name' });
-      var done = function () { UI.state.name = inp.value.trim() || 'Analyst'; UI.save(); UI.refreshHeader(); UI.render(); };
-      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { done(); document.querySelector('.modal-overlay').remove(); } });
-      UI.modal('Welcome to ' + SX.data.COMPANY + '!', [
-        h('p', { text: 'You were just hired as our new data analyst. Our data lives in five different tools, and they do not all speak the same language.' }),
-        h('p', { text: 'Earn XP by solving challenges, discovering errors, and translating formulas between apps.' }),
-        h('label.lbl', { text: 'What should we call you?' }), inp,
-        SX.cloud && SX.cloud.available() ? h('p.small', null, [h('b', { text: 'Coming back? ' }), 'Type your name, start, then click your name ▸ Class cloud save ▸ Load.']) : null
-      ], [{ text: 'Start my first day', primary: true, onclick: done }], { sticky: true, noX: true });
-    }
+    if (UI.loadNotice) { var n = UI.loadNotice; UI.loadNotice = null; UI.modal('Saved progress not loaded', [h('p', { text: n })], [{ text: 'OK', primary: true, onclick: function () { setTimeout(UI.start, 50); } }], { sticky: true }); return; }
+    if (!UI.state.name) welcome();
   };
+  // First visit: a permanent name, or load an existing progress code.
+  function welcome() {
+    var inp = h('input.input', { maxlength: 40, placeholder: 'First and last name', 'aria-label': 'First and last name' });
+    var err = h('div.small.bad');
+    var codeIn = h('textarea.input.code-box', { rows: 2, placeholder: 'Paste your progress code (SXP2-…)' });
+    var codeMsg = h('div.small.bad.code-msg');
+    function next() {
+      var v = UI.validName(inp.value);
+      if (!v) { err.textContent = 'Type your first AND last name, using letters only — for example: Jordan Smith'; inp.focus(); return false; }
+      document.querySelectorAll('.modal-overlay').forEach(function (m) { m.remove(); });
+      UI.modal('Is this exactly right?', [
+        h('div.name-confirm', { text: v }),
+        h('p', { html: 'This name goes on every certificate you earn. <b>Once you continue it can never be changed</b> — not even by you. Check the spelling and capital letters.' })
+      ], [{ text: '← Fix it', onclick: function () { setTimeout(welcome, 30); } }, { text: 'Yes, lock it in', primary: true, onclick: function () { UI.setIdentity(v); UI.refreshHeader(); UI.render(); } }], { sticky: true, noX: true });
+      return false;
+    }
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); next(); } });
+    UI.modal('Welcome to ' + SX.data.COMPANY + '!', [
+      h('p', { text: 'You were just hired as our new data analyst. Our data lives in several different tools, and they do not all speak the same language.' }),
+      h('p', { text: 'Earn XP by solving challenges, then pass each lesson\'s certification test to earn its certificate.' }),
+      h('label.lbl', { text: 'Your first and last name (as your teacher knows you)' }), inp, err,
+      h('details.load-code', null, [h('summary', { text: 'Coming back on a different computer? Load your progress code' }), codeIn,
+        h('div.row', null, h('button.btn', { text: 'Load my progress', onclick: function () {
+          var r = UI.restoreFromCode(codeIn.value);
+          if (!r.ok) { codeMsg.textContent = r.why; return; }
+          document.querySelectorAll('.modal-overlay').forEach(function (m) { m.remove(); });
+          UI.refreshHeader(); UI.render(); UI.toast('Welcome back, ' + r.name + '!', 'Your progress was loaded.');
+        } })), codeMsg])
+    ], [{ text: 'Continue', primary: true, onclick: next }], { sticky: true, noX: true });
+  }
 
   // Shared side panel for challenges ---------------------------------------
   UI.challengePanel = function (plat, helpersFn, opts) {
@@ -612,8 +768,12 @@
             lesson.guide ? h('button.linkish.guide-link', { text: '📖 Guide', onclick: function () { UI.showGuide(lp); } }) : null]) : null,
           h('div', { text: pr.done + ' of ' + pr.total + ' complete · ' + pr.xp + ' XP earned' }),
           h('div.pbar', null, h('div.pfill', { style: { width: (100 * pr.done / Math.max(1, pr.total)) + '%' } })),
-          lesson ? h('button.btn.btn-sm.cert-btn' + (complete ? '.btn-primary' : ''), { disabled: !complete, title: complete ? 'Open your certificate' : 'Finish every challenge in this lesson to unlock it',
-            text: complete ? '🎓 View my certificate' : '🔒 Certificate (finish all ' + pr.total + ')', onclick: function () { UI.showCert(lp); } }) : null
+          lesson ? (function () {
+            var certified = UI.lessonCertified(lp);
+            return h('button.btn.btn-sm.cert-btn' + (complete ? '.btn-primary' : ''), { disabled: !complete, title: complete ? '' : 'Finish every practice challenge to unlock the certification test',
+              text: certified ? '🎓 View my certificate' : complete ? '📝 Take the certification test' : '🔒 Certification test (finish all ' + pr.total + ')',
+              onclick: function () { if (certified) UI.showCert(lp); else UI.startTest(lp); } });
+          })() : null
         ]));
         list.forEach(function (ch) {
           var c = card(ch);
