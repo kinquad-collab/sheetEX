@@ -53,8 +53,8 @@ test('codes made by another deployment (different class key) are refused', () =>
   const cert = { name: 'Jordan Smith', sid: 'abcdefghijkl', lesson: 'sql', xp: 1, maxXp: 2, hints: 0, count: 1, score: 8, of: 10, attempts: 1, secs: 1, time: 1790000000000 };
   assert.ok(a.SX.lessons.readCert(a.SX.lessons.certCode(cert)).ok);
   assert.strictEqual(b.SX.lessons.readCert(a.SX.lessons.certCode(cert)).ok, false);
-  assert.notStrictEqual(a.SX.seal.printId('Jordan Smith', 'sql'), b.SX.seal.printId('Jordan Smith', 'sql'));
-  assert.strictEqual(a.SX.seal.printId('Jordan Smith', 'sql'), a.SX.seal.printId('  jordan   smith ', 'sql'), 'print IDs ignore spacing and case');
+  a.UI.setIdentity('Jordan Smith');
+  assert.strictEqual(b.UI.readProgressFile(a.UI.progressFileText()).ok, false, 'a file from another deployment is refused');
 });
 
 test('names: first + last required, then locked forever', () => {
@@ -70,35 +70,64 @@ test('names: first + last required, then locked forever', () => {
   assert.match(UI.state.sid, /^[A-Za-z0-9_-]{12}$/);
 });
 
-test('progress codes: same student merges, another student is refused, edits are refused', () => {
+test('progress file: one sealed JSON file restores everything, and any edit is refused', () => {
   const a = boot();
   a.UI.setIdentity('Jordan Smith');
-  a.UI.state.xp = 120; a.UI.state.done['365-sum'] = { xp: 10, hints: 1 };
-  a.UI.state.tests.xl365 = { attempts: 2, best: 9, of: 10, passed: 1790000000000, secs: 300 };
-  const code = a.UI.progressCode();
-  // fresh computer: becomes Jordan
+  a.UI.state.xp = 120; a.UI.state.done['365-sum'] = { xp: 10, hints: 1, at: 1790000000000 };
+  a.UI.state.tests.xl365 = { attempts: 2, best: 9, of: 10, passed: 1790000000000, passScore: 9, passAttempt: 2, passSecs: 300, secs: 300, open: 0, lastFail: 0 };
+  a.SX.challenges.forPlat('xl365').forEach((c) => { a.UI.state.done[c.id] = a.UI.state.done[c.id] || { xp: c.xp, hints: 0 }; });
+  a.UI.issueCert('xl365');
+  a.UI.state.wb.xl365 = { marker: 'my spreadsheet work' };
+  a.UI.state.files = { 'notes.csv': 'a,b\n1,2\n' };
+  a.UI.state.visited = { xl365: true, ml: 1790000000000 }; a.UI.state.badges.certified = 1790000000000;
+  a.UI.state.stats.compatSeen = { '=XLOOKUP(A1,B:B,C:C)': 1 }; a.UI.state.hints['365-sum'] = 1; a.UI.state.wrong['365-sum'] = 2;
+  const text = a.UI.progressFileText();
+  const file = JSON.parse(text);
+  // human-readable and self-describing
+  assert.strictEqual(file.student, 'Jordan Smith');
+  assert.strictEqual(file.summary.certificates[0].test, '9/10');
+  assert.strictEqual(file.summary.certificates[0].attempt, 2);
+  assert.ok(text.startsWith('{\n  "app": "SheetEX",'));
+  // a fresh computer becomes Jordan, with all of the work
   const b = boot();
-  const r = b.UI.restoreFromCode(code);
-  assert.ok(r.ok, r.why); assert.strictEqual(b.UI.state.name, 'Jordan Smith'); assert.strictEqual(b.UI.state.xp, 120);
-  assert.strictEqual(b.UI.state.tests.xl365.passed, 1790000000000);
+  const r = b.UI.restoreFromFile(text);
+  assert.ok(r.ok, r.why);
+  assert.strictEqual(b.UI.state.name, 'Jordan Smith'); assert.strictEqual(b.UI.state.xp, 120);
+  assert.ok(b.UI.lessonCertified('xl365'));
+  assert.strictEqual(b.UI.state.wb.xl365.marker, 'my spreadsheet work');
+  assert.strictEqual(b.UI.state.files['notes.csv'], 'a,b\n1,2\n');
   assert.throws(() => { 'use strict'; b.UI.state.name = 'Casey Wright'; });
-  // Casey cannot load Jordan's code (her name is locked)
+  // Windows line endings / a trailing newline from a text editor are fine
+  assert.ok(boot().UI.readProgressFile(text.replace(/\n/g, '\r\n')).ok);
+  // Casey (name already set) cannot load Jordan's file
   const c = boot(); c.UI.setIdentity('Casey Wright');
-  const rc = c.UI.restoreFromCode(code);
+  const rc = c.UI.restoreFromFile(text);
   assert.strictEqual(rc.ok, false); assert.ok(rc.other); assert.strictEqual(c.UI.state.name, 'Casey Wright');
-  // same student on another computer: merge, never lowers
-  const d = boot(); d.UI.restoreFromCode(code); d.UI.state.xp = 500;
-  assert.ok(d.UI.restoreFromCode(code).merged); assert.strictEqual(d.UI.state.xp, 500);
-  // edited code (XP changed inside)
-  const [head, sig] = code.split('.');
-  const p = JSON.parse(a.SX.seal.fromUtf8(a.SX.seal.unb64u(head.slice(5)))); p.x = 99999;
-  const forged = 'SXP2-' + a.SX.seal.b64u(a.SX.seal.utf8(JSON.stringify(p))) + '.' + sig;
-  assert.strictEqual(boot().UI.restoreFromCode(forged).ok, false);
-  // validly signed but the wrong shape (unknown challenge id / extra field)
-  const e = boot();
-  assert.strictEqual(e.UI.restoreFromCode(e.SX.seal.pack('SXP2', Object.assign({}, p, { x: 10, d: { 'not-a-challenge': [1, 0] } }))).ok, false);
-  assert.strictEqual(e.UI.restoreFromCode(e.SX.seal.pack('SXP2', Object.assign({}, p, { x: 10, admin: true }))).ok, false);
-  assert.strictEqual(e.UI.restoreFromCode('SX1-eyJuIjoiSm9yZGFuIn0=-abc').ok, false, 'old v1 codes are not accepted');
+  // the same student on another computer: merge, never lower
+  const d = boot(); d.UI.restoreFromFile(text); d.UI.state.xp = 500;
+  assert.ok(d.UI.restoreFromFile(text).merged); assert.strictEqual(d.UI.state.xp, 500);
+  // every kind of edit is refused
+  const edits = {
+    'name in the summary': text.replace('"student": "Jordan Smith"', '"student": "Casey Wright"'),
+    'name everywhere': text.split('Jordan Smith').join('Casey Wright'),
+    'xp': text.replace('"xp": 120', '"xp": 9999'),
+    'test score': text.replace('"test": "9/10"', '"test": "10/10"'),
+    'one space': text.replace('"app": "SheetEX"', '"app":  "SheetEX"'),
+    're-indented': JSON.stringify(file, null, 4),
+    'minified': JSON.stringify(file),
+    'seal': text.replace(/"seal": "(.)/, (m, ch) => '"seal": "' + (ch === 'A' ? 'B' : 'A')),
+    'extra field': text.replace('"app": "SheetEX",', '"app": "SheetEX",\n  "admin": true,'),
+    'not json': text.slice(0, 200),
+    'empty': ''
+  };
+  for (const [what, t] of Object.entries(edits)) assert.strictEqual(boot().UI.readProgressFile(t).ok, false, what + ' should be refused');
+  // re-sealing an edited file with the (public) default key of ANOTHER deployment still fails on this one
+  const other = boot(null, 'classZ00000000000000000000000000');
+  assert.strictEqual(other.UI.readProgressFile(text).ok, false);
+  // a correctly sealed file with an impossible shape is refused (exact format)
+  const bad = JSON.parse(text); delete bad.seal; bad.progress.done['not-a-challenge'] = { xp: 1, hints: 0 };
+  bad.seal = a.SX.seal.mac('file|' + JSON.stringify(bad));
+  assert.match(boot().UI.readProgressFile(JSON.stringify(bad, null, 2) + '\n').why, /exact format/);
 });
 
 test('the saved game is sealed: editing localStorage throws the save away', () => {

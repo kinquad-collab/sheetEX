@@ -1,5 +1,4 @@
-// SheetEX — certification-test question bank. TEACHER-ONLY: this file holds the answers and is never shipped to
-// students. The build runs every reference answer through the real engine (src/js/certtest.js), stores only a
+// SheetEX — certification-test question banks. This file holds the answers and is never shipped in the app: The build runs every reference answer through the real engine (src/js/certtest.js), stores only a
 // fingerprint of the result in the student app, and fails if a reference answer errors or could be faked.
 //
 // kinds: mc (a = correct option) · text (a = accepted answers) · formula (ref = a correct formula; any formula with

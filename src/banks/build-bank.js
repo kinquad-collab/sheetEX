@@ -1,4 +1,4 @@
-// Turns the teacher-only bank into the student bank: answers become fingerprints. Every reference answer is run
+// Turns the question banks into what ships in the app: answers become fingerprints. Every reference answer is run
 // through the same engine students use; anything that errors or cannot be graded stops the build.
 'use strict';
 const SHIP = ['id', 'kind', 'topic', 'q', 'opts', 'plat', 'book', 'sheet', 'at', 'fill', 'show', 'ordered', 'probes', 'delim', 'must', 'same'];

@@ -39,17 +39,16 @@ test('doGet allows iframe embedding and injects one class key', () => {
   assert.strictEqual(ctx.doGet().html, out.html, 'key is stable between visits');
 });
 
-test('codes from another copy of SheetEX are rejected by the deployment', () => {
+test('anything sealed by another copy of SheetEX is rejected by the deployment', () => {
   const { ctx } = makeEnv(SEAL);
   const deployed = sealFrom(ctx.doGet().html), publicCopy = sealFrom(SEAL);
   assert.ok(!deployed.isDefaultKey()); assert.ok(publicCopy.isDefaultKey());
   const forged = publicCopy.pack('SXC2', { n: 'Ana Ruiz' });
   assert.strictEqual(deployed.unpack('SXC2', forged).ok, false);
   assert.strictEqual(deployed.unpack('SXC2', deployed.pack('SXC2', { n: 'Ana Ruiz' })).ok, true);
-  assert.notStrictEqual(deployed.printId('Ana Ruiz', 'xl365'), publicCopy.printId('Ana Ruiz', 'xl365'));
 });
 
-test('newClassKey invalidates old codes', () => {
+test('newClassKey invalidates everything sealed before', () => {
   const { ctx } = makeEnv(SEAL);
   const before = sealFrom(ctx.doGet().html), code = before.pack('SXP2', { x: 1 });
   ctx.newClassKey();

@@ -3,8 +3,8 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const SX = require('./load.js')(['certtest.js', 'platforms.js', 'challenges.js', 'lessons.js']);
-const BANK = require('../src/teacher/bank.js');
-const built = require('../src/teacher/bankbuild.js')(SX, BANK);
+const BANK = require('../src/banks/questions.js');
+const built = require('../src/banks/build-bank.js')(SX, BANK);
 const CT = SX.certtest;
 const ship = {}; Object.values(built.bank).flat().forEach((q) => { ship[q.id] = q; });
 const ok = (id, text, cse) => CT.isCorrect(ship[id], { text, cse: !!cse });

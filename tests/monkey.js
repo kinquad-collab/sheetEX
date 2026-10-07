@@ -37,7 +37,7 @@ async function main() {
   page.on('pageerror', (e) => errors.push(e.message + ' ' + (e.stack || '').split('\n')[1]));
   page.on('dialog', (d) => d.dismiss());
   await page.goto(DIST);
-  await page.fill('.modal input', 'Monkey Tester'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in');
+  await page.fill('.modal input.input', 'Monkey Tester'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in');
   const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay, #cert-overlay').forEach((m) => m.remove()));
   const views = ['xl365', 'xl2013', 'gs', 'wrangle', 'csv', 'sql', 'compare', 'reference', 'rdbms', 'ml', 'test'];
   const JUNK = ['=)))(', '=XLOOKUP(', '=1/0', '="', '=A1:A3+', '{=SUM(A1)}', 'DROP TABLE products;', 'SELECT * FROM nope;', "SELECT 1; DELETE FROM sales;", 'BEGIN;',

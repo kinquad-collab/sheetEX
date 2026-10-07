@@ -19,9 +19,9 @@ async function main() {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(DIST);
-  await page.fill('.modal input', 'Tester'); await page.keyboard.press('Enter');
+  await page.fill('.modal input.input', 'Tester'); await page.keyboard.press('Enter');
   check((await page.textContent('.modal .bad')).includes('first AND last'), 'a one-word name is refused');
-  await page.fill('.modal input', 'Tester Person'); await page.keyboard.press('Enter');
+  await page.fill('.modal input.input', 'Tester Person'); await page.keyboard.press('Enter');
   check((await page.textContent('.name-confirm')) === 'Tester Person', 'name confirmation screen');
   await page.click('text=Yes, lock it in');
   check(await page.evaluate(() => { SX.ui.state.name = 'Someone Else'; return SX.ui.state.name; }) === 'Tester Person', 'name is locked');
@@ -73,17 +73,21 @@ async function main() {
   await page.waitForSelector('.cert-paper');
   check((await page.textContent('.cert-name')) === 'Tester Person', 'certificate shows the student name');
   check((await page.textContent('.cert-stats')).includes('9 / 10'), 'certificate shows the test score');
-  const certCode = await page.inputValue('.cert-howto textarea');
-  check(await page.evaluate((c) => SX.lessons.readCert(c).ok, certCode), 'certificate code is valid');
-  // teacher tool: one real code, one edited code
+  // the progress file: a real .json download
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.click('.cert-bar >> text=💾 Download my progress file')]);
+  check(dl.suggestedFilename() === 'SheetEX-Tester-Person.json', 'progress file downloads as ' + dl.suggestedFilename());
+  const fileText = fs.readFileSync(await dl.path(), 'utf8');
+  check(JSON.parse(fileText).summary.certificates.length === 1, 'progress file lists the certificate');
   await page.evaluate(() => document.querySelector('#cert-overlay').remove());
-  await page.click('button[title="Help"], .help-btn').catch(() => page.evaluate(() => SX.ui.help()));
-  await page.click('text=For teachers: check codes and certificates');
-  const forged = certCode.slice(0, 12) + (certCode[12] === 'A' ? 'B' : 'A') + certCode.slice(13);
-  await page.fill('.load-code textarea', certCode + '\n' + forged);
-  await page.dispatchEvent('.load-code textarea', 'input');
-  check((await page.textContent('.load-code')).includes('Tester Person'), 'teacher tool reads a real certificate');
-  check((await page.$$('tr.bad-row')).length === 1, 'teacher tool rejects the edited certificate');
+  // view-only check in Help: genuine file vs edited file
+  await page.click('button[title="Help"]');
+  const pasteCheck = (t) => page.evaluate((t) => { const d = document.querySelector('.file-check'); d.open = true; d.querySelector('textarea').value = t;
+    Array.from(d.querySelectorAll('button')).find((b) => b.textContent === 'Check this file').click(); }, t);
+  await pasteCheck(fileText);
+  check((await page.textContent('.file-summary')).includes('Genuine'), 'checker: genuine file shows ✓ Genuine and its certificates');
+  await pasteCheck(fileText.replace('"test": "9/10"', '"test": "10/10"'));
+  check((await page.textContent('.file-check .load-msg')).includes('changed'), 'checker: an edited score is refused');
+  check(await page.evaluate(() => SX.ui.state.name) === 'Tester Person', 'checker does not load anything');
   check(errors.length === 0, 'no page errors (' + errors.join(' | ') + ')');
 
   // ---- 2. Locked-down iframe: scripts only, no same-origin -> localStorage throws ----
@@ -96,7 +100,7 @@ async function main() {
   p2.on('pageerror', (e) => errs2.push(e.message));
   await p2.goto('file://' + wrapper);
   const frame = p2.frameLocator('#f');
-  await frame.locator('.modal input').fill('Sandboxed Student');
+  await frame.locator('.modal input.input').fill('Sandboxed Student');
   await frame.locator('.modal .btn-primary').click();
   await frame.locator('text=Yes, lock it in').click();
   await frame.locator('.pc-xl365').click();

@@ -2,8 +2,8 @@
 
 > **v2** adds the **Data Wrangling Lab** with an **🤖 AI Readiness Check**, an **Interactive Cheat Sheet**, an
 > **interactive "What is an RDBMS?" page**, an **ML Data Lab**, **10 lessons with guides, no-hints certification tests and
-> certificates**, and a **teacher guide with a verified answer key**. **No student data is collected**: everything stays in the
-> student's browser and in sealed codes they choose to turn in. v1 is preserved on its own branch.
+> certificates**. Everything runs from one Google Apps Script page. **No student data is collected**: everything stays in the
+> student's browser and in one sealed **progress file** (`.json`) the student saves. v1 is preserved on its own branch.
 
 A classroom simulator that teaches students **why a formula that works at school breaks at home**.
 The same store data (Peachtree Supply Co. — products, sales, stores) lives in five tools, and each
@@ -71,36 +71,30 @@ lesson's **certification test** unlocks:
   SQL answers are run on a fresh database and on a changed copy; `CREATE TABLE` answers are graded by what the table
   accepts and refuses; CSV answers are parsed the way a program reads them.
 - **The answers are not in the app.** It holds only fingerprints (hashes) of each correct result. The answers live in
-  `src/teacher/bank.js`, which is never shipped.
+  `src/banks/questions.js`, which is never shipped.
 - **An attempt counts as soon as it starts.** Closing or reloading the page counts as a failed attempt, a failed attempt
   has a 2-minute review break, and results show which *topics* were missed, not the answers.
 
 Passing earns the **certificate**: the student's locked name, the lesson, the skills covered, the **test score**, the
-**attempt number**, practice challenges done, hints used in practice, the date, and a **verification ID**. Students turn it in
-by **🖨 printing / saving as PDF**, **⬇ downloading an image**, or **📋 copying the certificate code** (`SXC2-…`) into Canvas.
+**attempt number**, practice challenges done, hints used in practice and the date. Students can **🖨 print / save it as a
+PDF** or **⬇ download an image**. The proof behind every certificate is the progress file.
 
-### Names are permanent; codes are sealed
+### One progress file: the proof and the way back
 
 - On the first visit a student types a **first and last name**, sees it large on a confirmation screen, and locks it in.
   After that it **cannot be changed**, even by the student. A misspelled name means *Erase everything and start over*.
-- **Progress codes** (`SXP2-…`) carry the name, XP, challenges and test results to another computer. Loading a code on a
-  fresh computer *becomes* that student (name included); a student whose name is already set **cannot** load someone
-  else's code.
-- Every code, and the progress saved in the browser, is **signed (HMAC-SHA-256)** with a key made from a program key and
-  a **class key** that belongs to your Apps Script deployment. Change one character, edit the name or score inside, or
-  bring a code made by any other copy of SheetEX, and it is refused. Codes must also match the exact format SheetEX
-  makes (known lessons and challenges, sane numbers, no extra fields) or they are rejected.
-- **Teachers:** click **?** → *For teachers*. Paste a whole Canvas export of codes to get a table of certificates and
-  progress (rejected codes are listed separately with the reason), or type a name + lesson + verification ID to check a
-  **printed** certificate.
-
-## Teacher guide (v2)
-
-`npm run build` also writes **`dist/teacher-guide.html`** (and `dist/SheetEX-Teacher-Guide.pdf` is committed):
-pacing (about 10 class periods), objectives, misconceptions, vocabulary, discussion questions, exit tickets, and the
-**answer key for all 93 practice challenges and all 152 certification-test questions**. The answer key lives in `src/teacher/solutions.js`; the test suite checks every
-answer against the real auto-checkers (Wrangling answers in both Excel 365 and Google Sheets), so the key cannot drift
-from the app. The answers are never included in the student app — the build fails if they leak.
+- Clicking their name ▸ **⬇ Download my progress file** saves `SheetEX-First-Last.json`. That one file holds the name, XP,
+  every challenge, every test result, every certificate **and all of their work** (spreadsheets, SQL database, CSV files).
+- **Loading it puts them straight back where they were**, on any computer: on the welcome screen, *Coming back? Load your
+  progress file*. A student whose name is already set **cannot** load someone else's file.
+- The file is readable JSON with a summary at the top (name, level, XP, challenges, and each certificate with its test
+  score, attempt and date), and it is **sealed (HMAC-SHA-256)** with a key made from a program key and a **class key** that
+  belongs to your Apps Script deployment. SheetEX refuses the file if anything in it changes: a name, a score, one space or
+  line break, the order of fields, an extra field, or a file made by any other copy of SheetEX.
+- **To verify a file:** open the app, click **?** ▸ *Check a progress file (view only)*, and pick or paste the file. A genuine
+  file shows **✓ Genuine** with its summary; an edited one is refused with the reason. Nothing is loaded or changed.
+- If a school site blocks downloads, the file's text appears on screen with a **Copy** button, and the same text can be
+  pasted back in to load or check it.
 
 ## Student data (FERPA)
 
@@ -124,7 +118,7 @@ project's Script Properties.
    - *Who has access:* **Anyone** (or **Anyone within your school domain** if your district requires it — students then need to be signed in to their school Google account)
 5. Click **Deploy** and copy the **Web app URL** (it ends in `/exec`). The only permission it can ask for is storing its own
    class key in Script Properties.
-6. **Open the URL once yourself.** That creates your class key. Check codes in this same deployment (codes are sealed to it).
+6. **Open the URL once yourself.** That creates your class key. Check progress files in this same deployment (they are sealed to it).
 7. In Canvas, edit a Page → **HTML Editor**, and paste:
 
    ```html
@@ -135,12 +129,12 @@ project's Script Properties.
 
 **Updating later:** paste the new `Index.html`, then use **Deploy → Manage deployments → ✏️ Edit → Version: New version → Deploy**.
 That keeps the same URL, so the Canvas embed does not change, and the class key (Script Properties) stays the same, so
-students keep their progress. **New semester:** select `newClassKey` in the editor and click **Run**. Every old code and
-saved game stops being accepted.
+students keep their progress. **New semester:** select `newClassKey` in the editor and click **Run**. Every old progress
+file and saved game stops being accepted.
 
 **Upgrading from an earlier v2 with the gradebook:** replace *both* files. The new `Code.gs` has no gradebook functions.
-The old *SheetEX Gradebook* sheet in your Drive is no longer used; delete it if your district requires. Saves from
-earlier versions are not accepted (they were not sealed), so students start fresh once.
+The old *SheetEX Gradebook* sheet in your Drive is no longer used; delete it if your district requires. Saves and codes
+from earlier versions are not accepted, so students start fresh once.
 
 `Code.gs` sets `XFrameOptionsMode.ALLOWALL`, which is what allows Canvas to show it in an iframe.
 If you use a personal Gmail account (not Workspace), Google shows a small "created by a Google Apps Script user" banner above the app. That is normal.
@@ -148,9 +142,9 @@ If you use a personal Gmail account (not Workspace), Google shows a small "creat
 ### Saving progress
 
 - Work and XP save automatically in the student's browser (`localStorage`). On a school Chromebook that stays with the student's login.
-- If a browser blocks saving, the home page warns the student. Everything still works for that session; the progress code carries it.
-- To continue on another computer, students click their name → **Copy code**, then on the new computer choose
-  *Coming back on a different computer?* on the welcome screen and paste it.
+- If a browser blocks saving, the home page warns the student. Everything still works for that session; the progress file carries it.
+- To continue on another computer, students download their progress file, then on the new computer choose
+  *Coming back? Load your progress file* on the welcome screen.
 
 ## Other ways to run it
 
@@ -174,24 +168,24 @@ src/
   js/csv.js           CSV/TSV parse/write/export and "what a spreadsheet does on open"
   js/challenges.js    the challenge bank and its auto-checkers
   js/wrangle.js       v2: the messy order feed (generated from clean "truth" records) + expected answers
-  js/lessons.js       v2: lesson list, guides and sealed certificate codes
-  js/seal.js          v2: SHA-256 + HMAC in plain JS; sealed codes; the class-key marker Code.gs replaces
+  js/lessons.js       v2: lesson list, guides and sealed certificate records
+  js/seal.js          v2: SHA-256 + HMAC in plain JS; the class-key marker Code.gs replaces
   js/certtest.js      v2: certification-test engine (runs answers, fingerprints results, draws tests)
   js/mldata.js        v2: Lesson 10 data (ml_examples, predictions) with planted ML pitfalls
-  teacher/bank.js     v2: certification-test questions WITH answers (teacher-only; build ships fingerprints)
+  banks/questions.js  v2: certification-test question banks WITH answers (never shipped; build ships fingerprints)
+  banks/build-bank.js v2: runs every bank answer through the engine and turns it into fingerprints
   js/reference.js     v2: interactive cheat sheet data + live runner
-  teacher/            v2: answer key, discussion/exit tickets, teacher-guide generator (never shipped to students)
   js/ui-*.js          home page, XP/badges, spreadsheet grid, CSV editor, SQL console, Compare page,
                       RDBMS page, ML Data Lab, certification test screen, certificates
 build.js              inlines everything into dist/index.html and apps-script/Index.html
-tests/                node:test suites + a Playwright browser smoke test
+tests/                node:test suites, reference solutions for every practice challenge, Playwright browser tests
 ```
 
 ```bash
 npm run build          # writes dist/index.html and apps-script/Index.html
 npm test               # engine behaviour, every challenge solvable (wrangling in BOTH Excel 365 and Sheets),
                        # every cheat-sheet example runs, every test-bank answer accepted and common fakes rejected,
-                       # sealed codes/saves refuse tampering, names stay locked, Code.gs collects nothing
+                       # sealed progress files/saves refuse tampering, names stay locked, Code.gs collects nothing
 npm run test:browser   # Playwright smoke test (every workspace + a locked-down iframe with no storage)
 npm run test:e2e       # completes EVERY lesson through the real UI (typing formulas, Ctrl+D, Ctrl+Shift+Enter,
                        # the CSV editor, the SQL console, the RDBMS and ML pages), then passes every lesson's
@@ -205,18 +199,18 @@ After editing anything in `src/`, run `npm run build` and paste the new `apps-sc
 
 Add an entry in `src/js/challenges.js` (`plat`, `title`, `xp`, `task`, `hints`, `learn`, and either
 `check(h)` or `type: 'quiz'` with `options`/`answer`). Then add its reference solution to
-`src/teacher/solutions.js`. The test suite fails if any challenge cannot be solved.
+`tests/solutions.js`. The test suite fails if any challenge cannot be solved.
 
 ### Adding a certification-test question
 
-Add it to the lesson's list in `src/teacher/bank.js` with its answer (`a` for multiple choice/short answer, `ref` for a
+Add it to the lesson's list in `src/banks/questions.js` with its answer (`a` for multiple choice/short answer, `ref` for a
 formula, SQL or CSV answer). `npm run build` runs every reference answer through the engine and refuses to build if one
 errors, if a multiple-choice answer is not among the options, or if answers would leak into the student app.
 
 ## Honest limits
 
-- **Sealed is not unbreakable.** The page has to hold the signing key to sign codes. Editing a code, editing the browser's
-  saved progress, swapping in a friend's code, or bringing a code from another copy of SheetEX all fail. A student who
+- **Sealed is not unbreakable.** The page has to hold the signing key to seal files. Editing a progress file, editing the
+  browser's saved progress, loading a friend's file, or bringing a file from another copy of SheetEX all fail. A student who
   opens developer tools, reads the JavaScript and re-implements the signing (or edits the page's memory while it runs)
   could still forge a certificate. That takes real skill and leaves no trace you can check for. On managed Chromebooks,
   Google Admin can turn developer tools off (Chrome policy *DeveloperToolsAvailability*), which closes most of that gap.
@@ -226,7 +220,7 @@ errors, if a multiple-choice answer is not among the options, or if answers woul
   formula or query that actually works.
 - **The test is open-browser.** SheetEX cannot stop a student from opening another tab. The test hides hints and the cheat
   sheet; supervision does the rest.
-- **One sitting is not required:** progress stays in the browser on the same device/login, and progress codes move it anywhere.
+- **One sitting is not required:** progress stays in the browser on the same device/login, and the progress file moves it anywhere.
 
 ## Accuracy notes
 

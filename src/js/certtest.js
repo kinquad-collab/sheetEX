@@ -2,7 +2,7 @@
  * The question bank shipped to students holds only fingerprints of correct answers (SX.seal.answerHash), never the
  * answers. Hands-on answers are RUN: a formula is evaluated in a fresh workbook and in a "shuffled" copy (rows
  * reversed, numbers changed), so typing the answer as a constant, or pointing at the one cell that happens to hold
- * it, does not match. The build computes the fingerprints with this same file, from the teacher-only answer key. */
+ * it, does not match. The build computes the fingerprints with this same file, from the question banks (src/banks/questions.js). */
 (function (SX) {
   'use strict';
   var F = SX.f;

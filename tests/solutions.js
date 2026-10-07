@@ -1,5 +1,5 @@
-// Teacher-only answer key. NOT included in the student app.
-// Every entry is verified by tests/challenges.test.js, and build.js prints it in dist/teacher-guide.html.
+// Reference solutions for every practice challenge (test fixture, never shipped in the app).
+// Every entry is verified by tests/challenges.test.js; build.js fails if any SQL answer appears in the app.
 // sheet: [[address (Sheet!A1 or Sheet!A1:A9 = fill down), input, 'cse'?], ...]
 module.exports = {
   // Lesson 1 — Excel 365

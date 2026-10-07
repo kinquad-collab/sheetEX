@@ -4,7 +4,7 @@ const path = require('path');
 let chromium;
 try { ({ chromium } = require('playwright')); } catch (e) { ({ chromium } = require('/opt/node22/lib/node_modules/playwright')); }
 const DIST = 'file://' + path.join(__dirname, '..', 'dist', 'index.html');
-const BANK = require('../src/teacher/bank.js');
+const BANK = require('../src/banks/questions.js');
 const cell = (r, c) => `td[data-r="${r}"][data-c="${c}"]`;
 const colIdx = (s) => s.split('').reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1;
 
@@ -36,7 +36,7 @@ async function main() {
   const failures = [];
   const check = (cond, msg) => { if (!cond) failures.push(msg); console.log((cond ? '  ok   ' : '  FAIL ') + msg); };
 
-  // Take a lesson's certification test through the real test screen, typing the teacher-key answers.
+  // Take a lesson's certification test through the real test screen, typing the bank's answers.
   // failFirst: submit an empty attempt first, check the review break, then pass on attempt 2.
   async function passTest(page, lesson, failFirst) {
     const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
@@ -73,13 +73,14 @@ async function main() {
     await page.click('text=Finish & submit');
     await page.waitForSelector('.tq-score');
     const score = await page.textContent('.tq-score b');
-    check(score === '100%', lesson + ' test: teacher-key answers typed into the test score ' + score);
+    check(score === '100%', lesson + ' test: bank answers typed into the test score ' + score);
     check(await page.evaluate((L) => SX.ui.lessonCertified(L), lesson), lesson + ' test passed -> certificate earned');
     await clear();
     await page.evaluate((L) => SX.ui.showCert(L), lesson);
     await page.waitForSelector('.cert-paper');
-    const code = await page.inputValue('.cert-howto textarea');
-    const cert = await page.evaluate((c) => SX.lessons.readCert(c), code);
+    const cert = await page.evaluate((L) => SX.lessons.readCert(SX.ui.state.certs[L].code), lesson);
+    const inFile = await page.evaluate((L) => { const r = SX.ui.readProgressFile(SX.ui.progressFileText()); return r.ok && r.file.summary.certificates.some((c) => c.lesson.endsWith(SX.lessons.byId(L).title)); }, lesson);
+    check(inFile, lesson + ' certificate is recorded in the sealed progress file');
     check(cert.ok && cert.cert.lesson === lesson && cert.cert.score === n && cert.cert.attempts === (failFirst ? 2 : 1), lesson + ' certificate code is sealed and correct (attempt ' + (cert.cert && cert.cert.attempts) + ')');
     await page.evaluate(() => document.querySelector('#cert-overlay').remove());
     check(errors.length === 0, lesson + ' test: no page errors ' + errors.join(' | '));
@@ -90,7 +91,7 @@ async function main() {
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Avery Johnson'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
+    await page.fill('.modal input.input', 'Avery Johnson'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
     await page.evaluate((p) => { SX.ui.state.ui.wrPlat = p; SX.ui.state.ui.wrIntro = true; }, plat);
     await page.click('.pc-wrangle'); await page.waitForSelector('.grid');
     const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
@@ -162,7 +163,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
     const errors = []; page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Riley Brooks'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
+    await page.fill('.modal input.input', 'Riley Brooks'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
     await page.click('.pc-' + plat); await page.waitForSelector('.grid');
     const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
     for (const [addr, formula, how] of STORE[plat]) {
@@ -200,7 +201,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
     const errors = []; page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Sam Patel'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
+    await page.fill('.modal input.input', 'Sam Patel'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
     await page.click('.pc-sql'); await page.waitForSelector('.sql-editor');
     const SQL = {
       'sql-star': 'SELECT * FROM products;',
@@ -235,7 +236,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
     const errors = []; page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Casey Wright'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
+    await page.fill('.modal input.input', 'Casey Wright'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
     await page.click('.pc-csv'); await page.waitForSelector('.csv-editor');
     const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
     const checkCh = async (id) => {
@@ -257,7 +258,7 @@ async function main() {
     await page.click('.file-open:has(span:text-is("stores.csv"))');
     const storesText = await page.inputValue('.csv-editor');
     await page.click('text=＋ New file');
-    await page.fill('.modal input', 'stores.tsv'); await page.click('.modal .btn-primary');
+    await page.fill('.modal input.input', 'stores.tsv'); await page.click('.modal .btn-primary');
     await page.fill('.csv-editor', storesText);
     await page.click('text=🔍 Find & replace');
     await page.fill('.find-bar input >> nth=0', ',');
@@ -290,7 +291,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
     const errors = []; page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Riley Chen'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
+    await page.fill('.modal input.input', 'Riley Chen'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
     await page.click('.pc-rdbms'); await page.waitForSelector('#rd-grid');
     const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
     const runIn = async (sel, sql) => { await clear(); await page.fill(sel + ' .rd-console', sql); await page.click(sel + ' .rd-console-wrap .btn-primary'); await page.waitForTimeout(60); };
@@ -347,7 +348,7 @@ async function main() {
     console.log('\n== Compare lesson ==');
     const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
     await page.goto(DIST);
-    await page.fill('.modal input', 'Jamie Ortiz'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); });
+    await page.fill('.modal input.input', 'Jamie Ortiz'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); });
     await page.click('.cmp-card'); await page.waitForSelector('.cmp-cards');
     for (const id of await page.$$eval('.ch-card', (cs) => cs.map((c) => c.dataset.id))) {
       await page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
@@ -365,7 +366,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
     const errors = []; page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Morgan Lee'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); });
+    await page.fill('.modal input.input', 'Morgan Lee'); await page.keyboard.press('Enter'); await page.click('text=Yes, lock it in'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); });
     await page.click('.pc-ml'); await page.waitForSelector('#ml-examples');
     const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
     // celebrations (level-ups) can pop up at any moment: clear them and retry the click
@@ -414,20 +415,25 @@ async function main() {
     check(errors.length === 0, 'ml no page errors ' + errors.join(' | '));
     await page.waitForTimeout(1500);
     await passTest(page, 'ml');
-    // the sealed progress code carries the certificate to a fresh computer
-    const code = await page.evaluate(() => SX.ui.progressCode());
+    // the sealed progress file carries everything (certificate AND work) to a fresh computer
+    await page.evaluate(() => document.querySelectorAll('.modal-overlay, #cert-overlay').forEach((m) => m.remove()));
+    await page.evaluate(() => SX.ui.profile());
+    const [dl] = await Promise.all([page.waitForEvent('download'), page.click('.save-file')]);
+    const fileText = require('fs').readFileSync(await dl.path(), 'utf8');
     const p2 = await browser.newPage();
     await p2.goto(DIST);
-    await p2.click('text=Coming back on a different computer? Load your progress code');
-    await p2.fill('.modal textarea', code.slice(0, -1) + (code.endsWith('A') ? 'B' : 'A'));
-    await p2.click('text=Load my progress');
-    check((await p2.textContent('.code-msg')).includes('changed'), 'restore: an edited progress code is refused');
-    await p2.fill('.modal textarea', code);
-    await p2.click('text=Load my progress');
-    await p2.waitForTimeout(200);
-    check(await p2.evaluate(() => SX.ui.state.name === 'Morgan Lee' && SX.ui.lessonCertified('ml')), 'restore: name and certificate move to a new computer');
+    await p2.click('text=Coming back? Load your progress file');
+    await p2.fill('.welcome-load textarea', fileText.replace('"student": "Morgan Lee"', '"student": "Someone Else"'));
+    await p2.click('.welcome-load >> text=Load my progress');
+    check((await p2.textContent('.welcome-load .load-msg')).length > 10, 'restore: an edited progress file is refused');
+    await p2.setInputFiles('.welcome-load .file-pick', { name: 'SheetEX-Morgan-Lee.json', mimeType: 'application/json', buffer: Buffer.from(fileText) });
+    await p2.waitForTimeout(400);
+    check(await p2.evaluate(() => SX.ui.state.name === 'Morgan Lee' && SX.ui.lessonCertified('ml')), 'restore: picking the .json file brings back the name and certificate');
+    const work = (pg) => pg.evaluate(() => JSON.stringify([SX.ui.state.wb, SX.ui.state.db, SX.ui.state.files, Object.keys(SX.ui.state.done).sort(), SX.ui.state.xp]));
+    const f = JSON.parse(fileText);
+    check((await work(p2)) === JSON.stringify([f.work.wb, f.work.db, f.work.files, Object.keys(f.progress.done).sort(), f.progress.xp]), 'restore: all work, challenges and XP come back exactly');
     await p2.evaluate(() => SX.ui.showCert('ml')); await p2.waitForSelector('.cert-paper');
-    check((await p2.textContent('.cert-name')) === 'Morgan Lee', 'restore: certificate re-issued with the locked name');
+    check((await p2.textContent('.cert-name')) === 'Morgan Lee', 'restore: certificate shows the locked name');
     await p2.close();
     await page.close();
   }

@@ -203,8 +203,8 @@ test('AI readiness: raw model is wrong, cleaned model is exact, score reaches 10
   assert.ok(r1.matchRaw < 30);
 });
 
-// ---- The teacher answer key (src/teacher/solutions.js) must be correct for every non-quiz challenge ----
-const KEY = require('../src/teacher/solutions.js');
+// ---- The reference solutions (tests/solutions.js) must be correct for every non-quiz challenge ----
+const KEY = require('./solutions.js');
 function applySteps(wb, steps) {
   for (const [addr, input, how] of steps) {
     const m = /^(.+)!([A-Z]+)(\d+)(?::([A-Z]+)(\d+))?$/.exec(addr);
@@ -284,7 +284,7 @@ test('lesson 10 data has the planted problems the lesson promises', () => {
   assert.throws(() => SX.sql.execute(db, "INSERT INTO ml_examples (week, store_id, sku, stockout, split) VALUES (1, 'S01', 'SKU-101', 2, 'train');"), /CHECK/);
 });
 for (const ch of SX.challenges.LIST.filter((c) => c.type !== 'quiz')) {
-  test('teacher answer key is correct: ' + ch.id, () => {
+  test('reference solution is correct: ' + ch.id, () => {
     const k = KEY[ch.id];
     assert.ok(k, 'missing answer key for ' + ch.id);
     if (k.ui) { assert.ok(k.ui.length > 10); return; } // page interaction: verified in tests/e2e-lessons.js
@@ -306,23 +306,3 @@ for (const ch of SX.challenges.LIST.filter((c) => c.type !== 'quiz')) {
   });
 }
 
-test('teacher exit-ticket answers are correct', () => {
-  const T = require('../src/teacher/discussion.js');
-  const run = (plat, f, wbMaker) => { const wb = (wbMaker || SX.makeStoreWorkbook)(plat); wb.applyEdits([{ sheet: 'Scratch', r: 1, c: 1, cell: { input: 'red|green|blue' } }]);
-    wb.applyEdits([{ sheet: 'Scratch', r: 1, c: 2, cell: wb.prepare(f.replace(/A2/g, 'B2')).cell }]); return wb.display('Scratch', 1, 2); };
-  assert.strictEqual(run('xl365', T.xl365.exitAnswer).text, String(SX.data.PRODUCTS.filter((p) => p[3] > 10).length));
-  { const wb = SX.makeStoreWorkbook('xl2013');
-    wb.applyEdits([{ sheet: 'Products', r: 1, c: 9, cell: wb.prepare(T.xl2013.exitAnswer).cell }]);
-    assert.strictEqual(wb.display('Products', 1, 9).text, 'Bottled Water'); }
-  assert.strictEqual(run('xl365', T.wr2.exitAnswer).text, '3');
-  const s = run('gs', T.gs.exitAnswer.replace(', 3, TRUE', ',3,TRUE'));
-  assert.ok(!s.err);
-  const p = SX.csv.parse(T.csv.exitAnswer + '\n', ',');
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.rows[0].cells.map((c) => c.v))), ['Smith, Jo', '05401', 'said "hi"']);
-  assert.ok(SX.sql.execute(SX.sql.makeStoreDb(), T.sql.exitAnswer).pop().rows.length === 5);
-});
-test('lesson 9 exit ticket SQL works', () => {
-  const T = require('../src/teacher/discussion.js');
-  const db = SX.sql.makeStoreDb(); SX.sql.execute(db, T.rdbms.exitAnswer);
-  assert.ok(db.tables.clubs.pk[0] === 'club_id' && db.tables.clubs.notNull.includes('name'));
-});

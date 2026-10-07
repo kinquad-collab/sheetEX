@@ -342,73 +342,164 @@
   };
 
   var ID_RE = /^[A-Za-z0-9_-]{12}$/;
-  function isInt(x, lo, hi) { return typeof x === 'number' && Math.floor(x) === x && x >= lo && x <= hi; }
-  function onlyKeys(o, allowed) { return o && typeof o === 'object' && !Array.isArray(o) && Object.keys(o).every(function (k) { return allowed.indexOf(k) >= 0; }); }
+  function isNum(x, lo, hi) { return typeof x === 'number' && isFinite(x) && x >= lo && x <= hi; }
+  function isInt(x, lo, hi) { return isNum(x, lo, hi) && Math.floor(x) === x; }
+  function isObj(o) { return !!o && typeof o === 'object' && !Array.isArray(o); }
+  function onlyKeys(o, allowed) { return isObj(o) && Object.keys(o).every(function (k) { return allowed.indexOf(k) >= 0; }); }
   function lessonIds() { return SX.lessons.LIST.map(function (l) { return l.id; }); }
-  // Strict shape check: a code must look EXACTLY like one SheetEX makes, or it is refused.
-  UI.validProgress = function (p) {
-    if (!onlyKeys(p, ['n', 'i', 'x', 'd', 'b', 'e', 'c', 'ts', 't'])) return 'unexpected fields';
-    if (UI.validName(p.n) !== p.n) return 'bad name';
-    if (typeof p.i !== 'string' || !ID_RE.test(p.i)) return 'bad id';
-    if (!isInt(p.x, 0, 100000) || !isInt(p.t, 1.6e12, 4e12)) return 'bad numbers';
-    if (!onlyKeys(p.d, Object.keys(p.d || {}))) return 'bad challenges';
-    var ok = Object.keys(p.d).every(function (k) { var v = p.d[k]; return SX.challenges.byId(k) && Array.isArray(v) && v.length === 2 && isInt(v[0], 0, 1000) && isInt(v[1], 0, 10); });
-    if (!ok) return 'bad challenges';
-    var badgeIds = BADGES.map(function (x) { return x.id; });
-    if (!Array.isArray(p.b) || !p.b.every(function (x) { return badgeIds.indexOf(x) >= 0; })) return 'bad badges';
-    if (!Array.isArray(p.e) || !p.e.every(function (x) { return UI.ERROR_CODES.indexOf(x) >= 0; })) return 'bad errors';
-    var L = lessonIds();
-    if (!onlyKeys(p.c, L) || !Object.keys(p.c).every(function (k) { return isInt(p.c[k], 1.6e12, 4e12); })) return 'bad certificates';
-    if (!onlyKeys(p.ts, L)) return 'bad tests';
-    ok = Object.keys(p.ts).every(function (k) {
-      var t = p.ts[k];
-      return onlyKeys(t, ['b', 'q', 'a', 'p', 's']) && isInt(t.q, 1, 50) && isInt(t.b, 0, t.q) && isInt(t.a, 1, 999) && isInt(t.s, 0, 86400) && (t.p === 0 || isInt(t.p, 1.6e12, 4e12));
+  function challengeIds() { return SX.challenges.LIST.map(function (c) { return c.id; }); }
+  function mapOf(o, keys, valueOk) { return onlyKeys(o, keys) && Object.keys(o).every(function (k) { return valueOk(o[k]); }); }
+  var TIME = function (x) { return isNum(x, 0, 4e12); };
+  var TEST_KEYS = ['attempts', 'best', 'of', 'passed', 'secs', 'open', 'lastFail', 'passScore', 'passAttempt', 'passSecs'];
+  var WB_KEYS = ['xl365', 'xl2013', 'gs', 'wr-xl365', 'wr-gs'];
+
+  // ---------- The progress file ----------
+  // One JSON file that is BOTH the student's proof of work AND their way back to exactly where they were.
+  // It is written with a fixed layout and sealed; any change (even to spacing) makes SheetEX refuse it.
+  UI.FILE_APP = 'SheetEX'; UI.FILE_FORMAT = 3;
+  function core(st) { var c = {}; CORE.forEach(function (k) { c[k] = st[k]; }); return JSON.parse(JSON.stringify(c)); }
+  function summaryOf(p) {
+    var certs = SX.lessons.LIST.filter(function (L) { var t = p.tests[L.id]; return t && t.passed; }).map(function (L) {
+      var t = p.tests[L.id];
+      return { lesson: L.n + '. ' + L.title, test: (t.passScore != null ? t.passScore : t.best) + '/' + t.of, attempt: t.passAttempt || t.attempts, passed: new Date(t.passed).toISOString().slice(0, 10) };
     });
-    return ok ? '' : 'bad tests';
-  };
-  UI.progressCode = function () {
-    var st = UI.state, d = {}, c = {}, ts = {};
-    Object.keys(st.done).forEach(function (k) { d[k] = [st.done[k].xp | 0, st.done[k].hints | 0]; });
-    Object.keys(st.certs || {}).forEach(function (k) { if (st.certs[k] && st.certs[k].t) c[k] = st.certs[k].t; });
-    Object.keys(st.tests || {}).forEach(function (k) { var t = st.tests[k]; if (t && t.attempts) ts[k] = { b: t.best | 0, q: t.of | 0, a: t.attempts | 0, p: t.passed || 0, s: t.secs | 0 }; });
-    return SX.seal.pack('SXP2', { n: st.name, i: st.sid, x: st.xp | 0, d: d, b: Object.keys(st.badges), e: Object.keys(st.errors), c: c, ts: ts, t: Date.now() });
-  };
-  // -> { ok, p } or { ok:false, why }
-  UI.readProgress = function (code) {
-    var r = SX.seal.unpack('SXP2', code);
-    if (!r.ok) return r;
-    var bad = UI.validProgress(r.obj);
-    if (bad) return { ok: false, why: 'This code does not have the exact format SheetEX makes (' + bad + '). It cannot be used.' };
-    return { ok: true, p: r.obj };
-  };
-  function applyProgress(st, p) {
-    st.xp = Math.max(st.xp, p.x);
-    Object.keys(p.d).forEach(function (k) { if (!st.done[k]) st.done[k] = { xp: p.d[k][0], at: p.t, hints: p.d[k][1] }; });
-    p.b.forEach(function (b) { st.badges[b] = st.badges[b] || p.t; });
-    p.e.forEach(function (e) { st.errors[e] = st.errors[e] || p.t; });
-    Object.keys(p.ts).forEach(function (k) {
-      var t = p.ts[k], mine = st.tests[k] || { best: 0, of: t.q, attempts: 0, passed: 0, secs: 0 };
-      if (t.b / t.q > mine.best / Math.max(1, mine.of)) { mine.best = t.b; mine.of = t.q; mine.secs = t.s; }
-      mine.attempts = Math.max(mine.attempts, t.a);
-      if (t.p && (!mine.passed || t.p < mine.passed)) mine.passed = t.p;
-      st.tests[k] = mine;
-    });
+    var lv = UI.level(p.xp);
+    return { level: lv.n + ' ' + lv.title, xp: p.xp, challenges: Object.keys(p.done).length + '/' + SX.challenges.LIST.length, certificates: certs };
   }
-  // Load a progress code. Same student: merge (never lowers anything). Nobody here yet: become that student.
-  // A different student: replace everything (the name in a code can never be changed).
-  UI.restoreFromCode = function (code, opts) {
-    var r = UI.readProgress(code);
+  UI.progressFileText = function () {
+    saveNowCollect();
+    var st = UI.state;
+    var file = { app: UI.FILE_APP, format: UI.FILE_FORMAT, student: st.name, id: st.sid, savedAt: new Date().toISOString(),
+      summary: summaryOf(st), progress: core(st), work: { wb: st.wb || {}, db: st.db || null, files: st.files || null, colw: st.colw || {} } };
+    file.seal = SX.seal.mac('file|' + JSON.stringify(file));
+    return JSON.stringify(file, null, 2) + '\n';
+  };
+  UI.progressFileName = function () { return 'SheetEX-' + UI.state.name.replace(/[^A-Za-z0-9]+/g, '-') + '.json'; };
+  // Strict shape check of the progress inside a file.
+  function validProgress(p, file) {
+    if (!onlyKeys(p, CORE)) return 'unexpected fields';
+    if (UI.validName(p.name) !== p.name || p.name !== file.student) return 'name';
+    if (typeof p.sid !== 'string' || !ID_RE.test(p.sid) || p.sid !== file.id) return 'student id';
+    if (!isInt(p.xp, 0, 1000000) || !TIME(p.created)) return 'numbers';
+    var ch = challengeIds(), L = lessonIds();
+    if (!mapOf(p.done, ch, function (v) { return onlyKeys(v, ['xp', 'at', 'hints']) && isInt(v.xp, 0, 1000) && isInt(v.hints || 0, 0, 10) && (v.at == null || TIME(v.at)); })) return 'challenges';
+    if (!mapOf(p.hints, ch, function (v) { return isInt(v, 0, 10); }) || !mapOf(p.wrong, ch, function (v) { return isInt(v, 0, 1000); })) return 'hints';
+    if (!mapOf(p.badges, BADGES.map(function (b) { return b.id; }), TIME)) return 'badges';
+    if (!mapOf(p.errors, UI.ERROR_CODES, TIME)) return 'errors';
+    if (!isObj(p.visited) || Object.keys(p.visited).length > 30 || !Object.keys(p.visited).every(function (k) { return p.visited[k] === true || TIME(p.visited[k]); })) return 'visited';
+    if (!onlyKeys(p.stats, ['formulas', 'queries', 'compat', 'noHint', 'refRuns', 'compatSeen']) || !Object.keys(p.stats).every(function (k) {
+      var v = p.stats[k];
+      return k === 'compatSeen' ? isObj(v) && Object.keys(v).length < 5000 && Object.keys(v).every(function (f) { return isInt(v[f], 0, 1e7); }) : isInt(v, 0, 1e7);
+    })) return 'stats';
+    if (!mapOf(p.tests, L, function (t) { return onlyKeys(t, TEST_KEYS) && Object.keys(t).every(function (k) { return t[k] == null || isNum(t[k], 0, 4e12); }) && isInt(t.attempts || 0, 0, 999) && (t.best || 0) <= (t.of || 0); })) return 'tests';
+    if (!mapOf(p.certs, L, function (c) {
+      if (!onlyKeys(c, ['code', 't']) || typeof c.code !== 'string') return false;
+      var r = SX.lessons.readCert(c.code); return r.ok && r.cert.name === p.name && r.cert.sid === p.sid;
+    })) return 'certificates';
+    return '';
+  }
+  function validWork(w) {
+    if (!onlyKeys(w, ['wb', 'db', 'files', 'colw'])) return false;
+    if (!onlyKeys(w.wb, WB_KEYS) || !isObj(w.colw)) return false;
+    if (w.db !== null && !Array.isArray(w.db)) return false;
+    if (w.files !== null && !(isObj(w.files) && Object.keys(w.files).every(function (k) { return typeof w.files[k] === 'string'; }))) return false;
+    return true;
+  }
+  // -> { ok, file } or { ok:false, why }
+  UI.readProgressFile = function (text) {
+    text = String(text == null ? '' : text).replace(/^﻿/, '').replace(/\r\n/g, '\n');
+    if (!text.trim()) return { ok: false, why: 'The file is empty.' };
+    var f;
+    try { f = JSON.parse(text); } catch (e) { return { ok: false, why: 'That is not a SheetEX progress file (it is not valid JSON).' }; }
+    var KEYS = ['app', 'format', 'student', 'id', 'savedAt', 'summary', 'progress', 'work', 'seal'];
+    if (!isObj(f) || f.app !== UI.FILE_APP) return { ok: false, why: 'That is not a SheetEX progress file.' };
+    if (f.format !== UI.FILE_FORMAT) return { ok: false, why: 'This progress file was made by a different version of SheetEX.' };
+    if (Object.keys(f).join() !== KEYS.join() || typeof f.seal !== 'string') return { ok: false, why: 'This file does not have the exact layout SheetEX writes. It was changed, so it cannot be used.' };
+    if (JSON.stringify(f, null, 2) !== text.replace(/\n+$/, '')) return { ok: false, why: 'The formatting of this file was changed (spaces, line breaks or order). SheetEX only accepts files exactly as it saved them.' };
+    var seal = f.seal; delete f.seal;
+    var good = SX.seal.mac('file|' + JSON.stringify(f));
+    f.seal = seal;
+    if (good !== seal) return { ok: false, why: 'This file was changed after SheetEX saved it, or it was made by a different copy of SheetEX. It cannot be used.' };
+    var bad = validProgress(f.progress, f);
+    if (bad || !validWork(f.work) || JSON.stringify(summaryOf(f.progress)) !== JSON.stringify(f.summary) || typeof f.savedAt !== 'string')
+      return { ok: false, why: 'This file is not in the exact format SheetEX makes' + (bad ? ' (' + bad + ')' : '') + '. It cannot be used.' };
+    return { ok: true, file: f };
+  };
+  function mergeProgress(st, p) {
+    st.xp = Math.max(st.xp, p.xp);
+    Object.keys(p.done).forEach(function (k) { if (!st.done[k]) st.done[k] = p.done[k]; });
+    ['hints', 'wrong'].forEach(function (m) { Object.keys(p[m]).forEach(function (k) { st[m][k] = Math.max(st[m][k] || 0, p[m][k]); }); });
+    ['badges', 'errors', 'visited'].forEach(function (m) { Object.keys(p[m]).forEach(function (k) { st[m][k] = st[m][k] || p[m][k]; }); });
+    Object.keys(p.stats).forEach(function (k) {
+      if (k === 'compatSeen') st.stats.compatSeen = Object.assign({}, p.stats.compatSeen, st.stats.compatSeen || {});
+      else st.stats[k] = Math.max(st.stats[k] || 0, p.stats[k]);
+    });
+    Object.keys(p.tests).forEach(function (k) {
+      var mine = st.tests[k], t = p.tests[k];
+      if (!mine || (t.passed && !mine.passed) || (!mine.passed && (t.best || 0) > (mine.best || 0))) st.tests[k] = t;
+      else st.tests[k].attempts = Math.max(mine.attempts || 0, t.attempts || 0);
+    });
+    Object.keys(p.certs).forEach(function (k) { if (!st.certs[k]) st.certs[k] = p.certs[k]; });
+  }
+  // Load a progress file. Nobody here yet: become that student, with all their work.
+  // The same student: merge (never lowers anything; their work fills in anything missing here).
+  // A different student: refused — the name on this computer can never change.
+  UI.restoreFromFile = function (text) {
+    var r = UI.readProgressFile(text);
     if (!r.ok) return r;
-    var p = r.p;
-    if (UI.state.name && UI.state.sid === p.i) { applyProgress(UI.state, p); saveNow(); return { ok: true, merged: true, name: p.n }; }
-    if (UI.state.name && !(opts && opts.replace)) return { ok: false, other: true, name: p.n, why: 'This code belongs to ' + p.n + '.' };
+    var f = r.file, p = f.progress, w = f.work;
+    if (UI.state.name && UI.state.sid !== p.sid) return { ok: false, other: true, name: p.name, why: 'This file belongs to ' + p.name + ', not to ' + UI.state.name + '. A name can never be changed, so it was not loaded.' };
+    if (UI.state.name) {
+      saveNowCollect();
+      mergeProgress(UI.state, p);
+      Object.keys(w.wb).forEach(function (k) { if (!UI.state.wb[k]) UI.state.wb[k] = w.wb[k]; });
+      if (!UI.state.db && w.db) UI.state.db = w.db;
+      if (!UI.state.files && w.files) UI.state.files = w.files;
+      UI.wbs = {}; UI.db = null; UI.files = null; saveNow();
+      return { ok: true, merged: true, name: p.name };
+    }
     var st = freshState();
-    st.name = p.n; st.sid = p.i; st.created = p.t;
-    applyProgress(st, p);
+    CORE.forEach(function (k) { if (p[k] !== undefined) st[k] = p[k]; });
+    st.wb = w.wb; st.db = w.db; st.files = w.files; st.colw = w.colw;
     if (UI.state.ui) st.ui = { guideSeen: UI.state.ui.guideSeen, wrIntro: UI.state.ui.wrIntro, wrIntroDone: UI.state.ui.wrIntroDone };
     UI.replaceState(lockIdentity(st));
-    return { ok: true, name: p.n };
+    return { ok: true, name: p.name };
   };
+  // Write the file: a real download where the browser allows it, plus the text on screen to copy as a fallback.
+  UI.downloadText = function (name, text, holder) {
+    var ok = false;
+    try {
+      var url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+      var a = h('a', { href: url, download: name }); document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000); ok = true;
+    } catch (e) { ok = false; }
+    if (holder) {
+      holder.innerHTML = '';
+      var ta = h('textarea.input.code-box', { readonly: true, rows: 4 }); ta.value = text;
+      holder.appendChild(h('p.small', { text: (ok ? 'Saved as ' + name + ' (check your Downloads). ' : '') + 'If no file appeared — some school sites block downloads — copy the text below and save it, or paste it where your teacher asks.' }));
+      holder.appendChild(ta);
+      holder.appendChild(h('div.row', null, h('button.btn.btn-sm', { text: '📋 Copy the file text', onclick: function () { ta.select(); copyText(text); UI.toast('Copied', 'Your progress file text is on the clipboard.'); } })));
+    }
+    return ok;
+  };
+  // A loader: pick the .json file, or paste its text.
+  UI.fileLoader = function (onText, label) {
+    var msg = h('div.small.load-msg');
+    var pick = h('input.file-pick', { type: 'file', accept: '.json,application/json,text/plain', 'aria-label': 'Progress file' });
+    var paste = h('textarea.input.code-box', { rows: 3, placeholder: '…or paste the text of the progress file here' });
+    function run(text) { var r = onText(text); if (r) { msg.className = 'small load-msg ' + (r.ok ? 'good' : 'bad'); msg.textContent = r.msg; } }
+    pick.addEventListener('change', function () {
+      var f = pick.files && pick.files[0]; if (!f) return;
+      if (f.size > 8e6) { run(null); msg.className = 'small load-msg bad'; msg.textContent = 'That file is far too big to be a SheetEX progress file.'; return; }
+      var rd = new FileReader(); rd.onload = function () { run(String(rd.result)); }; rd.readAsText(f);
+    });
+    return h('div.loader', null, [pick, paste, h('div.row', null, h('button.btn', { text: label || 'Load', onclick: function () { run(paste.value); } })), msg]);
+  };
+  function saveNowCollect() {
+    Object.keys(UI.wbs).forEach(function (p) { UI.state.wb[p] = UI.wbs[p].serialize(); });
+    if (UI.db) UI.state.db = UI.db.serialize();
+    if (UI.files) UI.state.files = UI.files;
+  }
 
   UI.profile = function () {
     var st = UI.state, lv = UI.level(st.xp);
@@ -420,10 +511,7 @@
       var got = !!st.errors[c];
       return h('div.err-tile' + (got ? '.got' : ''), { title: got ? SX.f.ERR_TEXT[c] : 'Not discovered yet' }, got ? c : '???');
     }));
-    var code = UI.progressCode();
-    var codeBox = h('textarea.input.code-box', { readonly: true, rows: 3 }, code);
-    var loadIn = h('textarea.input.code-box', { rows: 2, placeholder: 'Paste a progress code here (SXP2-…)' });
-    var loadMsg = h('div.small');
+    var saveOut = h('div');
     UI.modal('Your profile', [
       h('div.profile-top', null, [
         h('div.big-level', null, [h('div.big-level-n', { text: lv.n }), h('div', { text: lv.title })]),
@@ -437,18 +525,16 @@
         var ok = UI.lessonCertified && UI.lessonCertified(L.id);
         return h('button.chip' + (ok ? '' : '.chip-off'), { disabled: !ok, text: (ok ? '🎓 ' : '🔒 ') + L.n + '. ' + L.title, onclick: function () { UI.showCert(L.id); } });
       })),
-      h('h3', { text: 'Progress code' }),
-      h('p.small', { text: 'Your progress code carries your name, XP, challenges and test results. It is sealed: if anyone changes even one character, SheetEX refuses it. Use it to continue on another computer.' }),
-      codeBox,
-      h('div.row', null, [h('button.btn', { text: 'Copy code', onclick: function () { codeBox.select(); copyText(code); UI.toast('Copied!', 'Progress code copied to the clipboard.'); } })]),
-      h('details.load-code', null, [h('summary', { text: 'Load a progress code from another computer' }), loadIn, h('div.row', null, [
-        h('button.btn', { text: 'Load progress', onclick: function () {
-          var r = UI.restoreFromCode(loadIn.value);
-          if (r.ok) { UI.render(); loadMsg.className = 'small good'; loadMsg.textContent = 'Progress loaded and merged.'; return; }
-          loadMsg.className = 'small bad';
-          loadMsg.textContent = r.other ? 'That code belongs to ' + r.name + ', not to you. Your name cannot be changed, so it was not loaded.' : r.why;
-        } })
-      ]), loadMsg]),
+      h('h3', { text: '💾 Your progress file' }),
+      h('p.small', { html: 'One file holds <b>everything</b>: your name, XP, challenges, test scores, certificates and all your work in every app. Load it on any computer to pick up exactly where you left off. It is sealed — if anything in it is changed, SheetEX refuses it.' }),
+      h('div.row', null, [h('button.btn.btn-primary.save-file', { text: '⬇ Download my progress file', onclick: function () { UI.downloadText(UI.progressFileName(), UI.progressFileText(), saveOut); } })]),
+      saveOut,
+      h('details.load-code', null, [h('summary', { text: 'Load my progress file from another computer' }),
+        UI.fileLoader(function (text) {
+          var r = UI.restoreFromFile(text);
+          if (r.ok) { setTimeout(function () { UI.render(); }, 600); return { ok: true, msg: 'Loaded! Everything from your file is back.' }; }
+          return { ok: false, msg: r.why };
+        }, 'Load my progress')]),
       h('details.danger-zone', null, [h('summary', { text: 'Wrong name? Start over' }),
         h('p.small', { text: 'Your name is locked once it is set. If it is misspelled, the only fix is to erase everything on this computer (XP, badges, test results, certificates and your work) and start again with the right name.' }),
         h('button.btn.btn-danger', { text: 'Erase everything and start over', onclick: function () {
@@ -483,67 +569,35 @@
         h('li', { html: '<b>Cheat Sheet</b> lists what is different on that platform, plus every function it supports.' }),
         h('li', { html: '<b>Will it work elsewhere?</b> runs your formula in Excel 365, Excel 2013 and Google Sheets at the same time and suggests a rewrite.' }),
         h('li', { html: 'Discover new error types (like <code>#SPILL!</code>) for bonus XP.' }),
-        h('li', { html: 'Your work saves automatically in this browser. Your name is locked once you type it. Use your <b>progress code</b> (click your name) to continue on another computer.' })
+        h('li', { html: 'Your work saves automatically in this browser. Your name is locked once you type it. Your <b>progress file</b> (click your name ▸ Download) holds everything and brings it back on any computer.' })
       ]),
       h('p.small', { text: 'Privacy: SheetEX sends nothing anywhere. Your progress stays in this browser until you copy your own code.' }),
       h('p.small', { text: 'SheetEX is a practice simulator. It copies how these apps behave for the functions it supports, but it is not the real software. When in doubt, test it in the real app!' }),
-      UI.storageOk ? null : h('p.warn', { text: 'Heads up: this browser is blocking saving. Your progress will be lost when you close the page — copy your progress code before leaving!' }),
-      h('details.load-code', null, [h('summary', { text: 'For teachers: check codes and certificates' }), teacherTool()])
+      UI.storageOk ? null : h('p.warn', { text: 'Heads up: this browser is blocking saving. Your progress will be lost when you close the page — download your progress file before leaving!' }),
+      h('details.load-code.file-check', null, [h('summary', { text: 'Check a progress file (view only)' }), fileChecker()])
     ], [{ text: 'Got it', primary: true }], { cls: 'wide' });
   };
-  function teacherTool() {
-    var ta = h('textarea.input.code-box', { rows: 5, placeholder: 'Paste codes here — one per line, or a whole Canvas export. Anything that is not a code is ignored.' });
+  // Look inside a progress file WITHOUT loading it: is it genuine, and what does it say?
+  UI.fileSummaryView = function (f) {
+    var sm = f.summary;
+    return h('div.file-summary', null, [
+      h('div.fs-head', null, [h('span.fs-ok', { text: '✓ Genuine' }), h('b', { text: f.student }), h('span.small.muted', { text: ' · saved ' + new Date(f.savedAt).toLocaleString() })]),
+      h('div.small', { text: 'Level ' + sm.level + ' · ' + sm.xp + ' XP · ' + sm.challenges + ' practice challenges' }),
+      sm.certificates.length ? h('table.cs-keys', null, [h('tr', null, ['Certificate', 'Test', 'Attempt', 'Passed'].map(function (x) { return h('th', { text: x }); }))].concat(
+        sm.certificates.map(function (c) { return h('tr', null, [c.lesson, c.test, c.attempt, c.passed].map(function (x) { return h('td', { text: String(x) }); })); })))
+        : h('p.small', { text: 'No certification tests passed yet.' })
+    ]);
+  };
+  function fileChecker() {
     var out = h('div');
-    function fmtD(t) { return new Date(t).toLocaleDateString(); }
-    function table(head, rows) {
-      return h('table.cs-keys', null, [h('tr', null, head.map(function (x) { return h('th', { text: x }); }))].concat(rows));
-    }
-    function run() {
-      out.innerHTML = '';
-      var found = ta.value.match(/SX[A-Z0-9]*-[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]*)?/g) || [];
-      if (!found.length) { out.appendChild(h('p.small', { text: 'No codes found yet.' })); return; }
-      var certRows = [], progRows = [], badRows = [];
-      found.forEach(function (c) {
-        if (c.indexOf('SXC2-') === 0) {
-          var d = SX.lessons.readCert(c);
-          if (!d.ok) { badRows.push([c, d.why]); return; }
-          d = d.cert;
-          certRows.push(h('tr', null, ['✓ ' + SX.seal.printId(d.name, d.lesson), d.name, d.n + '. ' + d.title, d.score + '/' + d.of + ' (' + Math.round(100 * d.score / d.of) + '%)',
-            d.attempts, d.xp + '/' + d.maxXp, d.hints, fmtD(d.time)].map(function (x) { return h('td', { text: String(x) }); })));
-        } else if (c.indexOf('SXP2-') === 0) {
-          var r = UI.readProgress(c);
-          if (!r.ok) { badRows.push([c, r.why]); return; }
-          var p = r.p, passed = Object.keys(p.ts).filter(function (k) { return p.ts[k].p; });
-          progRows.push(h('tr', null, [p.n, UI.level(p.x).n + ' ' + UI.level(p.x).title, p.x, Object.keys(p.d).length + '/' + SX.challenges.LIST.length,
-            passed.length + '/' + SX.lessons.LIST.length, p.b.length, fmtD(p.t)].map(function (x) { return h('td', { text: String(x) }); })));
-        } else badRows.push([c, 'Old or unknown kind of code — not made by this version of SheetEX.']);
-      });
-      if (certRows.length) { out.appendChild(h('h4', { text: 'Certificates' })); out.appendChild(table(['ID', 'Name', 'Lesson', 'Test', 'Attempts', 'XP', 'Hints', 'Date'], certRows)); }
-      if (progRows.length) { out.appendChild(h('h4', { text: 'Progress codes' })); out.appendChild(table(['Name', 'Level', 'XP', 'Challenges', 'Tests passed', 'Badges', 'Saved'], progRows)); }
-      if (badRows.length) {
-        out.appendChild(h('h4', { text: '⚠ Rejected codes' }));
-        out.appendChild(table(['Code', 'Why'], badRows.map(function (b) { return h('tr.bad-row', null, [h('td', { text: b[0].slice(0, 28) + '…' }), h('td', { text: b[1] })]); })));
-      }
-    }
-    ta.addEventListener('input', run);
-    // Check a printed / image certificate by name + lesson + ID
-    var nm = h('input.input', { placeholder: 'Student name exactly as printed' });
-    var ls = h('select.input', null, SX.lessons.LIST.map(function (l) { return h('option', { value: l.id, text: l.n + '. ' + l.title }); }));
-    var idIn = h('input.input', { placeholder: 'ID, e.g. K7QX-M2PA', maxlength: 9 });
-    var pmsg = h('div.small');
-    function checkPrint() {
-      var want = SX.seal.printId(nm.value, ls.value), got = idIn.value.trim().toUpperCase();
-      if (!nm.value.trim() || got.length < 9) { pmsg.className = 'small'; pmsg.textContent = ''; return; }
-      pmsg.className = 'small ' + (want === got ? 'good' : 'bad');
-      pmsg.textContent = want === got ? '✓ Genuine: this ID was issued to ' + nm.value.trim() + ' for that lesson.' : '✗ Does not match. Check the spelling of the name and the lesson — or the certificate was not issued by this SheetEX.';
-    }
-    [nm, ls, idIn].forEach(function (x) { x.addEventListener('input', checkPrint); x.addEventListener('change', checkPrint); });
     return h('div', null, [
-      h('p.small', { html: 'Paste progress codes (<code>SXP2-…</code>) and certificate codes (<code>SXC2-…</code>). Every code is sealed with this class\'s key (fingerprint <b>' + SX.seal.fingerprint() + '</b>): an edited code, or one made by a different copy of SheetEX, is listed under <i>Rejected</i>.' }),
-      SX.seal.isDefaultKey() ? h('p.small.warn', { text: 'This copy is not running from your Apps Script deployment, so it uses the built-in key. Check codes in the same copy your students use.' }) : null,
-      ta, out,
-      h('h4', { text: 'Check a printed certificate' }),
-      h('div.print-check', null, [nm, ls, idIn]), pmsg
+      h('p.small', { text: 'Open a progress file to see whether it is genuine and what it contains. Nothing is loaded or changed on this computer.' }),
+      UI.fileLoader(function (text) {
+        out.innerHTML = '';
+        var r = UI.readProgressFile(text);
+        if (r.ok) { out.appendChild(UI.fileSummaryView(r.file)); return { ok: true, msg: '' }; }
+        return { ok: false, msg: '✗ ' + r.why };
+      }, 'Check this file'), out
     ]);
   }
 
@@ -582,7 +636,7 @@
     var cmpPr = UI.platProgress('compare');
     var errCount = Object.keys(st.errors).length;
     return h('main.home', null, [
-      UI.storageOk ? null : h('div.warn.storage-warn', null, [h('b', { text: 'Saving is blocked in this browser. ' }), 'Your work disappears when you close this page. Before you leave, click your name ▸ Copy code, and paste the code somewhere safe.']),
+      UI.storageOk ? null : h('div.warn.storage-warn', null, [h('b', { text: 'Saving is blocked in this browser. ' }), 'Your work disappears when you close this page. Before you leave, click your name ▸ Download my progress file.']),
       h('section.hero', null, [
         h('div.hero-text', null, [
           h('div.hero-kicker', { text: 'Welcome' + (st.name ? ', ' + st.name : '') + '! Your first day as a data analyst' }),
@@ -671,8 +725,6 @@
   function welcome() {
     var inp = h('input.input', { maxlength: 40, placeholder: 'First and last name', 'aria-label': 'First and last name' });
     var err = h('div.small.bad');
-    var codeIn = h('textarea.input.code-box', { rows: 2, placeholder: 'Paste your progress code (SXP2-…)' });
-    var codeMsg = h('div.small.bad.code-msg');
     function next() {
       var v = UI.validName(inp.value);
       if (!v) { err.textContent = 'Type your first AND last name, using letters only — for example: Jordan Smith'; inp.focus(); return false; }
@@ -688,13 +740,14 @@
       h('p', { text: 'You were just hired as our new data analyst. Our data lives in several different tools, and they do not all speak the same language.' }),
       h('p', { text: 'Earn XP by solving challenges, then pass each lesson\'s certification test to earn its certificate.' }),
       h('label.lbl', { text: 'Your first and last name (as your teacher knows you)' }), inp, err,
-      h('details.load-code', null, [h('summary', { text: 'Coming back on a different computer? Load your progress code' }), codeIn,
-        h('div.row', null, h('button.btn', { text: 'Load my progress', onclick: function () {
-          var r = UI.restoreFromCode(codeIn.value);
-          if (!r.ok) { codeMsg.textContent = r.why; return; }
+      h('details.load-code.welcome-load', null, [h('summary', { text: 'Coming back? Load your progress file' }),
+        UI.fileLoader(function (text) {
+          var r = UI.restoreFromFile(text);
+          if (!r.ok) return { ok: false, msg: r.why };
           document.querySelectorAll('.modal-overlay').forEach(function (m) { m.remove(); });
-          UI.refreshHeader(); UI.render(); UI.toast('Welcome back, ' + r.name + '!', 'Your progress was loaded.');
-        } })), codeMsg])
+          UI.refreshHeader(); UI.render(); UI.toast('Welcome back, ' + r.name + '!', 'Everything from your progress file is back.');
+          return { ok: true, msg: '' };
+        }, 'Load my progress')])
     ], [{ text: 'Continue', primary: true, onclick: next }], { sticky: true, noX: true });
   }
 

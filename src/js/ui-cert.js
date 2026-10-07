@@ -94,19 +94,19 @@
           h('div.cert-seal', { text: '★' }),
           h('div', null, [h('div.cert-line'), h('div.cert-small', { text: 'Instructor' })])
         ]),
-        h('div.cert-verify', { text: 'Verification ID ' + SX.seal.printId(c.name, c.lesson) + ' · test attempt ' + c.attempts + ' · teachers: SheetEX ▸ ? ▸ For teachers' })
+        h('div.cert-verify', { text: 'Passed on test attempt ' + c.attempts + ' · proof: ' + c.name + '\'s sealed SheetEX progress file' })
       ])
     ]);
-    var codeBox = h('textarea.input.code-box', { readonly: true, rows: 2 }, saved.code);
+    var saveOut = h('div');
     var imgHolder = h('div');
     var bar = h('div.cert-bar', null, [
       h('button.btn.btn-primary', { text: '🖨 Print / Save as PDF', onclick: function () { printCert(); } }),
       h('button.btn', { text: '⬇ Download image', onclick: function () { downloadPng(c, lesson, saved.code, imgHolder); } }),
-      h('button.btn', { text: '📋 Copy certificate code', onclick: function () { codeBox.select(); UI.copyText(saved.code); UI.toast('Copied', 'Paste the code into your Canvas assignment.'); } }),
+      h('button.btn', { text: '💾 Download my progress file', onclick: function () { UI.downloadText(UI.progressFileName(), UI.progressFileText(), saveOut); } }),
       h('button.btn', { text: 'Close', onclick: close })
     ]);
     overlay.appendChild(h('div.cert-wrap', null, [bar, paper,
-      h('div.cert-howto', null, [h('b', { text: 'Turning it in: ' }), 'print it (choose "Save as PDF"), download the image, or paste this code into Canvas:', codeBox, imgHolder])]));
+      h('div.cert-howto', null, [h('b', { text: 'Turning it in: ' }), 'print it (choose "Save as PDF") or download the image. Your progress file is the proof behind every certificate — it is sealed, so it cannot be edited.', saveOut, imgHolder])]));
     overlay.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
     document.body.appendChild(overlay);
     overlay.tabIndex = -1; overlay.focus();
@@ -143,7 +143,7 @@
     t('Date: ' + fmtDate(c.time), 900, '28px Arial', '#344054');
     g.beginPath(); g.moveTo(1050, 905); g.lineTo(1400, 905); g.strokeStyle = '#98a2b3'; g.lineWidth = 2; g.stroke();
     g.font = '22px Arial'; g.fillStyle = '#667085'; g.fillText('Instructor', 1225, 940);
-    t('Verification ID ' + SX.seal.printId(c.name, c.lesson) + '  ·  test attempt ' + c.attempts, 1010, '20px monospace', '#667085');
+    t('Passed on test attempt ' + c.attempts + '  ·  proof: ' + c.name + "'s sealed SheetEX progress file", 1010, '20px monospace', '#667085');
     g.beginPath(); g.arc(300, 900, 70, 0, Math.PI * 2); g.fillStyle = '#f26b1d'; g.fill();
     g.font = 'bold 70px Arial'; g.fillStyle = '#fff'; g.fillText('★', 300, 925);
     var url = cv.toDataURL('image/png');

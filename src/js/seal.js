@@ -1,9 +1,9 @@
 /* SheetEX — sealed codes. SHA-256 + HMAC (RFC 2104) in plain JS, so it runs the same in browsers, in Apps Script
  * pages and in tests. Progress codes, certificate codes and the saved game are signed with a key made from a
  * program key and a CLASS KEY. When SheetEX is served by Google Apps Script, Code.gs swaps the class key below for a
- * random key that belongs to that deployment, so codes made by any other copy of SheetEX are rejected.
+ * random key that belongs to that deployment, so files made by any other copy of SheetEX are rejected.
  *
- * Honest limit: the key has to live inside the page for the page to sign codes. This stops edited codes and edited
+ * Honest limit: the key has to live inside the page for the page to sign codes. This stops edited files and edited
  * saves; it cannot stop someone who reads the page's source code with developer tools and re-implements the signing. */
 (function (SX) {
   'use strict';
@@ -125,18 +125,11 @@
   // Answer fingerprints for the certification tests (fixed salt, so the bank can be built ahead of time).
   function answerHash(qid, norm) { return b64u(sha256(BANK.concat(utf8(qid + '|' + norm))).slice(0, 12)); }
 
-  // A short ID printed on certificates: lets a teacher check a paper copy by name + lesson.
-  var B32 = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  function printId(name, lesson) {
-    var b = hmac(KEY, 'print|' + normName(name) + '|' + lesson), out = '';
-    for (var i = 0; i < 8; i++) out += B32[b[i] % 32];
-    return out.slice(0, 4) + '-' + out.slice(4);
-  }
   function normName(n) { return String(n || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
 
   SX.seal = {
     sha256: sha256, hmac: hmac, hex: hex, utf8: utf8, fromUtf8: fromUtf8, b64u: b64u, unb64u: unb64u,
-    mac: mac, pack: pack, unpack: unpack, answerHash: answerHash, printId: printId, normName: normName,
+    mac: mac, pack: pack, unpack: unpack, answerHash: answerHash, normName: normName,
     isDefaultKey: function () { return DEFAULT; },
     fingerprint: function () { return mac('fingerprint', 4).toUpperCase().replace(/[-_]/g, 'X').slice(0, 5); }
   };
