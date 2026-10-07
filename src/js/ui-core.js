@@ -69,7 +69,14 @@
     if (!UI.db) {
       try { UI.db = UI.state.db ? SX.sql.Database.load(UI.state.db) : SX.sql.makeStoreDb(); } catch (e) { UI.db = SX.sql.makeStoreDb(); }
       var fresh = SX.sql.makeStoreDb(); // v2 tables for older saves
-      Object.keys(fresh.tables).forEach(function (k) { if (!UI.db.tables[k]) UI.db.tables[k] = fresh.tables[k]; });
+      Object.keys(fresh.tables).forEach(function (k) {
+        var mine = UI.db.tables[k], f = fresh.tables[k];
+        if (!mine) { UI.db.tables[k] = f; return; }
+        if ((!mine.pk || !mine.pk.length) && f.pk.length) { // older save: add the keys and rules of the real database
+          ['pk', 'uniques', 'fks', 'checks', 'notNull', 'strict'].forEach(function (m) { mine[m] = f[m]; });
+          mine.cols.forEach(function (c) { var fc = f.cols.filter(function (x) { return x.name === c.name; })[0]; if (fc) { c.pk = fc.pk; c.notNull = fc.notNull; c.ref = fc.ref; } });
+        }
+      });
     }
     return UI.db;
   };
@@ -108,6 +115,7 @@
     { id: 'arrayformula', icon: '🔁', name: 'Array Thinker', desc: 'Use ARRAYFORMULA in Google Sheets.', xp: 10 },
     { id: 'translator', icon: '🌐', name: 'Translator', desc: 'Check 3 formulas with “Will it work elsewhere?”.', xp: 15 },
     { id: 'sql-first', icon: '🗄️', name: 'Hello, Database', desc: 'Run your first SQL query.', xp: 10 },
+    { id: 'rollback', icon: '⏪', name: 'Undo Button', desc: 'Use ROLLBACK to undo a transaction.', xp: 10 },
     { id: 'oops', icon: '😬', name: 'Learned the Hard Way', desc: 'Run UPDATE or DELETE without WHERE.', xp: 5 },
     { id: 'no-hints', icon: '🧠', name: 'No Hints Needed', desc: 'Finish 5 challenges without hints.', xp: 25 },
     { id: 'done-xl365', icon: '🟩', name: 'Excel 365 Pro', desc: 'Finish every Excel 365 challenge.', xp: 30 },

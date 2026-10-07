@@ -606,3 +606,6 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
 .guide-skills { justify-content: flex-start; }
 .guide-link { margin-left: auto; }
 .ch-lesson { flex-wrap: wrap; }
+
+.key-pk { font-size: 10px; } .key-fk { color: #7c3aed; font-size: 10.5px; }
+.tbl-strict { font: 700 9px var(--font); background: #ede9fe; color: #5b21b6; border-radius: 3px; padding: 1px 4px; }

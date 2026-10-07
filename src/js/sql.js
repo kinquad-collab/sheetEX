@@ -69,6 +69,9 @@
     var near = t.t === 'eof' ? 'incomplete input' : 'near "' + this.src.slice(t.s, t.e) + '": syntax error';
     throw new SqlError(t.t === 'eof' ? near : near, hint);
   };
+  Parser.prototype.isWord = function (w, k) { var t = this.peek(k); return (t.t === 'id' || t.t === 'kw') && String(t.v).toUpperCase() === w; };
+  Parser.prototype.acceptWord = function (w) { if (this.isWord(w)) { this.p++; return true; } return false; };
+  Parser.prototype.expectWord = function (w, hint) { if (!this.acceptWord(w)) this.fail(null, hint || ('Expected ' + w + ' here.')); };
   Parser.prototype.expectKw = function (v, hint) { if (!this.acceptKw(v)) this.fail(null, hint || ('Expected ' + v + ' here.')); };
   Parser.prototype.expectOp = function (v, hint) { if (!this.acceptOp(v)) this.fail(null, hint || ('Expected "' + v + '" here.')); };
   Parser.prototype.ident = function (what) {
@@ -100,9 +103,22 @@
       if (t.v === 'CREATE') return this.create();
       if (t.v === 'DROP') { this.p++; this.expectKw('TABLE'); return { type: 'drop', table: this.ident('a table name') }; }
     }
+    if (t.t === 'id') {
+      var w = t.v.toUpperCase();
+      if (w === 'BEGIN') { this.p++; if (this.isWord('TRANSACTION')) this.p++; return { type: 'begin' }; }
+      if (w === 'COMMIT' || w === 'END') { this.p++; if (this.isWord('TRANSACTION')) this.p++; return { type: 'commit' }; }
+      if (w === 'ROLLBACK') { this.p++; if (this.isWord('TRANSACTION')) this.p++; return { type: 'rollback' }; }
+      if (w === 'PRAGMA') {
+        this.p++;
+        var pname = this.ident('a pragma name').toLowerCase(), arg = null;
+        if (this.acceptOp('=')) { var a = this.next(); arg = String(a.v).toUpperCase(); }
+        else if (this.acceptOp('(')) { arg = this.ident('a table name'); this.expectOp(')'); }
+        return { type: 'pragma', name: pname, arg: arg };
+      }
+    }
     var hint = '';
     if (t.t === 'id' && /^(selct|slect|selet|seelct|select)$/i.test(t.v)) hint = 'Check the spelling of SELECT.';
-    else hint = 'SQL statements start with SELECT, INSERT, UPDATE, DELETE, CREATE or DROP.';
+    else hint = 'SQL statements start with SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, BEGIN, COMMIT or ROLLBACK.';
     this.fail(t, hint);
   };
 
@@ -196,20 +212,69 @@
     var table = this.ident('a table name');
     return { type: 'delete', table: table, where: this.acceptKw('WHERE') ? this.expr() : null };
   };
+  var CONSTRAINT_WORDS = ['PRIMARY', 'NOT', 'NULL', 'UNIQUE', 'DEFAULT', 'REFERENCES', 'CHECK', 'CONSTRAINT', 'COLLATE', 'FOREIGN', 'AUTOINCREMENT'];
   Parser.prototype.create = function () {
     this.expectKw('CREATE'); this.expectKw('TABLE');
-    var table = this.ident('a table name'), cols = [];
-    this.expectOp('(');
-    do {
-      var name = this.ident('a column name'), type = '';
-      while (this.peek().t === 'id' || (this.peek().t === 'kw' && ['NOT', 'NULL'].indexOf(this.peek().v) >= 0) || (this.isOp('(') && type)) {
-        if (this.acceptOp('(')) { while (!this.acceptOp(')')) this.next(); continue; }
-        type += (type ? ' ' : '') + this.next().v;
+    var ifNot = false;
+    if (this.isWord('IF')) { this.p++; this.expectKw('NOT'); this.expectWord('EXISTS'); ifNot = true; }
+    var table = this.ident('a table name');
+    var spec = { type: 'create', table: table, ifNot: ifNot, cols: [], pk: [], uniques: [], fks: [], checks: [], notNull: [], strict: false };
+    this.expectOp('(', 'Column definitions go in parentheses: CREATE TABLE t (id INTEGER PRIMARY KEY, name TEXT);');
+    var self = this;
+    function names() { self.expectOp('('); var a = []; do { a.push(self.ident('a column name')); } while (self.acceptOp(',')); self.expectOp(')'); return a; }
+    function refClause(colName) {
+      var rt = self.ident('the table being referenced'), rc = null;
+      if (self.acceptOp('(')) { rc = self.ident('a column name'); self.expectOp(')'); }
+      while (self.isWord('ON') || self.isWord('MATCH') || self.isWord('DEFERRABLE')) { // ON DELETE CASCADE etc. are accepted but not simulated
+        self.p++; while (self.peek().t === 'id' || (self.peek().t === 'kw' && ['NULL', 'SET'].indexOf(self.peek().v) >= 0) || self.isWord('DELETE') || self.isWord('UPDATE')) { if (self.isOp(',') || self.isOp(')')) break; self.p++; }
       }
-      cols.push({ name: name, type: type.split(' ')[0].toUpperCase() || 'TEXT' });
+      spec.fks.push({ col: colName, table: rt, refCol: rc });
+    }
+    function checkClause() {
+      var start = self.peek().s; self.expectOp('(');
+      var depth = 1, from = self.p; void from;
+      var e = self.expr(); self.expectOp(')');
+      var text = self.src.slice(start + 1, self.toks[self.p - 1].s).trim();
+      spec.checks.push({ text: text }); void e; depth = 0;
+    }
+    do {
+      if (this.acceptWord('CONSTRAINT')) this.ident('a constraint name');
+      if (this.isWord('PRIMARY')) { this.p++; this.expectWord('KEY'); spec.pk = names(); continue; }
+      if (this.isWord('UNIQUE') && this.peek(1).t === 'op' && this.peek(1).v === '(') { this.p++; spec.uniques.push(names()); continue; }
+      if (this.isWord('FOREIGN')) { this.p++; this.expectWord('KEY'); var fc = names(); this.expectWord('REFERENCES', 'FOREIGN KEY (col) REFERENCES other_table (col)'); refClause(fc[0]); continue; }
+      if (this.isWord('CHECK')) { this.p++; checkClause(); continue; }
+      var name = this.ident('a column name'), type = '';
+      while (this.peek().t === 'id' && CONSTRAINT_WORDS.indexOf(this.peek().v.toUpperCase()) < 0) {
+        type += (type ? ' ' : '') + this.next().v;
+        if (this.acceptOp('(')) { while (!this.acceptOp(')')) { if (this.peek().t === 'eof') this.fail(); this.next(); } }
+      }
+      var col = { name: name, type: type.split(' ')[0].toUpperCase() || (this.strictHint ? 'ANY' : 'TEXT') };
+      while (true) {
+        if (this.acceptWord('CONSTRAINT')) { this.ident('a constraint name'); continue; }
+        if (this.isWord('PRIMARY')) { this.p++; this.expectWord('KEY'); this.acceptWord('ASC'); this.acceptWord('DESC'); this.acceptWord('AUTOINCREMENT'); spec.pk = [name]; col.pk = true; continue; }
+        if (this.isKw('NOT')) { this.p++; this.expectKw('NULL'); spec.notNull.push(name); col.notNull = true; continue; }
+        if (this.isKw('NULL')) { this.p++; continue; }
+        if (this.isWord('UNIQUE')) { this.p++; spec.uniques.push([name]); col.unique = true; continue; }
+        if (this.isWord('DEFAULT')) {
+          this.p++;
+          var neg = this.acceptOp('-'), d = this.next();
+          if (d.t === 'num') col.dflt = neg ? -d.v : d.v;
+          else if (d.t === 'str') col.dflt = d.v;
+          else if (d.t === 'kw' && d.v === 'NULL') col.dflt = null;
+          else if (d.t === 'kw' && (d.v === 'TRUE' || d.v === 'FALSE')) col.dflt = d.v === 'TRUE' ? 1 : 0;
+          else this.fail(d, "DEFAULT needs a number, 'text' or NULL.");
+          continue;
+        }
+        if (this.isWord('REFERENCES')) { this.p++; refClause(name); col.ref = spec.fks[spec.fks.length - 1]; continue; }
+        if (this.isWord('CHECK')) { this.p++; checkClause(); continue; }
+        if (this.isWord('COLLATE')) { this.p++; this.next(); continue; }
+        break;
+      }
+      spec.cols.push(col);
     } while (this.acceptOp(','));
-    this.expectOp(')');
-    return { type: 'create', table: table, cols: cols };
+    this.expectOp(')', 'Missing ) at the end of the column list — or a comma between columns.');
+    if (this.acceptWord('STRICT')) spec.strict = true;
+    return spec;
   };
 
   // Expressions
@@ -377,7 +442,7 @@
   }
 
   // ---------------- Database ----------------
-  function Database() { this.tables = {}; }
+  function Database() { this.tables = {}; this.fk = true; this.tx = null; }
   Database.prototype.table = function (name) {
     var t = this.tables[String(name).toLowerCase()];
     if (!t) {
@@ -386,18 +451,38 @@
     }
     return t;
   };
-  Database.prototype.create = function (name, cols, rows) {
-    var t = { name: name, cols: cols, rows: rows || [] };
+  // meta (all optional): { pk: [col], uniques: [[col]], fks: [{col, table, refCol}], checks: [{text}], notNull: [col], strict: bool }
+  var META = ['pk', 'uniques', 'fks', 'checks', 'notNull', 'strict'];
+  Database.prototype.create = function (name, cols, rows, meta) {
+    var t = { name: name, cols: cols, rows: rows || [], pk: [], uniques: [], fks: [], checks: [], notNull: [], strict: false };
+    if (meta) META.forEach(function (k) { if (meta[k] !== undefined) t[k] = meta[k]; });
+    // mirror table-level constraints onto column flags (for schema display)
+    cols.forEach(function (c) {
+      var low = c.name.toLowerCase(), has = function (list) { return list.some(function (n) { return String(n).toLowerCase() === low; }); };
+      if (has(t.pk)) c.pk = true;
+      if (has(t.notNull)) c.notNull = true;
+      var fk = t.fks.filter(function (f) { return f.col.toLowerCase() === low; })[0];
+      if (fk) c.ref = { table: fk.table, refCol: fk.refCol };
+    });
     this.tables[name.toLowerCase()] = t; return t;
   };
   Database.prototype.serialize = function () {
     var self = this;
-    return Object.keys(this.tables).map(function (k) { var t = self.tables[k]; return { name: t.name, cols: t.cols, rows: t.rows }; });
+    return Object.keys(this.tables).map(function (k) {
+      var t = self.tables[k], o = { name: t.name, cols: t.cols, rows: t.rows };
+      META.forEach(function (m) { o[m] = t[m]; });
+      return o;
+    });
   };
   Database.load = function (data) {
     var db = new Database();
-    data.forEach(function (t) { db.create(t.name, t.cols, t.rows); });
+    data.forEach(function (t) { db.create(t.name, t.cols, t.rows, t); });
     return db;
+  };
+  Database.prototype.snapshot = function () { return JSON.parse(JSON.stringify(this.serialize())); };
+  Database.prototype.restore = function (snap) {
+    var self = this; this.tables = {};
+    snap.forEach(function (t) { self.create(t.name, t.cols, t.rows, t); });
   };
 
   // Scope = list of {alias, table}; a row = array (one entry per scope item) of row arrays
@@ -775,53 +860,196 @@
       case 'insert': {
         var t = db.table(st.table);
         var cols = st.cols ? st.cols.map(function (c) {
-          var i = t.cols.findIndex(function (x) { return x.name.toLowerCase() === c.toLowerCase(); });
+          var i = colIndex(t, c);
           if (i < 0) throw new SqlError('table ' + t.name + ' has no column named ' + c);
           return i;
         }) : t.cols.map(function (_, i) { return i; });
         var srcRows = st.select ? this.select(st.select, null).rows : st.rows.map(function (r) { return r.map(function (e) { return self.ev(e, { scope: [], row: [] }); }); });
+        var newRows = t.rows.slice(), autoPk = autoPkIndex(t);
         srcRows.forEach(function (vals) {
           if (vals.length !== cols.length) throw new SqlError('table ' + t.name + ' has ' + t.cols.length + ' columns but ' + vals.length + ' values were supplied', st.cols ? '' : 'List the columns you are filling: INSERT INTO ' + t.name + ' (col1, col2) VALUES (...).');
-          var row = t.cols.map(function () { return null; });
-          cols.forEach(function (ci, k) { row[ci] = coerce(vals[k], t.cols[ci].type); });
-          t.rows.push(row);
+          var row = t.cols.map(function (c) { return c.dflt === undefined ? null : c.dflt; });
+          cols.forEach(function (ci, k) { row[ci] = vals[k]; });
+          if (autoPk >= 0 && row[autoPk] === null) row[autoPk] = newRows.reduce(function (m, r) { return Math.max(m, typeof r[autoPk] === 'number' ? r[autoPk] : 0); }, 0) + 1;
+          newRows.push(storeRow(t, row));
         });
+        commitRows(db, t, newRows, this);
         return { type: 'msg', message: srcRows.length + ' row' + (srcRows.length === 1 ? '' : 's') + ' inserted into ' + t.name + '.', changed: srcRows.length };
       }
       case 'update': {
         var tu = db.table(st.table), scope = [{ alias: tu.name, table: tu }], n = 0;
         var idx = st.sets.map(function (s) {
-          var i = tu.cols.findIndex(function (x) { return x.name.toLowerCase() === s.col.toLowerCase(); });
+          var i = colIndex(tu, s.col);
           if (i < 0) throw new SqlError('no such column: ' + s.col);
           return i;
         });
-        tu.rows.forEach(function (row) {
+        var upd = tu.rows.map(function (row) {
           var env = { scope: scope, row: [row] };
-          if (st.where && !truthy(self.ev(st.where, env))) return;
+          if (st.where && !truthy(self.ev(st.where, env))) return row;
           var nv = st.sets.map(function (s) { return self.ev(s.expr, env); });
-          idx.forEach(function (ci, k) { row[ci] = coerce(nv[k], tu.cols[ci].type); });
+          var copy = row.slice();
+          idx.forEach(function (ci, k) { copy[ci] = nv[k]; });
           n++;
+          return storeRow(tu, copy);
         });
+        commitRows(db, tu, upd, this);
         return { type: 'msg', message: n + ' row' + (n === 1 ? '' : 's') + ' updated in ' + tu.name + '.' + (st.where ? '' : ' (No WHERE clause — every row was changed!)'), changed: n, noWhere: !st.where };
       }
       case 'delete': {
         var td = db.table(st.table), sc = [{ alias: td.name, table: td }], before = td.rows.length;
-        td.rows = td.rows.filter(function (row) { return st.where && !truthy(self.ev(st.where, { scope: sc, row: [row] })); });
-        var nd = before - td.rows.length;
+        var keep = td.rows.filter(function (row) { return st.where && !truthy(self.ev(st.where, { scope: sc, row: [row] })); });
+        commitRows(db, td, keep, this);
+        var nd = before - keep.length;
         return { type: 'msg', message: nd + ' row' + (nd === 1 ? '' : 's') + ' deleted from ' + td.name + '.' + (st.where ? '' : ' (No WHERE clause — the whole table was emptied!)'), changed: nd, noWhere: !st.where };
       }
       case 'create': {
-        if (db.tables[st.table.toLowerCase()]) throw new SqlError('table ' + st.table + ' already exists');
-        db.create(st.table, st.cols, []);
-        return { type: 'msg', message: 'Table ' + st.table + ' created with ' + st.cols.length + ' columns.' };
+        if (db.tables[st.table.toLowerCase()]) {
+          if (st.ifNot) return { type: 'msg', message: 'Table ' + st.table + ' already exists — nothing changed.' };
+          throw new SqlError('table ' + st.table + ' already exists', 'Use a different name, or DROP TABLE ' + st.table + ' first.');
+        }
+        st.fks.forEach(function (f) { db.table(f.table); });
+        st.checks.forEach(function (c) { new Parser(c.text, false).expr(); });
+        if (st.strict) st.cols.forEach(function (c) {
+          if (['INTEGER', 'INT', 'REAL', 'TEXT', 'BLOB', 'ANY'].indexOf(c.type) < 0) throw new SqlError('unknown datatype for ' + st.table + '.' + c.name + ': "' + c.type + '"', 'STRICT tables allow INTEGER, REAL, TEXT, BLOB or ANY.');
+        });
+        db.create(st.table, st.cols, [], st);
+        var bits = [];
+        if (st.pk.length) bits.push('primary key ' + st.pk.join(', '));
+        if (st.fks.length) bits.push(st.fks.length + ' foreign key' + (st.fks.length === 1 ? '' : 's'));
+        if (st.checks.length) bits.push(st.checks.length + ' CHECK rule' + (st.checks.length === 1 ? '' : 's'));
+        return { type: 'msg', message: 'Table ' + st.table + ' created with ' + st.cols.length + ' columns' + (bits.length ? ' (' + bits.join(', ') + ')' : '') + '.' };
       }
       case 'drop': {
-        db.table(st.table);
+        var tdrop = db.table(st.table);
+        if (db.fk) referrers(db, tdrop).forEach(function (r) {
+          if (r.table.rows.some(function (row) { return row[r.ci] !== null; })) throw new SqlError('FOREIGN KEY constraint failed', 'Table ' + r.table.name + ' still points at ' + tdrop.name + '. Delete those rows (or that table) first.');
+        });
         delete db.tables[st.table.toLowerCase()];
         return { type: 'msg', message: 'Table ' + st.table + ' dropped.' };
       }
+      case 'begin':
+        if (db.tx) throw new SqlError('cannot start a transaction within a transaction', 'Finish the current one with COMMIT or ROLLBACK first.');
+        db.tx = db.snapshot();
+        return { type: 'msg', message: 'Transaction started. Nothing is permanent until COMMIT — ROLLBACK undoes everything since BEGIN.', tx: true };
+      case 'commit':
+        if (!db.tx) throw new SqlError('cannot commit - no transaction is active', 'Start one with BEGIN.');
+        db.tx = null;
+        return { type: 'msg', message: 'COMMIT: every change since BEGIN is now saved for good.', tx: false };
+      case 'rollback':
+        if (!db.tx) throw new SqlError('cannot rollback - no transaction is active', 'ROLLBACK only works after BEGIN.');
+        db.restore(db.tx); db.tx = null;
+        return { type: 'msg', message: 'ROLLBACK: every change since BEGIN was undone.', tx: false, rolledBack: true };
+      case 'pragma': {
+        if (st.name === 'foreign_keys') {
+          if (st.arg !== null) db.fk = ['ON', '1', 'TRUE', 'YES'].indexOf(st.arg) >= 0;
+          return { type: 'rows', columns: ['foreign_keys'], rows: [[db.fk ? 1 : 0]] };
+        }
+        if (st.name === 'table_info') {
+          var ti = db.table(st.arg);
+          return { type: 'rows', columns: ['cid', 'name', 'type', 'notnull', 'dflt_value', 'pk'], rows: ti.cols.map(function (c, i) {
+            var pkPos = ti.pk.map(function (x) { return x.toLowerCase(); }).indexOf(c.name.toLowerCase());
+            return [i, c.name, c.type, isNotNull(ti, i) ? 1 : 0, c.dflt === undefined ? null : c.dflt, pkPos + 1];
+          }) };
+        }
+        throw new SqlError('this practice database does not support PRAGMA ' + st.name, 'Try PRAGMA foreign_keys or PRAGMA table_info(products).');
+      }
     }
   };
+
+  // ---------------- Constraints (what makes it an RDBMS) ----------------
+  function colIndex(t, name) { var low = String(name).toLowerCase(); for (var i = 0; i < t.cols.length; i++) if (t.cols[i].name.toLowerCase() === low) return i; return -1; }
+  function autoPkIndex(t) { // INTEGER PRIMARY KEY gets the next number automatically (SQLite rowid)
+    if (t.pk.length !== 1) return -1;
+    var i = colIndex(t, t.pk[0]);
+    return i >= 0 && /^INT/.test(t.cols[i].type) ? i : -1;
+  }
+  function isNotNull(t, i) {
+    var low = t.cols[i].name.toLowerCase();
+    return t.notNull.some(function (n) { return n.toLowerCase() === low; }) || t.pk.some(function (n) { return n.toLowerCase() === low; });
+  }
+  function typeName(v) { return v === null ? 'NULL' : typeof v === 'number' ? (Number.isInteger(v) ? 'INTEGER' : 'REAL') : 'TEXT'; }
+  // Convert a value for storage. STRICT tables refuse values of the wrong type (the error real databases give).
+  function storeRow(t, row) {
+    return row.map(function (v, i) {
+      var ty = t.cols[i].type;
+      if (v === null || v === undefined) return null;
+      if (typeof v === 'boolean') v = v ? 1 : 0;
+      if (!t.strict) return coerce(v, ty);
+      var asNum = typeof v === 'number' ? v : (/^\s*[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?\s*$/.test(v) ? Number(v) : null);
+      if (/^INT/.test(ty)) {
+        if (asNum !== null && Number.isInteger(asNum)) return asNum;
+        throw new SqlError('cannot store ' + typeName(v) + ' value in INTEGER column ' + t.name + '.' + t.cols[i].name, 'This column only accepts whole numbers. A spreadsheet would have let "' + v + '" in — a database will not.');
+      }
+      if (ty === 'REAL') {
+        if (asNum !== null) return asNum;
+        throw new SqlError('cannot store TEXT value in REAL column ' + t.name + '.' + t.cols[i].name, 'This column only accepts numbers. Remove $ signs and other text first.');
+      }
+      if (ty === 'TEXT') return typeof v === 'number' ? fmtSqlNum(v) : v;
+      return v;
+    });
+  }
+  var checkCache = {};
+  function referrers(db, parent) {
+    var out = [];
+    Object.keys(db.tables).forEach(function (k) {
+      var c = db.tables[k];
+      c.fks.forEach(function (f) {
+        if (f.table.toLowerCase() === parent.name.toLowerCase()) {
+          var refCol = f.refCol || (parent.pk.length === 1 ? parent.pk[0] : null);
+          out.push({ table: c, ci: colIndex(c, f.col), pi: refCol ? colIndex(parent, refCol) : -1 });
+        }
+      });
+    });
+    return out;
+  }
+  // Validate the whole new version of a table before it replaces the old one (statements are all-or-nothing).
+  function commitRows(db, t, rows, runner) {
+    rows.forEach(function (row) {
+      t.cols.forEach(function (c, i) {
+        if (row[i] === null && isNotNull(t, i)) throw new SqlError('NOT NULL constraint failed: ' + t.name + '.' + c.name, c.name + ' is required. Every ' + t.name + ' row must have one.');
+      });
+    });
+    function uniq(colNames, label) {
+      var idx = colNames.map(function (n) { return colIndex(t, n); }), seen = {};
+      rows.forEach(function (row) {
+        var vals = idx.map(function (i) { return row[i]; });
+        if (vals.some(function (v) { return v === null; })) return;
+        var key = JSON.stringify(vals);
+        if (seen[key]) throw new SqlError('UNIQUE constraint failed: ' + colNames.map(function (n) { return t.name + '.' + n; }).join(', '),
+          label + ' "' + vals.join(', ') + '" is already used by another row. ' + (label === 'The primary key' ? 'A primary key must be different for every row — it is how the database tells rows apart.' : ''));
+        seen[key] = 1;
+      });
+    }
+    if (t.pk.length) uniq(t.pk, 'The primary key');
+    t.uniques.forEach(function (u) { uniq(u, 'The value'); });
+    t.checks.forEach(function (ck) {
+      var ast = checkCache[ck.text] || (checkCache[ck.text] = new Parser(ck.text, false).expr());
+      var scope = [{ alias: t.name, table: t }];
+      rows.forEach(function (row) {
+        var r = runner.ev(JSON.parse(JSON.stringify(ast)), { scope: scope, row: [row] });
+        if (r !== null && !truthy(r)) throw new SqlError('CHECK constraint failed: ' + ck.text, 'This table has a rule (' + ck.text + ') and the new value breaks it.');
+      });
+    });
+    if (db.fk) {
+      t.fks.forEach(function (f) { // child side: every reference must point at a real parent row
+        var parent = db.table(f.table), ci = colIndex(t, f.col), refCol = f.refCol || (parent.pk.length === 1 ? parent.pk[0] : null), pi = colIndex(parent, refCol);
+        var have = {}; (parent === t ? rows : parent.rows).forEach(function (r) { have[typeName(r[pi]) + ':' + r[pi]] = 1; });
+        rows.forEach(function (row) {
+          var v = row[ci];
+          if (v !== null && !have[typeName(v) + ':' + v]) throw new SqlError('FOREIGN KEY constraint failed', t.name + '.' + f.col + ' = "' + v + '" points at a ' + parent.name + ' row that does not exist. Add it to ' + parent.name + ' first.');
+        });
+      });
+      referrers(db, t).forEach(function (r) { // parent side: cannot remove/change a row something still points at
+        if (r.table === t || r.pi < 0) return;
+        var have = {}; rows.forEach(function (row) { have[typeName(row[r.pi]) + ':' + row[r.pi]] = 1; });
+        r.table.rows.forEach(function (row) {
+          var v = row[r.ci];
+          if (v !== null && !have[typeName(v) + ':' + v]) throw new SqlError('FOREIGN KEY constraint failed', r.table.name + ' still has rows pointing at ' + t.name + ' "' + v + '". Delete or change those ' + r.table.name + ' rows first.');
+        });
+      });
+    }
+    t.rows = rows;
+  }
   function coerce(v, type) {
     if (v === null) return null;
     if (/INT/.test(type)) { var n = sqlNumify(v); return typeof v === 'string' && !/^\s*[+-]?\d/.test(v) ? v : Math.round(n) === n ? n : n; }
@@ -844,13 +1072,17 @@
     db.create('products', [
       { name: 'sku', type: 'TEXT' }, { name: 'product', type: 'TEXT' }, { name: 'category', type: 'TEXT' },
       { name: 'price', type: 'REAL' }, { name: 'cost', type: 'REAL' }, { name: 'in_stock', type: 'INTEGER' },
-      { name: 'reorder_at', type: 'INTEGER' }, { name: 'supplier', type: 'TEXT' }], D.PRODUCTS.map(function (r) { return r.slice(); }));
+      { name: 'reorder_at', type: 'INTEGER' }, { name: 'supplier', type: 'TEXT' }], D.PRODUCTS.map(function (r) { return r.slice(); }),
+      { pk: ['sku'], notNull: ['product', 'category', 'price', 'in_stock'], checks: [{ text: 'price >= 0' }, { text: 'in_stock >= 0' }], strict: true });
     db.create('sales', [
       { name: 'order_id', type: 'INTEGER' }, { name: 'order_date', type: 'TEXT' }, { name: 'store_id', type: 'TEXT' },
-      { name: 'sku', type: 'TEXT' }, { name: 'qty', type: 'INTEGER' }, { name: 'rep', type: 'TEXT' }], D.SALES.map(function (r) { return r.slice(); }));
+      { name: 'sku', type: 'TEXT' }, { name: 'qty', type: 'INTEGER' }, { name: 'rep', type: 'TEXT' }], D.SALES.map(function (r) { return r.slice(); }),
+      { pk: ['order_id'], notNull: ['order_date', 'store_id', 'sku', 'qty'], checks: [{ text: 'qty > 0' }], strict: true,
+        fks: [{ col: 'store_id', table: 'stores', refCol: 'store_id' }, { col: 'sku', table: 'products', refCol: 'sku' }] });
     db.create('stores', [
       { name: 'store_id', type: 'TEXT' }, { name: 'city', type: 'TEXT' }, { name: 'state', type: 'TEXT' },
-      { name: 'zip', type: 'INTEGER' }, { name: 'manager', type: 'TEXT' }, { name: 'opened', type: 'TEXT' }], D.STORES.map(function (r) { return r.slice(); }));
+      { name: 'zip', type: 'INTEGER' }, { name: 'manager', type: 'TEXT' }, { name: 'opened', type: 'TEXT' }], D.STORES.map(function (r) { return r.slice(); }),
+      { pk: ['store_id'], notNull: ['city', 'state'], strict: true });
     // v2: the messy order feed, imported "as is" (everything TEXT, blanks become NULL)
     if (SX.wrangle) {
       var W = SX.wrangle;

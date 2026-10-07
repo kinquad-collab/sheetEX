@@ -74,9 +74,12 @@
     Object.keys(this.db.tables).forEach(function (k) {
       var t = self.db.tables[k];
       self.schema.appendChild(h('details.tbl', { open: true }, [
-        h('summary', null, [h('span.tbl-name', { text: t.name, title: 'Click to insert', onclick: function (e) { e.preventDefault(); self.insert(t.name); } }), h('span.tbl-n', { text: t.rows.length + ' rows' })]),
+        h('summary', null, [h('span.tbl-name', { text: t.name, title: 'Click to insert', onclick: function (e) { e.preventDefault(); self.insert(t.name); } }), t.strict ? h('span.tbl-strict', { text: 'STRICT', title: 'Typed table: wrong types are refused' }) : null, h('span.tbl-n', { text: t.rows.length + ' rows' })]),
         h('div.tbl-cols', null, t.cols.map(function (c) {
-          return h('button.col-item', { title: 'Insert ' + c.name, onclick: function () { self.insert(c.name); } }, [h('span', { text: c.name }), h('span.col-type', { text: c.type })]);
+          var tip = 'Insert ' + c.name + (c.pk ? ' · PRIMARY KEY (unique for every row)' : '') + (c.ref ? ' · FOREIGN KEY → ' + c.ref.table + '.' + (c.ref.refCol || '') : '') + (c.notNull ? ' · NOT NULL (required)' : '');
+          return h('button.col-item', { title: tip, onclick: function () { self.insert(c.name); } }, [
+            h('span', null, [c.pk ? h('span.key-pk', { text: '🔑 ' }) : null, c.name, c.ref ? h('span.key-fk', { text: ' → ' + c.ref.table }) : null]),
+            h('span.col-type', { text: c.type + (c.notNull && !c.pk ? ' NN' : '') })]);
         }))
       ]));
     });
@@ -107,6 +110,7 @@
         if (r.type === 'msg') {
           self.out.appendChild(h('div.sql-msg' + (r.noWhere ? '.warn' : ''), { text: '✓ ' + r.message }));
           if (r.noWhere && /^(update|delete)/i.test(r.statement.text)) UI.badge('oops');
+          if (r.rolledBack) UI.badge('rollback');
         } else if (i === results.length - 1 || results.length < 4) self.out.appendChild(self.table(r, ms));
       });
       var last = results[results.length - 1];
