@@ -700,7 +700,7 @@
     if (!this.isFormulaText(v)) { this.hideAssist(); return; }
     var before = v.slice(0, pos);
     // autocomplete
-    var m = /(^|[=(,+\-*/^&<>:\s])([A-Za-z][A-Za-z0-9.]*)$/.exec(before);
+    var m = /(^|[=(,+\-*/^&<>\s])([A-Za-z][A-Za-z0-9.]*)$/.exec(before); // not after ":" (ranges like E2:E)
     this.acItems = [];
     if (m && !inString(before)) {
       var word = m[2].toUpperCase(), plat = this.wb.plat, excel = this.excel;

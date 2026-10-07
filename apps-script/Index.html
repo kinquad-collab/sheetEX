@@ -4847,14 +4847,14 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     hints: ['Try =Products!D2:D25-Products!E2:E25 first. Notice it only gives ONE answer.', 'ARRAYFORMULA tells Sheets to do the math on every row.', '<code>=ARRAYFORMULA(D2:D25 - E2:E25)</code>'],
     learn: 'In Excel 365 this just works without ARRAYFORMULA. In Excel 2013 it needs Ctrl+Shift+Enter across the whole range.',
     check: columnCheck('Products', 'I', 2, X.profit, { mustUse: ['ARRAYFORMULA'] }) });
-  add({ id: 'gs-query', plat: 'gs', title: 'QUERY: SQL Inside a Spreadsheet', xp: 35, level: 3, target: 'Scratch!H2',
-    task: 'In <b>Scratch!H2</b>, use <b>QUERY</b> to show each <b>category</b> and its <b>total InStock</b>.',
+  add({ id: 'gs-query', plat: 'gs', title: 'QUERY: SQL Inside a Spreadsheet', xp: 35, level: 3, target: 'Scratch!J2',
+    task: 'In <b>Scratch!J2</b>, use <b>QUERY</b> to show each <b>category</b> and its <b>total InStock</b>.',
     hints: ['QUERY(data, "query text"). Columns are named by LETTER: C = Category, F = InStock.', 'Group rows: "select C, sum(F) group by C"', '<code>=QUERY(Products!A1:H25, "select C, sum(F) group by C")</code>'],
     learn: 'QUERY is Google-only. It is basically SQL — head over to SQL mode to see the real thing.',
     check: function (h) {
-      var e = needFormula(h, 'Scratch!H2'); if (e) return e;
-      if (!h.uses('Scratch!H2', 'QUERY')) return no('Use QUERY for this one.');
-      var m = h.spill('Scratch!H2'); if (!m) return errMsg(h, 'Scratch!H2') || no('The QUERY should return a small table.');
+      var e = needFormula(h, 'Scratch!J2'); if (e) return e;
+      if (!h.uses('Scratch!J2', 'QUERY')) return no('Use QUERY for this one.');
+      var m = h.spill('Scratch!J2'); if (!m) return errMsg(h, 'Scratch!J2') || no('The QUERY should return a small table.');
       var got = {}; m.rows.forEach(function (r) { if (typeof r[1] === 'number') got[r[0]] = r[1]; });
       var good = Object.keys(X.stockByCat).every(function (k) { return got[k] === X.stockByCat[k]; });
       return good ? ok() : no('The totals do not match yet. Make sure you sum column F and group by column C.');
@@ -6815,7 +6815,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     if (!this.isFormulaText(v)) { this.hideAssist(); return; }
     var before = v.slice(0, pos);
     // autocomplete
-    var m = /(^|[=(,+\-*/^&<>:\s])([A-Za-z][A-Za-z0-9.]*)$/.exec(before);
+    var m = /(^|[=(,+\-*/^&<>\s])([A-Za-z][A-Za-z0-9.]*)$/.exec(before); // not after ":" (ranges like E2:E)
     this.acItems = [];
     if (m && !inString(before)) {
       var word = m[2].toUpperCase(), plat = this.wb.plat, excel = this.excel;

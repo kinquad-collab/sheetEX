@@ -41,7 +41,7 @@ const SHEET = {
   'gs-filter2': ['gs', [['Scratch!D2', '=FILTER(Products!B2:B25,Products!C2:C25="Snacks",Products!D2:D25>1)']]],
   'gs-sort': ['gs', [['Scratch!F2', '=SORT(Products!B2:D25,3,FALSE)']]],
   'gs-arrayformula': ['gs', [['Products!I2', '=ARRAYFORMULA(D2:D25-E2:E25)']]],
-  'gs-query': ['gs', [['Scratch!H2', '=QUERY(Products!A1:H25,"select C, sum(F) group by C")']]],
+  'gs-query': ['gs', [['Scratch!J2', '=QUERY(Products!A1:H25,"select C, sum(F) group by C")']]],
   'gs-split': ['gs', [['Scratch!B10', '=SPLIT(Stores!E2," ")']]],
   'gs-open': ['gs', [['Scratch!B12', '=SUM(Sales!E2:E)']]],
   'gs-concat': ['gs', [['Scratch!B13', '=CONCATENATE(Stores!B2,", ",Stores!C2)']]],
