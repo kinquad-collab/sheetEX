@@ -199,3 +199,19 @@ test('every challenge belongs to a lesson', () => {
   const S = require('./load.js')(['platforms.js', 'challenges.js', 'lessons.js']);
   for (const c of S.challenges.LIST) assert.ok(S.lessons.byId(c.plat), c.id + ' has no lesson');
 });
+
+test('AI readiness: raw model is wrong, cleaned model is exact, score reaches 100', () => {
+  const W = SX.wrangle;
+  const raw = W.makeWorkbook('xl365');
+  const r0 = W.aiReport((r, c) => raw.value('RawOrders', r, c));
+  assert.ok(r0.phantom.length >= 5, 'raw data invents extra stores: ' + r0.phantom.join('|'));
+  assert.ok(r0.rawErr > 1, 'raw model should be off by more than 1 unit, got ' + r0.rawErr);
+  assert.strictEqual(r0.clean, null);
+  assert.strictEqual(r0.score, 0);
+  const h = wrSolve('gs', WR_ALL);
+  const r1 = W.aiReport((r, c) => h.wb.value('RawOrders', r, c));
+  assert.ok(r1.cleanErr < 1e-9, 'clean model should match the truth exactly, got ' + r1.cleanErr);
+  assert.strictEqual(r1.score, 100);
+  assert.strictEqual(r1.matchClean, 30);
+  assert.ok(r1.matchRaw < 30);
+});

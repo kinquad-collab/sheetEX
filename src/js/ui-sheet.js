@@ -104,7 +104,7 @@
       h('div.tb-group', null, [tb('Σ', 'AutoSum', function () { self.autoSum(); }), tb('fx', 'Insert function', function () { self.insertFunctionDialog(); }, 'tb-fx'),
         tb('⤓', 'Fill down (Ctrl+D)', function () { self.fill('down'); }), this.sfBtn = tb('{=}', 'Show formulas (Ctrl+`)', function () { self.toggleFormulas(); })]),
       h('div.tb-spacer'),
-      h('div.tb-group.tb-panels', null, [pb('challenges', '🏆 Challenges', 'Challenges'), pb('cheat', '📘 Cheat sheet', 'Cheat sheet'), pb('elsewhere', '🌐 Will it work elsewhere?', 'Run this formula in every app')]),
+      h('div.tb-group.tb-panels', null, [pb('challenges', '🏆 Challenges', 'Challenges'), pb('cheat', '📘 Cheat sheet', 'Cheat sheet'), pb('elsewhere', '🌐 Will it work elsewhere?', 'Run this formula in every app')].concat((this.opts.extraTabs || []).map(function (t) { return pb(t.id, t.button || t.label, t.label); }))),
       tb('⟲', 'Reset this workbook to the original data', function () { self.resetData(); }, 'tb-reset')
     ]));
 
@@ -252,6 +252,8 @@
     if (!this.fmtSel.value) this.fmtSel.value = 'general';
     this.sfBtn.classList.toggle('on', this.showFormulas);
     if (this.panel && this.panel.current() === 'elsewhere') this.refreshElsewhere();
+    var cur = this.panel && this.panel.current(), me = this;
+    (this.opts.extraTabs || []).forEach(function (t) { if (t.id === cur && t.refresh) t.refresh(me); });
   };
 
   SheetView.prototype.selRange = function () {
@@ -964,7 +966,7 @@
         { id: 'challenges', label: '🏆 Challenges', render: function () { return self.challengesTab(); } },
         { id: 'cheat', label: '📘 Cheat sheet', render: function () { return self.cheatTab(); } },
         { id: 'elsewhere', label: '🌐 Elsewhere', render: function () { return self.elsewhereTab(); } }
-      ], id);
+      ].concat((this.opts.extraTabs || []).map(function (t) { return { id: t.id, label: t.label, render: function () { return t.render(self); } }; })), id);
       this.panel.el.querySelector('.sp-tabs').addEventListener('click', function () { self.markPanelBtns(self.panel.current()); UI.state.ui['panel_' + self.key] = self.panel.current(); });
       this.panel.el.appendChild(h('button.sp-close', { title: 'Close panel', 'aria-label': 'Close panel', text: '×', onclick: function () { self.togglePanel(self.panel.current()); } }));
       this.panelHost.appendChild(this.panel.el);

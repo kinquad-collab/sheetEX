@@ -79,6 +79,11 @@ async function main() {
     }
     await page.waitForTimeout(2500);
     await clear();
+    await page.evaluate(() => document.querySelector('.sp-tab[data-id="ai"]').click());
+    await page.waitForTimeout(200);
+    check((await page.textContent('.ai-score')).startsWith('100'), plat + ' AI-readiness score reaches 100 after cleaning');
+    check((await page.textContent('.ai-stats')).includes('0.0'), plat + ' cleaned model matches the truth (0.0 off)');
+    check(await page.evaluate(() => !!SX.ui.state.badges['ai-ready']), plat + ' AI-Ready Data badge earned');
     for (const L of ['wr1', 'wr2']) {
       await page.evaluate((L) => SX.ui.showCert(L), L);
       await page.waitForSelector('.cert-paper');

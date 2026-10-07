@@ -32,7 +32,8 @@
       channel: i % 3 === 0 ? 'Online' : 'In-Store'
     });
   }
-  var EURO_ROW = 17; // this one arrives as a European date: 03.09.2026
+  var EURO_ROW = 17; // this one arrives as a European date: 03.09.2026 (3 September — or is it March 9?)
+  TRUTH[EURO_ROW].d = 3;
 
   // ---- How each truth value arrives messy ----
   var NULL_TOKENS = ['', 'N/A', '-', 'null', ''];
@@ -169,6 +170,71 @@
     bigOrders: TRUTH.filter(function (t) { return t.qty !== null && t.qty > 10; }).map(function (t) { return t.id; })
   };
 
-  SX.wrangle = { TRUTH: TRUTH, MESSY: MESSY, ITEMS: ITEMS, TARGETS: TARGETS, CONTACTS: CONTACTS, EURO_ROW: EURO_ROW,
+  // ---- AI Readiness: "train" the simplest possible model (average units per order, per store)
+  // on the RAW feed vs the student's CLEANED columns, and score how AI-ready their data is.
+  // val(r, c) reads RawOrders (0-based row/col) from the student's workbook.
+  function mean(a) { return a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : null; }
+  function aiReport(val) {
+    var N = TRUTH.length, i;
+    var truth = {};
+    STORES.forEach(function (s) { truth[s] = mean(TRUTH.filter(function (t) { return t.store === s && t.qty !== null; }).map(function (t) { return t.qty; })); });
+    // Naive pipeline: group by the store text exactly as typed; anything that is not a real number counts as 0.
+    var rawGroups = {};
+    for (i = 0; i < N; i++) {
+      var label = val(i + 1, 1); label = label === null ? '(blank)' : String(label);
+      var q = val(i + 1, 4);
+      (rawGroups[label] = rawGroups[label] || []).push(typeof q === 'number' ? q : 0);
+    }
+    var raw = {}; Object.keys(rawGroups).forEach(function (k) { raw[k] = mean(rawGroups[k]); });
+    // Clean pipeline: the student's CleanStore (K) and CleanQty (J); blanks are skipped, not zeroed.
+    var cleanGroups = {}, cleanUsable = 0, hasClean = false;
+    for (i = 0; i < N; i++) {
+      var st = val(i + 1, 10), cq = val(i + 1, 9);
+      if (st !== null && st !== '' || cq !== null && cq !== '') hasClean = true;
+      if (typeof cq === 'number' && st !== null && st !== '') { (cleanGroups[String(st)] = cleanGroups[String(st)] || []).push(cq); cleanUsable++; }
+    }
+    var clean = null;
+    if (hasClean) { clean = {}; Object.keys(cleanGroups).forEach(function (k) { clean[k] = mean(cleanGroups[k]); }); }
+    function err(model) {
+      if (!model) return null;
+      return mean(STORES.map(function (s) { return model[s] == null ? truth[s] : Math.abs(model[s] - truth[s]); }));
+    }
+    // Readiness: share of rows where each cleaned column matches the truth
+    var X = SX.wrangle.X;
+    function pct(col, expected, skip) {
+      var good = 0, n = 0, any = false;
+      for (var q = 0; q < N; q++) { var x = val(q + 1, col); if (x !== null && x !== '') any = true; }
+      if (!any) return 0; // column not started yet
+      for (var r = 0; r < N; r++) {
+        if (skip && skip.indexOf(r) >= 0) continue;
+        n++;
+        var v = val(r + 1, col), e = expected[r];
+        if (e === null ? (v === null || v === '') : typeof e === 'number' ? (typeof v === 'number' && Math.abs(v - e) < 0.006) : String(v) === String(e)) good++;
+      }
+      return Math.round(100 * good / n);
+    }
+    var readiness = [
+      { col: 'I', name: 'Item codes keep leading zeros', pct: pct(8, X.codes) },
+      { col: 'J', name: 'Quantities are numbers; missing = blank', pct: pct(9, X.qty) },
+      { col: 'K', name: 'Store codes are consistent', pct: pct(10, X.stores) },
+      { col: 'L', name: 'Prices are numbers', pct: pct(11, X.prices) },
+      { col: 'M', name: 'Dates are real dates', pct: pct(12, X.dates, [EURO_ROW]) },
+      { col: 'N', name: 'Names are clean', pct: pct(13, X.names) }
+    ];
+    var score = Math.round(mean(readiness.map(function (r) { return r.pct; })));
+    // Can each row be joined to the product table?
+    var codeSet = {}; ITEMS.forEach(function (it) { codeSet[it.code] = 1; });
+    var matchRaw = 0, matchClean = 0;
+    for (i = 0; i < N; i++) {
+      var c = val(i + 1, 2); if (typeof c === 'string' && codeSet[c]) matchRaw++;
+      var ci = val(i + 1, 8); if (typeof ci === 'string' && codeSet[ci]) matchClean++;
+    }
+    return { stores: STORES, truth: truth, raw: raw, clean: clean, rawErr: err(raw), cleanErr: err(clean),
+      phantom: Object.keys(raw).filter(function (k) { return STORES.indexOf(k) < 0; }),
+      rawZeros: MESSY.filter(function (m) { return typeof m.qty !== 'number'; }).length,
+      cleanUsable: cleanUsable, readiness: readiness, score: score, matchRaw: matchRaw, matchClean: matchClean, total: N };
+  }
+
+  SX.wrangle = { aiReport: aiReport, TRUTH: TRUTH, MESSY: MESSY, ITEMS: ITEMS, TARGETS: TARGETS, CONTACTS: CONTACTS, EURO_ROW: EURO_ROW,
     makeWorkbook: makeWorkbook, files: files, X: X, code4: code4 };
 })(globalThis.SX = globalThis.SX || {});
