@@ -22,6 +22,9 @@ module.exports = function buildTeacherGuide(root) {
     if (steps) out += steps.map(([a, f, how]) => '<div class="ans"><span class="addr">' + esc(a) + (a.includes(':') ? ' <i>(type in the first cell, fill down)</i>' : '') + '</span><code>' + esc(f) + '</code>' + (how === 'cse' ? ' <i>Ctrl+Shift+Enter</i>' : '') + '</div>').join('');
     if (k.sql) out += '<div class="ans"><code>' + esc(k.sql) + '</code></div>';
     if (k.csv) out += '<div class="ans">' + esc(k.csv) + '</div>';
+    if (k.ui) out += '<div class="ans">' + esc(k.ui) + '</div>';
+    if (k.rd) out += k.rd.map((q) => '<div class="ans"><code>' + esc(q) + '</code></div>').join('');
+    if (k.needsNote) out += '<div class="alt">' + esc(k.needsNote) + '</div>';
     if (k.alt) out += '<div class="alt">Also accepted: <code>' + esc(k.alt) + '</code></div>';
     if (k.needs) out += '<div class="alt">Needs earlier step(s): ' + k.needs.map(esc).join(', ') + '</div>';
     if (k.note) out += '<div class="note">' + esc(k.note) + '</div>';

@@ -583,6 +583,67 @@
     learn: 'Missing values break filters in sneaky ways. Always ask "what happens to the blanks?"',
     check: spillCheck('Report!D2', W.bigOrders, { mustUse: ['FILTER'] }) });
 
+
+  // ===== v2: Lesson 9 — What is an RDBMS? =====
+  add({ id: 'rd-quiz-r', plat: 'rdbms', type: 'quiz', title: 'The R in RDBMS', xp: 10, level: 1,
+    task: 'What does the <b>R</b> in <b>RDBMS</b> stand for?', options: ['Random', 'Relational', 'Remote', 'Recursive'], answer: 1,
+    hints: ['Think about what connects the tables.'], learn: 'Relational: data lives in tables, and keys create RELATIONSHIPS between them.' });
+  add({ id: 'rd-anomaly', plat: 'rdbms', title: 'Break the Spreadsheet', xp: 15, level: 1,
+    task: 'In section <b>1. Grid vs. database</b>, change the price in only <b>ONE</b> of the highlighted rows of the flat sheet. Watch the sheet start to disagree with itself.',
+    hints: ['Click into one of the highlighted Price cells and type the new price.', 'Only change one — leave the others alone.'],
+    learn: 'When the same fact is stored many times, copies drift apart. That is an "update anomaly". Databases avoid it by storing each fact once.',
+    check: function (h) { return h.anomaly ? ok('The sheet now has two different prices for the same product — an update anomaly.') : no('Change just ONE of the highlighted price cells in section 1.'); } });
+  add({ id: 'rd-quiz-pk', plat: 'rdbms', type: 'quiz', title: 'Pick a Primary Key', xp: 10, level: 1,
+    task: 'You are building a <b>students</b> table for your school. Which column makes the best <b>primary key</b>?',
+    options: ['First name', 'Grade level', 'Student ID number', 'Birthday'], answer: 2,
+    hints: ['A primary key must be different for EVERY row, forever.'], learn: 'Names, grades and birthdays repeat. A student ID is unique — perfect for a primary key.' });
+  add({ id: 'rd-quiz-fk', plat: 'rdbms', type: 'quiz', title: 'Follow the Key', xp: 10, level: 1,
+    task: '<code>sales.store_id</code> holds values like <code>S03</code> that must already exist in <code>stores.store_id</code>. What is <code>sales.store_id</code>?',
+    options: ['A primary key', 'A foreign key', 'A CHECK rule', 'A delimiter'], answer: 1,
+    hints: ['Look at the diagram in section 3 — which column has an arrow?'], learn: 'A foreign key points at another table’s primary key. Following it is what a JOIN does.' });
+  add({ id: 'rd-no', plat: 'rdbms', title: 'The Database Says NO', xp: 20, level: 2,
+    task: 'Make the database refuse bad data in <b>3 different ways</b> (duplicate key, missing value, broken rule, missing parent, wrong type…). Use section 4 or any console on this page.',
+    hints: ['Each "Try it" button in section 4 triggers a different kind of error.', 'Different kinds count: UNIQUE, NOT NULL, CHECK, FOREIGN KEY and type errors.'],
+    learn: 'Constraints stop bad data at the door. In a spreadsheet you only find these problems later — while cleaning.',
+    check: function (h) { var n = h.errorsSeen.length; return n >= 3 ? ok('Refused ' + n + ' different ways: ' + h.errorsSeen.join(', ') + '.') : no('So far the database has refused ' + n + ' kind' + (n === 1 ? '' : 's') + ' of bad data (' + (h.errorsSeen.join(', ') || 'none') + '). You need 3 different kinds.'); } });
+  add({ id: 'rd-create', plat: 'rdbms', title: 'Build Your Own Table', xp: 25, level: 2,
+    task: 'In <b>Free play</b>, create a table <code>students</code> with <code>student_id INTEGER PRIMARY KEY</code> and <code>name TEXT NOT NULL</code>, then insert at least <b>2</b> students.',
+    hints: ['CREATE TABLE students (student_id INTEGER PRIMARY KEY, name TEXT NOT NULL);', "INSERT INTO students (name) VALUES ('Ana'), ('Ben');  — the database numbers the IDs for you.", 'Run both statements (you can put them in the console together, separated by ;).'],
+    learn: 'An INTEGER PRIMARY KEY numbers new rows automatically — no duplicates, ever.',
+    check: function (h) {
+      var t = h.table('students'); if (!t) return no('There is no students table yet.');
+      if (!t.pk.length || t.pk[0].toLowerCase() !== 'student_id') return no('students needs student_id as its PRIMARY KEY.');
+      if (!t.notNull.some(function (c) { return c.toLowerCase() === 'name'; })) return no('Make name NOT NULL so every student must have one.');
+      return t.rows.length >= 2 ? ok() : no('The table exists — now INSERT at least 2 students.');
+    } });
+  add({ id: 'rd-fk-create', plat: 'rdbms', title: 'Connect Two Tables', xp: 30, level: 3,
+    task: 'Create <code>enrollments</code> with <code>student_id INTEGER REFERENCES students(student_id)</code> and <code>course TEXT NOT NULL</code>. Add an enrollment for one of your students. (Then try enrolling student 99 and watch it fail!)',
+    hints: ['CREATE TABLE enrollments (student_id INTEGER REFERENCES students(student_id), course TEXT NOT NULL);', "INSERT INTO enrollments VALUES (1, 'Intro to AI');"],
+    learn: 'You just built a relationship: one student, many enrollments — and the database guarantees every enrollment belongs to a real student.',
+    check: function (h) {
+      var t = h.table('enrollments'); if (!t) return no('There is no enrollments table yet. (Build students first.)');
+      var fk = t.fks.filter(function (f) { return f.table.toLowerCase() === 'students'; })[0];
+      if (!fk) return no('enrollments needs a FOREIGN KEY: student_id INTEGER REFERENCES students(student_id).');
+      return t.rows.length >= 1 ? ok() : no('Now INSERT an enrollment for a student who exists.');
+    } });
+  add({ id: 'rd-rollback', plat: 'rdbms', title: 'Undo With ROLLBACK', xp: 20, level: 2,
+    task: 'In section <b>5</b>, start a transaction, <b>DELETE every sale</b>, check they are gone — then <b>ROLLBACK</b> and bring all 60 back.',
+    hints: ['Run: BEGIN; DELETE FROM sales; SELECT COUNT(*) FROM sales;', 'Then run: ROLLBACK;  and count again.'],
+    learn: 'Inside a transaction nothing is permanent until COMMIT. ROLLBACK is a real undo button for the whole database.',
+    check: function (h) {
+      if (!h.sawRollbackDelete) return no('Delete sales inside a transaction (after BEGIN), then ROLLBACK.');
+      var t = h.table('sales');
+      return t && t.rows.length === 60 ? ok() : no('The sales table has ' + (t ? t.rows.length : 0) + ' rows — it should be back to 60.');
+    } });
+  add({ id: 'rd-bank', plat: 'rdbms', title: 'Survive the Power Failure', xp: 25, level: 2,
+    task: 'In the lunch-money demo (section <b>5</b>), start <b>with a transaction</b>, pull the plug with <b>⚡ Power failure!</b>, then do the whole transfer again and <b>COMMIT</b> it.',
+    hints: ['Choose "With a transaction (BEGIN)", do Step 1, then press ⚡ Power failure!', 'After the rollback, choose "With a transaction" again, do both steps, then COMMIT.'],
+    learn: 'Atomicity: a transfer is either completely done or not done at all — money never vanishes.',
+    check: function (h) { return h.bankDone ? ok() : no('Survive a power failure inside a transaction, then complete the transfer with COMMIT.'); } });
+  add({ id: 'rd-quiz-acid', plat: 'rdbms', type: 'quiz', title: 'All or Nothing', xp: 10, level: 1,
+    task: 'In a database transaction, <b>atomic</b> means…', options: ['The data is very small', 'Either every change happens or none of them do', 'It runs as fast as possible', 'The data is encrypted'], answer: 1,
+    hints: ['Remember the lunch-money power failure.'], learn: 'Atomic = indivisible. ACID: Atomic, Consistent, Isolated, Durable.' });
+
   // ===== Compare-page quizzes =====
   add({ id: 'cmp-name', plat: 'compare', type: 'quiz', title: 'Who Says #NAME?', xp: 10, level: 1,
     task: 'Where does <code>=XLOOKUP(A2, B:B, C:C)</code> give a <b>#NAME?</b> error?',

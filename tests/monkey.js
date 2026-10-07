@@ -39,7 +39,7 @@ async function main() {
   await page.goto(DIST);
   await page.fill('.modal input', 'Monkey Tester'); await page.keyboard.press('Enter');
   const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay, #cert-overlay').forEach((m) => m.remove()));
-  const views = ['xl365', 'xl2013', 'gs', 'wrangle', 'csv', 'sql', 'compare', 'reference'];
+  const views = ['xl365', 'xl2013', 'gs', 'wrangle', 'csv', 'sql', 'compare', 'reference', 'rdbms'];
   let view = null;
   for (let step = 0; step < STEPS; step++) {
     const t0 = Date.now();

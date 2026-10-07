@@ -86,7 +86,7 @@ const CSV = {
 };
 
 for (const ch of SX.challenges.LIST) {
-  if (/^wr[12]$/.test(ch.plat)) continue; // covered by the wrangling-lab tests below
+  if (/^wr[12]$/.test(ch.plat) || ch.plat === 'rdbms') continue; // covered by dedicated tests below
   if (ch.type === 'quiz') {
     test('quiz ' + ch.id + ' is well-formed', () => { assert.ok(ch.options[ch.answer]); });
     continue;
@@ -228,10 +228,44 @@ function applySteps(wb, steps) {
     if (r2 > r1) wb.applyEdits(wb.pasteEdits(wb.copy(m[1], r1, c, r1, c), m[1], r1 + 1, c, r2 - r1, 1));
   }
 }
+// Mirrors RdbmsView.exec in ui-rdbms.js: run SQL on a sandbox and record what the page tracks.
+function rdRun(sqls) {
+  const db = SX.sql.makeStoreDb(), seen = {}; let txDel = false, sawRollbackDelete = false;
+  for (const q of sqls) {
+    try {
+      SX.sql.execute(db, q).forEach((r) => {
+        if (r.statement.type === 'begin') txDel = false;
+        if (r.statement.type === 'delete' && /^sales$/i.test(r.statement.table) && r.changed > 0 && db.tx) txDel = true;
+        if (r.rolledBack && txDel) sawRollbackDelete = true;
+      });
+    } catch (e) {
+      const m = e.message;
+      const k = /^UNIQUE/.test(m) ? 'UNIQUE' : /^NOT NULL/.test(m) ? 'NOT NULL' : /^CHECK/.test(m) ? 'CHECK' : /^FOREIGN KEY/.test(m) ? 'FOREIGN KEY' : /^cannot store/.test(m) ? 'TYPE' : null;
+      if (k) seen[k] = true;
+    }
+  }
+  return { db, table: (n) => db.tables[n.toLowerCase()] || null, anomaly: false, errorsSeen: Object.keys(seen), sawRollbackDelete, bankDone: false, last: null };
+}
+test('lesson 9: SQL challenges are solvable and reject the starting state', () => {
+  for (const ch of SX.challenges.forPlat('rdbms').filter((c) => c.type !== 'quiz')) {
+    assert.ok(!ch.check(rdRun([])).ok, ch.id + ' should not pass untouched');
+  }
+  const bad = [
+    ['rd-no', ["INSERT INTO products VALUES ('SKU-101','Fake','Snacks',1,0.4,10,5,'X');", "INSERT INTO products VALUES ('SKU-102','Fake','Snacks',1,0.4,10,5,'X');"]], // same kind twice
+    ['rd-create', ['CREATE TABLE students (student_id INTEGER, name TEXT);', "INSERT INTO students VALUES (1,'A'),(2,'B');"]], // no keys/rules
+    ['rd-fk-create', ['CREATE TABLE students (student_id INTEGER PRIMARY KEY, name TEXT NOT NULL);', 'CREATE TABLE enrollments (student_id INTEGER, course TEXT);', "INSERT INTO enrollments VALUES (1,'AI');"]],
+    ['rd-rollback', ['DELETE FROM sales WHERE order_id = 1001;', 'BEGIN;', 'ROLLBACK;']]
+  ];
+  for (const [id, sqls] of bad) assert.ok(!SX.challenges.byId(id).check(rdRun(sqls)).ok, id + ' should reject a near-miss');
+  assert.ok(SX.challenges.byId('rd-anomaly').check(Object.assign(rdRun([]), { anomaly: true })).ok);
+  assert.ok(SX.challenges.byId('rd-bank').check(Object.assign(rdRun([]), { bankDone: true })).ok);
+});
 for (const ch of SX.challenges.LIST.filter((c) => c.type !== 'quiz')) {
   test('teacher answer key is correct: ' + ch.id, () => {
     const k = KEY[ch.id];
     assert.ok(k, 'missing answer key for ' + ch.id);
+    if (k.ui) { assert.ok(k.ui.length > 10); return; } // page interaction: verified in tests/e2e-lessons.js
+    if (k.rd) { const r = ch.check(rdRun(k.rd)); assert.ok(r.ok, r.msg); return; }
     const plats = k.wr ? ['xl365', 'gs'] : [ch.plat];
     for (const plat of plats) {
       let h;
@@ -262,4 +296,9 @@ test('teacher exit-ticket answers are correct', () => {
   const p = SX.csv.parse(T.csv.exitAnswer + '\n', ',');
   assert.deepStrictEqual(JSON.parse(JSON.stringify(p.rows[0].cells.map((c) => c.v))), ['Smith, Jo', '05401', 'said "hi"']);
   assert.ok(SX.sql.execute(SX.sql.makeStoreDb(), T.sql.exitAnswer).pop().rows.length === 5);
+});
+test('lesson 9 exit ticket SQL works', () => {
+  const T = require('../src/teacher/discussion.js');
+  const db = SX.sql.makeStoreDb(); SX.sql.execute(db, T.rdbms.exitAnswer);
+  assert.ok(db.tables.clubs.pk[0] === 'club_id' && db.tables.clubs.notNull.includes('name'));
 });

@@ -125,6 +125,7 @@
     { id: 'done-sql', icon: '🔮', name: 'SQL Sorcerer', desc: 'Finish every SQL challenge.', xp: 30 },
     { id: 'researcher', icon: '📚', name: 'Researcher', desc: 'Run 10 examples in the Interactive Cheat Sheet.', xp: 15 },
     { id: 'ai-ready', icon: '🤖', name: 'AI-Ready Data', desc: 'Reach an AI-readiness score of 100 in the Data Wrangling Lab.', xp: 40 },
+    { id: 'done-rdbms', icon: '🗃️', name: 'Database Architect', desc: 'Finish Lesson 9: What is an RDBMS?', xp: 30 },
     { id: 'done-wr1', icon: '🧽', name: 'Data Janitor', desc: 'Finish Data Wrangling I: Cleaning.', xp: 30 },
     { id: 'done-wr2', icon: '🔗', name: 'Data Joiner', desc: 'Finish Data Wrangling II: Combining & Lookups.', xp: 30 },
     { id: 'done-compare', icon: '🔭', name: 'Big Picture', desc: 'Answer every Compare quiz.', xp: 20 },
@@ -425,13 +426,15 @@
     var EXTRA = {
       wrangle: { id: 'wrangle', name: 'Data Wrangling Lab', icon: 'WR', tagline: 'Clean messy data for AI', lessons: ['wr1', 'wr2'],
         blurb: 'A real-world messy order feed: lost leading zeros, four date formats, fake nulls, messy names. Clean it, join it with VLOOKUP/HLOOKUP, get it AI-ready. NEW in v2.' },
+      rdbms: { id: 'rdbms', name: 'What is an RDBMS?', icon: 'DB', tagline: 'Tables, keys & transactions', lessons: ['rdbms'],
+        blurb: 'Why real data lives in a relational database: break a spreadsheet, follow keys across tables, watch the database refuse bad data, and survive a power failure with a transaction.' },
       reference: { id: 'reference', name: 'Interactive Cheat Sheet', icon: '?!', tagline: 'Every task, every tool', lessons: [],
         blurb: 'Look up a task like "pad leading zeros" or "find nulls" and see the answer in Excel 365, Excel 2013, Google Sheets, SQL and CSV — then run it live.' }
     };
     function sumProgress(ids) {
       return ids.reduce(function (a, id) { var p = UI.platProgress(id); return { done: a.done + p.done, total: a.total + p.total, xp: a.xp + p.xp, maxXp: a.maxXp + p.maxXp }; }, { done: 0, total: 0, xp: 0, maxXp: 0 });
     }
-    var cards = SX.platforms.ORDER.slice(0, 4).concat(['wrangle', 'sql', 'reference']).map(function (id) {
+    var cards = SX.platforms.ORDER.slice(0, 4).concat(['wrangle', 'rdbms', 'sql', 'reference']).map(function (id) {
       var p = PL[id] || EXTRA[id], pr = EXTRA[id] ? sumProgress(EXTRA[id].lessons) : UI.platProgress(id);
       return h('button.plat-card.pc-' + id, { onclick: function () { UI.go(id); } }, [
         h('div.pc-top', null, [platIcon(p, true), h('div', null, [h('div.pc-name', { text: p.name }), h('div.pc-tag', { text: p.tagline })])]),
@@ -517,9 +520,11 @@
     else if (view === 'sql') UI.activeView = new UI.SqlView(host);
     else if (view === 'compare') UI.activeView = new UI.CompareView(host);
     else if (view === 'wrangle') UI.activeView = UI.wrangleView(host);
+    else if (view === 'reference') UI.activeView = new UI.ReferenceView(host);
+    else if (view === 'rdbms') UI.activeView = new UI.RdbmsView(host);
+    // first visit: open the lesson guide (after the view exists)
     var lessonsHere = SX.lessons.LIST.filter(function (l) { return l.workspace === view; }).map(function (l) { return l.id; });
     if (lessonsHere.length && UI.maybeGuide && !(view === 'wrangle' && !UI.state.ui.wrIntroDone)) UI.maybeGuide(lessonsHere);
-    else if (view === 'reference') UI.activeView = new UI.ReferenceView(host);
   };
 
   UI.start = function () {

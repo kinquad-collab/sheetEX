@@ -1,7 +1,7 @@
 # SheetEX — Spreadsheet Explorer (v2)
 
-> **v2** adds the **Data Wrangling Lab** with an **🤖 AI Readiness Check**, an **Interactive Cheat Sheet**,
-> **8 lessons with guides and certificates**, a **teacher guide with a verified answer key**, and an optional
+> **v2** adds the **Data Wrangling Lab** with an **🤖 AI Readiness Check**, an **Interactive Cheat Sheet**, an
+> **interactive "What is an RDBMS?" page**, **9 lessons with guides and certificates**, a **teacher guide with a verified answer key**, and an optional
 > **class gradebook + cloud save** through Google Apps Script. v1 is preserved on its own branch.
 
 A classroom simulator that teaches students **why a formula that works at school breaks at home**.
@@ -16,12 +16,13 @@ one behaves like the real thing, errors included:
 | **CSV / TSV** | Files store values only. Formulas and formatting vanish on export, commas need quotes, quotes get doubled, and spreadsheets mangle `05401` and 16-digit IDs on open |
 | **SQL** | WHERE = FILTER, GROUP BY = SUMIF, JOIN = VLOOKUP, HAVING, integer division (`7/2 = 3`), case-sensitive text, UPDATE without WHERE |
 | **Data Wrangling Lab** (v2) | Cleaning a messy order feed before an AI model sees it. Item codes that lost their zeros (`104` vs `"0104"`), text that looks like numbers, four date formats plus a European `03.09.2026`, blanks vs fake nulls (`N/A`, `-`, `null`), messy names and store codes, `$` prices stored as text. Then VLOOKUP/HLOOKUP/XLOOKUP joins, why lookups return `#N/A` (number vs text), concatenation, delimiters, TEXTJOIN, and FILTER around missing values. Runs on an Excel 365 **or** Google Sheets engine (switch at the top) |
+| **What is an RDBMS?** (v2) | A hands-on page: change one copy of a price in a flat sheet and watch an *update anomaly* appear, then fix it with one `UPDATE`; click columns to see types and keys; follow an order through an ER diagram (foreign key → primary key); press buttons that try duplicate keys, missing names, negative prices, text in a number column and orphan rows, and watch the database refuse each one; move lunch money between two accounts and pull the plug mid-transfer, with and without a transaction (ACID). Ends with a free-play SQL sandbox |
 | **Interactive Cheat Sheet** (v2) | 33 everyday data tasks ("pad leading zeros", "count fake nulls", "split at a delimiter", "why does my lookup say #N/A?") with the answer for Excel 365, Excel 2013, Google Sheets, SQL and CSV side by side, plus a **▶ Run** button that runs it live on the Peachtree data |
 
 Students start on a home page, pick a workspace, and earn **XP**, **levels** (Intern → Chief Data Officer)
 and **badges**. Every workspace has a free-play sandbox plus a side panel with:
 
-- **🏆 Challenges** — 71 auto-checked challenges with progressive hints, grouped into 8 lessons. A hint costs 20% of that challenge's XP.
+- **🏆 Challenges** — 81 auto-checked challenges with progressive hints, grouped into 9 lessons. A hint costs 20% of that challenge's XP.
 - **📘 Cheat sheet** — what is different on this platform, keyboard shortcuts, a searchable function list using *that* platform's argument names, and error codes.
 - **🌐 Will it work elsewhere?** — runs the selected cell's formula in Excel 365, Excel 2013 and Google Sheets on the same data, shows each result, and writes the rewrite (for example XLOOKUP → `IFERROR(INDEX(…, MATCH(…, 0)), …)`, or MAXIFS → `{=MAX(IF(…))}`). One click applies the fix.
 
@@ -48,6 +49,7 @@ Real models are far more complex, but the lesson is the same: garbage in, garbag
 | 6 | Data Wrangling II: Combining & Lookups | Data Wrangling Lab |
 | 7 | SQL for Data Analysts | SQL |
 | 8 | Cross-Platform Translator | Compare |
+| 9 | What is an RDBMS? | RDBMS page (tables, keys, constraints, transactions) |
 
 Every lesson has a **📖 guide** (why it matters, vocabulary with examples, common traps) that opens the first time a
 student enters its workspace and from the challenge panel or home page.
@@ -65,7 +67,7 @@ To check codes, click **?** → *For teachers* and paste a whole class's codes (
 
 `npm run build` also writes **`dist/teacher-guide.html`** (and `dist/SheetEX-Teacher-Guide.pdf` is committed):
 pacing (about 10 class periods), objectives, misconceptions, vocabulary, discussion questions, exit tickets, and the
-**answer key for all 71 challenges**. The answer key lives in `src/teacher/solutions.js`; the test suite checks every
+**answer key for all 81 challenges**. The answer key lives in `src/teacher/solutions.js`; the test suite checks every
 answer against the real auto-checkers (Wrangling answers in both Excel 365 and Google Sheets), so the key cannot drift
 from the app. The answers are never included in the student app — the build fails if they leak.
 
@@ -177,7 +179,10 @@ SheetEX copies how each app behaves for the ~115 functions it supports. It is no
 and the real apps have hundreds more functions. Behaviors it models: function availability by version,
 argument differences, array evaluation (dynamic arrays vs Ctrl+Shift+Enter vs ARRAYFORMULA),
 implicit intersection, spilling and `#SPILL!`, approximate-match VLOOKUP, blank-cell display,
-parse-error handling, and SQLite typing rules. Edge cases can differ, so when something matters,
+parse-error handling, and SQLite typing rules. The SQL engine enforces PRIMARY KEY, UNIQUE, NOT NULL, CHECK,
+DEFAULT, FOREIGN KEY and `STRICT` tables, and supports `BEGIN`/`COMMIT`/`ROLLBACK` and `PRAGMA table_info`. One deliberate
+difference: foreign keys are enforced by default (like PostgreSQL and MySQL); real SQLite needs `PRAGMA foreign_keys = ON;`,
+which SheetEX also accepts (and `= OFF` to show what happens without it). Edge cases can differ, so when something matters,
 check it in the real app — which is the habit this project is trying to build.
 
 SheetEX is not affiliated with Microsoft or Google. Product names identify the software being taught.

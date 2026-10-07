@@ -17,6 +17,8 @@
       skills: ['VLOOKUP and HLOOKUP', 'Why lookups fail (type mismatch)', 'Concatenation and delimiters', 'TEXTJOIN', 'Filtering around missing values'] },
     { id: 'sql', n: 7, title: 'SQL for Data Analysts', tool: 'SQL Database', workspace: 'sql',
       skills: ['SELECT, WHERE, ORDER BY', 'GROUP BY and HAVING', 'JOIN (the SQL VLOOKUP)', 'Integer division', 'UPDATE safely'] },
+    { id: 'rdbms', n: 9, title: 'Databases 101: What is an RDBMS?', tool: 'RDBMS Explorer', workspace: 'rdbms',
+      skills: ['Tables, rows, columns and data types', 'Primary keys and foreign keys', 'Relationships and JOINs', 'Constraints that refuse bad data', 'Transactions and ACID'] },
     { id: 'compare', n: 8, title: 'Cross-Platform Translator', tool: 'Compare', workspace: 'compare',
       skills: ['Which functions exist where', 'Silent differences between apps', 'Spreadsheet ideas in SQL'] }
   ];
@@ -103,6 +105,18 @@
       ],
       traps: ["Text uses 'single quotes'.", 'Whole-number division drops decimals: 7 / 2 = 3.', 'UPDATE or DELETE without WHERE changes every row.']
     },
+    rdbms: {
+      why: 'Spreadsheets hold data; a relational database guards it. Real companies — and the AI systems they build — keep their important data in an RDBMS because it refuses bad data, connects tables with keys, and never leaves a change half-done.',
+      terms: [
+        ['Table / row / column', 'A table holds one kind of thing; each row is one item; each column is one typed attribute.', 'products: one row per product'],
+        ['Primary key', 'A column whose value is different for every row — the row\u2019s ID.', 'products.sku'],
+        ['Foreign key', 'A column that holds another table\u2019s primary key, linking the two.', 'sales.sku → products.sku'],
+        ['Constraint', 'A rule the database enforces: NOT NULL, UNIQUE, CHECK, FOREIGN KEY, types.', 'CHECK (price >= 0)'],
+        ['Normalization', 'Store each fact once, in one place, and link to it.', 'Price lives only in products'],
+        ['Transaction', 'Several changes that succeed or fail together.', 'BEGIN; … COMMIT;  (or ROLLBACK;)']
+      ],
+      traps: ['A spreadsheet that repeats the same fact in many rows will eventually disagree with itself.', 'A foreign key must point at a row that already exists — add the parent first.', 'Nothing inside BEGIN is permanent until COMMIT.']
+    },
     compare: {
       why: 'The same formula can work, fail, or silently give a different answer depending on the app. Checking before you share is a professional habit.',
       terms: [
@@ -114,6 +128,7 @@
     }
   };
   LESSONS.forEach(function (l) { l.guide = GUIDES[l.id]; });
+  LESSONS.sort(function (a, b) { return a.n - b.n; });
 
   function byId(id) { return LESSONS.filter(function (l) { return l.id === id; })[0]; }
 

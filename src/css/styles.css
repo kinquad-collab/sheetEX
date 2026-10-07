@@ -609,3 +609,51 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
 
 .key-pk { font-size: 10px; } .key-fk { color: #7c3aed; font-size: 10.5px; }
 .tbl-strict { font: 700 9px var(--font); background: #ede9fe; color: #5b21b6; border-radius: 3px; padding: 1px 4px; }
+
+/* ---------- v2: What is an RDBMS? ---------- */
+.pc-rdbms { --accent: #be185d; } .pi-rdbms { background: linear-gradient(135deg, #f472b6, #9d174d); }
+.rd-hero { background: linear-gradient(135deg, #3b0764, #9d174d); } .rd-hero h1 span { color: #fbcfe8; }
+.rd-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; } .rd-nav .chip { background: rgba(255,255,255,.12); color: #fff; border-color: rgba(255,255,255,.3); }
+.rd-section { scroll-margin-top: 60px; }
+.rd-two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 8px; }
+.rd-two h3 { margin: 4px 0; font-size: 14.5px; }
+.rd-flat { border-collapse: collapse; font: 13px Calibri, Carlito, Arial, sans-serif; width: 100%; }
+.rd-flat th { background: #f3f3f3; text-align: left; padding: 3px 6px; border: 1px solid #ddd; font-weight: 600; }
+.rd-flat td { border: 1px solid #e3e3e3; padding: 2px 6px; }
+.rd-flat tr.rd-hl td { background: #fff7ed; }
+.rd-cell { width: 76px; border: 1px solid transparent; background: transparent; font: inherit; padding: 1px 3px; }
+.rd-cell:focus, .rd-cell:hover { border-color: #f97316; background: #fff; outline: none; }
+.rd-sheetcell { border-color: #ccc; background: #fff; width: 110px; }
+.rd-ok { color: var(--good); font-weight: 700; }
+.rd-status { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: #f8fafc; font-size: 13px; }
+.rd-status.bad { background: var(--bad-bg); color: #7a271a; } .rd-status.good { background: var(--good-bg); color: #065f46; }
+.rd-tcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 8px 0; }
+.rd-tcard { border: 1px solid #ebe9e4; border-radius: 10px; overflow: hidden; background: #fcfcfb; }
+.rd-tname { background: #fdf2f8; color: #831843; font: 700 13px var(--mono); padding: 6px 10px; }
+.rd-col { display: flex; justify-content: space-between; width: 100%; border: 0; border-top: 1px solid #f0eee9; background: transparent; padding: 4px 10px; font: 12.5px var(--mono); text-align: left; }
+.rd-col:hover { background: #fdf2f8; }
+.rd-detail { background: #fdf2f8; border-radius: 8px; padding: 8px 12px; font-size: 13px; min-height: 38px; }
+.rd-er { margin: 8px 0; }
+.er-box rect { fill: #fff; stroke: #d0d5dd; } .er-box .er-head { fill: #fdf2f8; stroke: #d0d5dd; }
+.er-title { font: 700 13px ui-monospace, Consolas, monospace; fill: #831843; }
+.er-col { font: 12px ui-monospace, Consolas, monospace; fill: #344054; } .er-col.pk { font-weight: 700; } .er-col.fk { fill: #7c3aed; }
+.er-val { font: 700 11.5px system-ui, sans-serif; fill: #be185d; }
+.er-link { fill: none; stroke: #c4b5fd; stroke-width: 2; } .er-link.on { stroke: #be185d; stroke-width: 3; }
+.er-card { font: 10.5px system-ui, sans-serif; fill: #667085; }
+.rd-orders { display: flex; flex-wrap: wrap; gap: 6px; }
+.rd-order { border: 1px solid #d0d5dd; background: #fff; border-radius: 8px; padding: 4px 10px; font-size: 12.5px; }
+.rd-order.on, .rd-order:hover { border-color: #be185d; background: #fdf2f8; }
+.rd-follow { margin-top: 10px; font-size: 13.5px; }
+.rd-no-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
+.rd-no { border: 1px solid #ebe9e4; border-radius: 10px; padding: 10px; background: #fcfcfb; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.rd-no pre { width: 100%; white-space: pre-wrap; margin: 0; }
+.rd-result { margin-top: 6px; width: 100%; }
+.rd-console { height: auto; min-height: 70px; resize: vertical; }
+.rd-console-wrap { margin-top: 6px; }
+.rd-bank { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+.rd-acct { border: 1px solid #ebe9e4; border-radius: 12px; padding: 10px 16px; min-width: 150px; background: #fff; }
+.rd-acct b { font-size: 26px; } .rd-acct.total { background: #f0fdf4; border-color: #bbf7d0; } .rd-acct.total.bad { background: var(--bad-bg); border-color: #fecdca; color: var(--bad); }
+.rd-log { min-height: 40px; white-space: pre-wrap; margin-top: 8px; }
+.rd-sys { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+.rd-syscard { border: 1px solid #ebe9e4; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; background: #fcfcfb; }
+@media (max-width: 760px) { .rd-two { grid-template-columns: 1fr; } }

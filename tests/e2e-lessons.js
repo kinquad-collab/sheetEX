@@ -235,6 +235,63 @@ async function main() {
     check(errors.length === 0, 'csv no page errors ' + errors.join(' | '));
     await page.close();
   }
+  // ---- Lesson 9: What is an RDBMS? — driven only through the page's own buttons, inputs and consoles ----
+  {
+    console.log('\n== RDBMS lesson ==');
+    const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
+    const errors = []; page.on('pageerror', (e) => errors.push(e.message));
+    await page.goto(DIST);
+    await page.fill('.modal input', 'Riley Chen'); await page.keyboard.press('Enter'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
+    await page.click('.pc-rdbms'); await page.waitForSelector('#rd-grid');
+    const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
+    const runIn = async (sel, sql) => { await clear(); await page.fill(sel + ' .rd-console', sql); await page.click(sel + ' .rd-console-wrap .btn-primary'); await page.waitForTimeout(60); };
+    // 1. update anomaly: edit one highlighted price
+    await page.fill('#rd-grid tr.rd-hl .rd-cell >> nth=0', '9.99');
+    check((await page.textContent('#rd-grid .rd-status')).includes('anomaly'), 'rdbms: editing one copy of a price shows an update anomaly');
+    // 2. the "cheap" price is refused
+    await page.click('#rd-tables .btn-primary');
+    check((await page.textContent('#rd-tables')).includes('cannot store TEXT'), 'rdbms: typed column refuses price = \'cheap\'');
+    // 3. follow an order's keys
+    await page.click('#rd-keys .rd-order >> nth=0');
+    check((await page.textContent('#rd-keys .rd-follow')).length > 30, 'rdbms: clicking an order follows its keys');
+    // 4. every "Try it" card is refused by the database
+    const tries = await page.$$('#rd-no .rd-no button');
+    for (const b of tries) { await clear(); await b.click(); }
+    check((await page.$$('#rd-no .rd-no .sql-err')).length === tries.length, 'rdbms: all ' + tries.length + ' bad-data attempts refused');
+    // 5. transactions: BEGIN / DELETE / ROLLBACK in the store-data console
+    await runIn('#rd-tx', 'BEGIN;\nDELETE FROM sales;\nSELECT COUNT(*) AS sales_left FROM sales;');
+    check((await page.textContent('#rd-tx .rd-console-wrap')).includes('sales_left'), 'rdbms: sales emptied inside the transaction');
+    await runIn('#rd-tx', 'ROLLBACK;\nSELECT COUNT(*) AS n FROM sales;');
+    check((await page.textContent('#rd-tx .rd-console-wrap')).includes('60'), 'rdbms: ROLLBACK brings back all 60 sales');
+    // bank transfer: power failure inside a transaction, then commit a clean one
+    const bankClick = async (t) => { await clear(); await page.click(`#rd-tx button:text-is("${t}")`); };
+    for (const t of ['With a transaction (BEGIN)', 'Step 1: take $10 from Jordan', '⚡ Power failure!']) await bankClick(t);
+    check((await page.textContent('#rd-tx .rd-bank')).includes('$25.00'), 'rdbms: power failure inside a transaction loses no money');
+    for (const t of ['With a transaction (BEGIN)', 'Step 1: take $10 from Jordan', 'Step 2: give $10 to Maria', 'COMMIT']) await bankClick(t);
+    check((await page.textContent('#rd-tx .rd-status')).includes('Committed'), 'rdbms: transfer committed');
+    // 6. free play: build two related tables
+    await runIn('#rd-play', "CREATE TABLE students (student_id INTEGER PRIMARY KEY, name TEXT NOT NULL);\nINSERT INTO students (name) VALUES ('Ana'), ('Ben');");
+    await runIn('#rd-play', 'CREATE TABLE enrollments (student_id INTEGER REFERENCES students(student_id), course TEXT);\nINSERT INTO enrollments VALUES (1, \'AI Foundations\');');
+    await runIn('#rd-play', "INSERT INTO enrollments VALUES (99, 'Ghost class');");
+    check((await page.textContent('#rd-play')).includes('FOREIGN KEY'), 'rdbms: your own foreign key refuses a student who does not exist');
+    // challenges
+    const ids = await page.$$eval('#rd-challenges .ch-card', (cs) => cs.map((c) => c.dataset.id));
+    check(ids.length === 10, 'rdbms: 10 challenges on the page (' + ids.length + ')');
+    for (const id of ids) {
+      await clear();
+      await page.evaluate((id) => { const c = document.querySelector(`.ch-card[data-id="${id}"]`); c.classList.add('open');
+        const quiz = c.querySelectorAll('.quiz-opt'); if (quiz.length) quiz[SX.challenges.byId(id).answer].click(); else c.querySelector('.btn-primary').click(); }, id);
+      await page.waitForTimeout(80);
+      const done = await page.evaluate((id) => !!SX.ui.state.done[id], id);
+      check(done, 'rdbms ' + id + (done ? '' : ' — ' + await page.textContent(`.ch-card[data-id="${id}"] .ch-msg`)));
+    }
+    check(await page.evaluate(() => SX.ui.lessonComplete('rdbms')), 'rdbms lesson complete -> certificate unlocked');
+    await page.waitForTimeout(1500); await clear();
+    await page.evaluate(() => SX.ui.showCert('rdbms')); await page.waitForSelector('.cert-paper');
+    check((await page.textContent('.cert-lesson')).includes('RDBMS'), 'rdbms certificate shows the lesson title');
+    check(errors.length === 0, 'rdbms no page errors ' + errors.join(' | '));
+    await page.close();
+  }
   await browser.close();
   if (failures.length) { console.error('\n' + failures.length + ' failure(s)'); process.exit(1); }
   console.log('\nEnd-to-end lessons passed.');

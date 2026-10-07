@@ -14,6 +14,8 @@ module.exports = {
     exit: 'Count the items in "red|green|blue" with one formula that works in every app.', exitAnswer: '=LEN(A2)-LEN(SUBSTITUTE(A2,"|",""))+1' },
   sql: { minutes: 75, discuss: ['Which spreadsheet function is most like GROUP BY? Like JOIN? Like WHERE?', 'Why do real databases not have an Undo button — and what do companies do instead?'],
     exit: 'Write SQL for the number of sales per store.', exitAnswer: 'SELECT store_id, COUNT(*) FROM sales GROUP BY store_id;' },
+  rdbms: { minutes: 60, discuss: ['Your school keeps student records. Why would it use a database instead of one giant spreadsheet?', 'Give an example from your own life where "all or nothing" matters (like the lunch-money transfer).', 'Constraints stop bad data before it is saved. How would that have helped in the Data Wrangling Lab?'],
+    exit: 'Write the CREATE TABLE for clubs(club_id, name) where club_id is the primary key and name is required.', exitAnswer: 'CREATE TABLE clubs (club_id INTEGER PRIMARY KEY, name TEXT NOT NULL);' },
   compare: { minutes: 25, discuss: ['Before sharing a spreadsheet, what should you check?'],
     exit: 'Name a function that exists in Excel 365 but gives #NAME? in Excel 2013.', exitAnswer: 'XLOOKUP, FILTER, SORT, UNIQUE, IFS, TEXTJOIN, LET, MAXIFS…' }
 };

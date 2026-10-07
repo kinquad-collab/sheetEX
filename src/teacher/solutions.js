@@ -67,5 +67,14 @@ module.exports = {
   'sql-having': { sql: 'SELECT category, COUNT(*) FROM products GROUP BY category HAVING COUNT(*) > 5;' },
   'sql-city': { sql: 'SELECT st.city, SUM(s.qty * p.price) AS revenue FROM sales s JOIN stores st ON s.store_id = st.store_id JOIN products p ON s.sku = p.sku GROUP BY st.city ORDER BY revenue DESC;' },
   'sql-avg': { sql: 'SELECT AVG(qty) FROM sales;', note: 'SUM(qty)/COUNT(*) gives 4 (integer division) — the trap.' },
-  'sql-update': { sql: 'UPDATE products SET in_stock = reorder_at * 2 WHERE in_stock < reorder_at;' }
+  'sql-update': { sql: 'UPDATE products SET in_stock = reorder_at * 2 WHERE in_stock < reorder_at;' },
+  // Lesson 9 — What is an RDBMS?  (rd: SQL run on the page's sandbox database; ui: clicks on the page)
+  'rd-anomaly': { ui: 'Section 1: change only one of the highlighted Price cells in the flat sheet.' },
+  'rd-no': { rd: ["INSERT INTO products VALUES ('SKU-101','Fake','Snacks',1,0.4,10,5,'X');", "INSERT INTO products (sku, category, price, in_stock) VALUES ('SKU-999','Snacks',1,5);", "UPDATE products SET price = -5 WHERE sku = 'SKU-101';"],
+    note: 'Any 3 of the 6 "Try it" buttons in section 4 (UNIQUE, NOT NULL, CHECK, FOREIGN KEY, type).' },
+  'rd-create': { rd: ['CREATE TABLE students (student_id INTEGER PRIMARY KEY, name TEXT NOT NULL);', "INSERT INTO students (name) VALUES ('Ana'), ('Ben');"] },
+  'rd-fk-create': { rd: ['CREATE TABLE students (student_id INTEGER PRIMARY KEY, name TEXT NOT NULL);', "INSERT INTO students (name) VALUES ('Ana'), ('Ben');",
+    'CREATE TABLE enrollments (student_id INTEGER REFERENCES students(student_id), course TEXT NOT NULL);', "INSERT INTO enrollments VALUES (1, 'Intro to AI');"], needsNote: 'Build students first (previous challenge).' },
+  'rd-rollback': { rd: ['BEGIN; DELETE FROM sales; SELECT COUNT(*) FROM sales;', 'ROLLBACK;'] },
+  'rd-bank': { ui: 'Section 5: With a transaction (BEGIN) → Step 1 → ⚡ Power failure! → With a transaction (BEGIN) → Step 1 → Step 2 → COMMIT.' }
 };

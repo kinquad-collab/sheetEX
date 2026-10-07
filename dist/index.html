@@ -618,6 +618,54 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
 .key-pk { font-size: 10px; } .key-fk { color: #7c3aed; font-size: 10.5px; }
 .tbl-strict { font: 700 9px var(--font); background: #ede9fe; color: #5b21b6; border-radius: 3px; padding: 1px 4px; }
 
+/* ---------- v2: What is an RDBMS? ---------- */
+.pc-rdbms { --accent: #be185d; } .pi-rdbms { background: linear-gradient(135deg, #f472b6, #9d174d); }
+.rd-hero { background: linear-gradient(135deg, #3b0764, #9d174d); } .rd-hero h1 span { color: #fbcfe8; }
+.rd-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; } .rd-nav .chip { background: rgba(255,255,255,.12); color: #fff; border-color: rgba(255,255,255,.3); }
+.rd-section { scroll-margin-top: 60px; }
+.rd-two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 8px; }
+.rd-two h3 { margin: 4px 0; font-size: 14.5px; }
+.rd-flat { border-collapse: collapse; font: 13px Calibri, Carlito, Arial, sans-serif; width: 100%; }
+.rd-flat th { background: #f3f3f3; text-align: left; padding: 3px 6px; border: 1px solid #ddd; font-weight: 600; }
+.rd-flat td { border: 1px solid #e3e3e3; padding: 2px 6px; }
+.rd-flat tr.rd-hl td { background: #fff7ed; }
+.rd-cell { width: 76px; border: 1px solid transparent; background: transparent; font: inherit; padding: 1px 3px; }
+.rd-cell:focus, .rd-cell:hover { border-color: #f97316; background: #fff; outline: none; }
+.rd-sheetcell { border-color: #ccc; background: #fff; width: 110px; }
+.rd-ok { color: var(--good); font-weight: 700; }
+.rd-status { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: #f8fafc; font-size: 13px; }
+.rd-status.bad { background: var(--bad-bg); color: #7a271a; } .rd-status.good { background: var(--good-bg); color: #065f46; }
+.rd-tcards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 8px 0; }
+.rd-tcard { border: 1px solid #ebe9e4; border-radius: 10px; overflow: hidden; background: #fcfcfb; }
+.rd-tname { background: #fdf2f8; color: #831843; font: 700 13px var(--mono); padding: 6px 10px; }
+.rd-col { display: flex; justify-content: space-between; width: 100%; border: 0; border-top: 1px solid #f0eee9; background: transparent; padding: 4px 10px; font: 12.5px var(--mono); text-align: left; }
+.rd-col:hover { background: #fdf2f8; }
+.rd-detail { background: #fdf2f8; border-radius: 8px; padding: 8px 12px; font-size: 13px; min-height: 38px; }
+.rd-er { margin: 8px 0; }
+.er-box rect { fill: #fff; stroke: #d0d5dd; } .er-box .er-head { fill: #fdf2f8; stroke: #d0d5dd; }
+.er-title { font: 700 13px ui-monospace, Consolas, monospace; fill: #831843; }
+.er-col { font: 12px ui-monospace, Consolas, monospace; fill: #344054; } .er-col.pk { font-weight: 700; } .er-col.fk { fill: #7c3aed; }
+.er-val { font: 700 11.5px system-ui, sans-serif; fill: #be185d; }
+.er-link { fill: none; stroke: #c4b5fd; stroke-width: 2; } .er-link.on { stroke: #be185d; stroke-width: 3; }
+.er-card { font: 10.5px system-ui, sans-serif; fill: #667085; }
+.rd-orders { display: flex; flex-wrap: wrap; gap: 6px; }
+.rd-order { border: 1px solid #d0d5dd; background: #fff; border-radius: 8px; padding: 4px 10px; font-size: 12.5px; }
+.rd-order.on, .rd-order:hover { border-color: #be185d; background: #fdf2f8; }
+.rd-follow { margin-top: 10px; font-size: 13.5px; }
+.rd-no-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 10px; }
+.rd-no { border: 1px solid #ebe9e4; border-radius: 10px; padding: 10px; background: #fcfcfb; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.rd-no pre { width: 100%; white-space: pre-wrap; margin: 0; }
+.rd-result { margin-top: 6px; width: 100%; }
+.rd-console { height: auto; min-height: 70px; resize: vertical; }
+.rd-console-wrap { margin-top: 6px; }
+.rd-bank { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
+.rd-acct { border: 1px solid #ebe9e4; border-radius: 12px; padding: 10px 16px; min-width: 150px; background: #fff; }
+.rd-acct b { font-size: 26px; } .rd-acct.total { background: #f0fdf4; border-color: #bbf7d0; } .rd-acct.total.bad { background: var(--bad-bg); border-color: #fecdca; color: var(--bad); }
+.rd-log { min-height: 40px; white-space: pre-wrap; margin-top: 8px; }
+.rd-sys { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
+.rd-syscard { border: 1px solid #ebe9e4; border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; background: #fcfcfb; }
+@media (max-width: 760px) { .rd-two { grid-template-columns: 1fr; } }
+
 </style>
 </head>
 <body>
@@ -5507,6 +5555,67 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     learn: 'Missing values break filters in sneaky ways. Always ask "what happens to the blanks?"',
     check: spillCheck('Report!D2', W.bigOrders, { mustUse: ['FILTER'] }) });
 
+
+  // ===== v2: Lesson 9 — What is an RDBMS? =====
+  add({ id: 'rd-quiz-r', plat: 'rdbms', type: 'quiz', title: 'The R in RDBMS', xp: 10, level: 1,
+    task: 'What does the <b>R</b> in <b>RDBMS</b> stand for?', options: ['Random', 'Relational', 'Remote', 'Recursive'], answer: 1,
+    hints: ['Think about what connects the tables.'], learn: 'Relational: data lives in tables, and keys create RELATIONSHIPS between them.' });
+  add({ id: 'rd-anomaly', plat: 'rdbms', title: 'Break the Spreadsheet', xp: 15, level: 1,
+    task: 'In section <b>1. Grid vs. database</b>, change the price in only <b>ONE</b> of the highlighted rows of the flat sheet. Watch the sheet start to disagree with itself.',
+    hints: ['Click into one of the highlighted Price cells and type the new price.', 'Only change one — leave the others alone.'],
+    learn: 'When the same fact is stored many times, copies drift apart. That is an "update anomaly". Databases avoid it by storing each fact once.',
+    check: function (h) { return h.anomaly ? ok('The sheet now has two different prices for the same product — an update anomaly.') : no('Change just ONE of the highlighted price cells in section 1.'); } });
+  add({ id: 'rd-quiz-pk', plat: 'rdbms', type: 'quiz', title: 'Pick a Primary Key', xp: 10, level: 1,
+    task: 'You are building a <b>students</b> table for your school. Which column makes the best <b>primary key</b>?',
+    options: ['First name', 'Grade level', 'Student ID number', 'Birthday'], answer: 2,
+    hints: ['A primary key must be different for EVERY row, forever.'], learn: 'Names, grades and birthdays repeat. A student ID is unique — perfect for a primary key.' });
+  add({ id: 'rd-quiz-fk', plat: 'rdbms', type: 'quiz', title: 'Follow the Key', xp: 10, level: 1,
+    task: '<code>sales.store_id</code> holds values like <code>S03</code> that must already exist in <code>stores.store_id</code>. What is <code>sales.store_id</code>?',
+    options: ['A primary key', 'A foreign key', 'A CHECK rule', 'A delimiter'], answer: 1,
+    hints: ['Look at the diagram in section 3 — which column has an arrow?'], learn: 'A foreign key points at another table’s primary key. Following it is what a JOIN does.' });
+  add({ id: 'rd-no', plat: 'rdbms', title: 'The Database Says NO', xp: 20, level: 2,
+    task: 'Make the database refuse bad data in <b>3 different ways</b> (duplicate key, missing value, broken rule, missing parent, wrong type…). Use section 4 or any console on this page.',
+    hints: ['Each "Try it" button in section 4 triggers a different kind of error.', 'Different kinds count: UNIQUE, NOT NULL, CHECK, FOREIGN KEY and type errors.'],
+    learn: 'Constraints stop bad data at the door. In a spreadsheet you only find these problems later — while cleaning.',
+    check: function (h) { var n = h.errorsSeen.length; return n >= 3 ? ok('Refused ' + n + ' different ways: ' + h.errorsSeen.join(', ') + '.') : no('So far the database has refused ' + n + ' kind' + (n === 1 ? '' : 's') + ' of bad data (' + (h.errorsSeen.join(', ') || 'none') + '). You need 3 different kinds.'); } });
+  add({ id: 'rd-create', plat: 'rdbms', title: 'Build Your Own Table', xp: 25, level: 2,
+    task: 'In <b>Free play</b>, create a table <code>students</code> with <code>student_id INTEGER PRIMARY KEY</code> and <code>name TEXT NOT NULL</code>, then insert at least <b>2</b> students.',
+    hints: ['CREATE TABLE students (student_id INTEGER PRIMARY KEY, name TEXT NOT NULL);', "INSERT INTO students (name) VALUES ('Ana'), ('Ben');  — the database numbers the IDs for you.", 'Run both statements (you can put them in the console together, separated by ;).'],
+    learn: 'An INTEGER PRIMARY KEY numbers new rows automatically — no duplicates, ever.',
+    check: function (h) {
+      var t = h.table('students'); if (!t) return no('There is no students table yet.');
+      if (!t.pk.length || t.pk[0].toLowerCase() !== 'student_id') return no('students needs student_id as its PRIMARY KEY.');
+      if (!t.notNull.some(function (c) { return c.toLowerCase() === 'name'; })) return no('Make name NOT NULL so every student must have one.');
+      return t.rows.length >= 2 ? ok() : no('The table exists — now INSERT at least 2 students.');
+    } });
+  add({ id: 'rd-fk-create', plat: 'rdbms', title: 'Connect Two Tables', xp: 30, level: 3,
+    task: 'Create <code>enrollments</code> with <code>student_id INTEGER REFERENCES students(student_id)</code> and <code>course TEXT NOT NULL</code>. Add an enrollment for one of your students. (Then try enrolling student 99 and watch it fail!)',
+    hints: ['CREATE TABLE enrollments (student_id INTEGER REFERENCES students(student_id), course TEXT NOT NULL);', "INSERT INTO enrollments VALUES (1, 'Intro to AI');"],
+    learn: 'You just built a relationship: one student, many enrollments — and the database guarantees every enrollment belongs to a real student.',
+    check: function (h) {
+      var t = h.table('enrollments'); if (!t) return no('There is no enrollments table yet. (Build students first.)');
+      var fk = t.fks.filter(function (f) { return f.table.toLowerCase() === 'students'; })[0];
+      if (!fk) return no('enrollments needs a FOREIGN KEY: student_id INTEGER REFERENCES students(student_id).');
+      return t.rows.length >= 1 ? ok() : no('Now INSERT an enrollment for a student who exists.');
+    } });
+  add({ id: 'rd-rollback', plat: 'rdbms', title: 'Undo With ROLLBACK', xp: 20, level: 2,
+    task: 'In section <b>5</b>, start a transaction, <b>DELETE every sale</b>, check they are gone — then <b>ROLLBACK</b> and bring all 60 back.',
+    hints: ['Run: BEGIN; DELETE FROM sales; SELECT COUNT(*) FROM sales;', 'Then run: ROLLBACK;  and count again.'],
+    learn: 'Inside a transaction nothing is permanent until COMMIT. ROLLBACK is a real undo button for the whole database.',
+    check: function (h) {
+      if (!h.sawRollbackDelete) return no('Delete sales inside a transaction (after BEGIN), then ROLLBACK.');
+      var t = h.table('sales');
+      return t && t.rows.length === 60 ? ok() : no('The sales table has ' + (t ? t.rows.length : 0) + ' rows — it should be back to 60.');
+    } });
+  add({ id: 'rd-bank', plat: 'rdbms', title: 'Survive the Power Failure', xp: 25, level: 2,
+    task: 'In the lunch-money demo (section <b>5</b>), start <b>with a transaction</b>, pull the plug with <b>⚡ Power failure!</b>, then do the whole transfer again and <b>COMMIT</b> it.',
+    hints: ['Choose "With a transaction (BEGIN)", do Step 1, then press ⚡ Power failure!', 'After the rollback, choose "With a transaction" again, do both steps, then COMMIT.'],
+    learn: 'Atomicity: a transfer is either completely done or not done at all — money never vanishes.',
+    check: function (h) { return h.bankDone ? ok() : no('Survive a power failure inside a transaction, then complete the transfer with COMMIT.'); } });
+  add({ id: 'rd-quiz-acid', plat: 'rdbms', type: 'quiz', title: 'All or Nothing', xp: 10, level: 1,
+    task: 'In a database transaction, <b>atomic</b> means…', options: ['The data is very small', 'Either every change happens or none of them do', 'It runs as fast as possible', 'The data is encrypted'], answer: 1,
+    hints: ['Remember the lunch-money power failure.'], learn: 'Atomic = indivisible. ACID: Atomic, Consistent, Isolated, Durable.' });
+
   // ===== Compare-page quizzes =====
   add({ id: 'cmp-name', plat: 'compare', type: 'quiz', title: 'Who Says #NAME?', xp: 10, level: 1,
     task: 'Where does <code>=XLOOKUP(A2, B:B, C:C)</code> give a <b>#NAME?</b> error?',
@@ -5586,6 +5695,8 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       skills: ['VLOOKUP and HLOOKUP', 'Why lookups fail (type mismatch)', 'Concatenation and delimiters', 'TEXTJOIN', 'Filtering around missing values'] },
     { id: 'sql', n: 7, title: 'SQL for Data Analysts', tool: 'SQL Database', workspace: 'sql',
       skills: ['SELECT, WHERE, ORDER BY', 'GROUP BY and HAVING', 'JOIN (the SQL VLOOKUP)', 'Integer division', 'UPDATE safely'] },
+    { id: 'rdbms', n: 9, title: 'Databases 101: What is an RDBMS?', tool: 'RDBMS Explorer', workspace: 'rdbms',
+      skills: ['Tables, rows, columns and data types', 'Primary keys and foreign keys', 'Relationships and JOINs', 'Constraints that refuse bad data', 'Transactions and ACID'] },
     { id: 'compare', n: 8, title: 'Cross-Platform Translator', tool: 'Compare', workspace: 'compare',
       skills: ['Which functions exist where', 'Silent differences between apps', 'Spreadsheet ideas in SQL'] }
   ];
@@ -5672,6 +5783,18 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       ],
       traps: ["Text uses 'single quotes'.", 'Whole-number division drops decimals: 7 / 2 = 3.', 'UPDATE or DELETE without WHERE changes every row.']
     },
+    rdbms: {
+      why: 'Spreadsheets hold data; a relational database guards it. Real companies — and the AI systems they build — keep their important data in an RDBMS because it refuses bad data, connects tables with keys, and never leaves a change half-done.',
+      terms: [
+        ['Table / row / column', 'A table holds one kind of thing; each row is one item; each column is one typed attribute.', 'products: one row per product'],
+        ['Primary key', 'A column whose value is different for every row — the row\u2019s ID.', 'products.sku'],
+        ['Foreign key', 'A column that holds another table\u2019s primary key, linking the two.', 'sales.sku → products.sku'],
+        ['Constraint', 'A rule the database enforces: NOT NULL, UNIQUE, CHECK, FOREIGN KEY, types.', 'CHECK (price >= 0)'],
+        ['Normalization', 'Store each fact once, in one place, and link to it.', 'Price lives only in products'],
+        ['Transaction', 'Several changes that succeed or fail together.', 'BEGIN; … COMMIT;  (or ROLLBACK;)']
+      ],
+      traps: ['A spreadsheet that repeats the same fact in many rows will eventually disagree with itself.', 'A foreign key must point at a row that already exists — add the parent first.', 'Nothing inside BEGIN is permanent until COMMIT.']
+    },
     compare: {
       why: 'The same formula can work, fail, or silently give a different answer depending on the app. Checking before you share is a professional habit.',
       terms: [
@@ -5683,6 +5806,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     }
   };
   LESSONS.forEach(function (l) { l.guide = GUIDES[l.id]; });
+  LESSONS.sort(function (a, b) { return a.n - b.n; });
 
   function byId(id) { return LESSONS.filter(function (l) { return l.id === id; })[0]; }
 
@@ -6042,6 +6166,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     { id: 'done-sql', icon: '🔮', name: 'SQL Sorcerer', desc: 'Finish every SQL challenge.', xp: 30 },
     { id: 'researcher', icon: '📚', name: 'Researcher', desc: 'Run 10 examples in the Interactive Cheat Sheet.', xp: 15 },
     { id: 'ai-ready', icon: '🤖', name: 'AI-Ready Data', desc: 'Reach an AI-readiness score of 100 in the Data Wrangling Lab.', xp: 40 },
+    { id: 'done-rdbms', icon: '🗃️', name: 'Database Architect', desc: 'Finish Lesson 9: What is an RDBMS?', xp: 30 },
     { id: 'done-wr1', icon: '🧽', name: 'Data Janitor', desc: 'Finish Data Wrangling I: Cleaning.', xp: 30 },
     { id: 'done-wr2', icon: '🔗', name: 'Data Joiner', desc: 'Finish Data Wrangling II: Combining & Lookups.', xp: 30 },
     { id: 'done-compare', icon: '🔭', name: 'Big Picture', desc: 'Answer every Compare quiz.', xp: 20 },
@@ -6342,13 +6467,15 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     var EXTRA = {
       wrangle: { id: 'wrangle', name: 'Data Wrangling Lab', icon: 'WR', tagline: 'Clean messy data for AI', lessons: ['wr1', 'wr2'],
         blurb: 'A real-world messy order feed: lost leading zeros, four date formats, fake nulls, messy names. Clean it, join it with VLOOKUP/HLOOKUP, get it AI-ready. NEW in v2.' },
+      rdbms: { id: 'rdbms', name: 'What is an RDBMS?', icon: 'DB', tagline: 'Tables, keys & transactions', lessons: ['rdbms'],
+        blurb: 'Why real data lives in a relational database: break a spreadsheet, follow keys across tables, watch the database refuse bad data, and survive a power failure with a transaction.' },
       reference: { id: 'reference', name: 'Interactive Cheat Sheet', icon: '?!', tagline: 'Every task, every tool', lessons: [],
         blurb: 'Look up a task like "pad leading zeros" or "find nulls" and see the answer in Excel 365, Excel 2013, Google Sheets, SQL and CSV — then run it live.' }
     };
     function sumProgress(ids) {
       return ids.reduce(function (a, id) { var p = UI.platProgress(id); return { done: a.done + p.done, total: a.total + p.total, xp: a.xp + p.xp, maxXp: a.maxXp + p.maxXp }; }, { done: 0, total: 0, xp: 0, maxXp: 0 });
     }
-    var cards = SX.platforms.ORDER.slice(0, 4).concat(['wrangle', 'sql', 'reference']).map(function (id) {
+    var cards = SX.platforms.ORDER.slice(0, 4).concat(['wrangle', 'rdbms', 'sql', 'reference']).map(function (id) {
       var p = PL[id] || EXTRA[id], pr = EXTRA[id] ? sumProgress(EXTRA[id].lessons) : UI.platProgress(id);
       return h('button.plat-card.pc-' + id, { onclick: function () { UI.go(id); } }, [
         h('div.pc-top', null, [platIcon(p, true), h('div', null, [h('div.pc-name', { text: p.name }), h('div.pc-tag', { text: p.tagline })])]),
@@ -6434,9 +6561,11 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     else if (view === 'sql') UI.activeView = new UI.SqlView(host);
     else if (view === 'compare') UI.activeView = new UI.CompareView(host);
     else if (view === 'wrangle') UI.activeView = UI.wrangleView(host);
+    else if (view === 'reference') UI.activeView = new UI.ReferenceView(host);
+    else if (view === 'rdbms') UI.activeView = new UI.RdbmsView(host);
+    // first visit: open the lesson guide (after the view exists)
     var lessonsHere = SX.lessons.LIST.filter(function (l) { return l.workspace === view; }).map(function (l) { return l.id; });
     if (lessonsHere.length && UI.maybeGuide && !(view === 'wrangle' && !UI.state.ui.wrIntroDone)) UI.maybeGuide(lessonsHere);
-    else if (view === 'reference') UI.activeView = new UI.ReferenceView(host);
   };
 
   UI.start = function () {
@@ -8717,6 +8846,370 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     UI.state.stats.refRuns = (UI.state.stats.refRuns || 0) + 1;
     if (UI.state.stats.refRuns >= 10) UI.badge('researcher');
     UI.save();
+  };
+})(globalThis.SX = globalThis.SX || {});
+
+// ---- ui-rdbms.js ----
+/* SheetEX v2 — "What is an RDBMS?" interactive explainer (Lesson 9).
+ * Runs on its own sandbox database so students can break things safely. */
+(function (SX) {
+  'use strict';
+  var UI = SX.ui, h = UI.h, D = SX.data;
+
+  function money(v) { return '$' + Number(v).toFixed(2); }
+  function errKind(msg) {
+    if (/^UNIQUE/.test(msg)) return 'UNIQUE';
+    if (/^NOT NULL/.test(msg)) return 'NOT NULL';
+    if (/^CHECK/.test(msg)) return 'CHECK';
+    if (/^FOREIGN KEY/.test(msg)) return 'FOREIGN KEY';
+    if (/^cannot store/.test(msg)) return 'TYPE';
+    return null;
+  }
+
+  function RdbmsView(host) {
+    this.host = host;
+    this.db = SX.sql.makeStoreDb();
+    this.errorsSeen = {};
+    this.anomaly = false;
+    this.sawRollbackDelete = false;
+    this.bankDone = false;
+    this.last = null;
+    this.build();
+  }
+  UI.RdbmsView = RdbmsView;
+
+  // Run SQL on the sandbox and remember what happened (the challenges look at this).
+  RdbmsView.prototype.exec = function (sql) {
+    var self = this, out = { results: [], error: null };
+    try {
+      SX.sql.execute(this.db, sql).forEach(function (r) {
+        if (r.statement.type === 'begin') self.txDeletedSales = false;
+        if (r.statement.type === 'delete' && /^sales$/i.test(r.statement.table) && r.changed > 0 && self.db.tx) self.txDeletedSales = true;
+        if (r.rolledBack) { if (self.txDeletedSales) self.sawRollbackDelete = true; UI.badge('rollback'); }
+        out.results.push(r);
+      });
+      this.last = out.results[out.results.length - 1];
+    } catch (e) {
+      if (!(e instanceof SX.sql.SqlError)) throw e;
+      out.error = e;
+      this.last = { error: e.message };
+      var k = errKind(e.message);
+      if (k) this.errorsSeen[k] = true;
+    }
+    if (this.onChange) this.onChange();
+    return out;
+  };
+  function resultView(out) {
+    var box = h('div.rd-result');
+    out.results.forEach(function (r) {
+      if (r.type === 'msg') box.appendChild(h('div.sql-msg' + (r.noWhere ? '.warn' : ''), { text: '✓ ' + r.message }));
+      else box.appendChild(UI.SqlView.prototype.table.call(null, r, 1));
+    });
+    if (out.error) box.appendChild(h('div.sql-err', null, [h('div.sql-err-msg', { text: 'Error: ' + out.error.message }), out.error.hint ? h('div.sql-hint', { text: '💡 ' + out.error.hint }) : null]));
+    return box;
+  }
+  RdbmsView.prototype.console = function (initial, rows) {
+    var self = this;
+    var ta = h('textarea.sql-editor.rd-console', { spellcheck: 'false', rows: rows || 3, 'aria-label': 'SQL' }, initial || '');
+    ta.value = initial || '';
+    var out = h('div');
+    function go() { out.innerHTML = ''; out.appendChild(resultView(self.exec(ta.value))); }
+    ta.addEventListener('keydown', function (e) { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); go(); } });
+    return h('div.rd-console-wrap', null, [ta, h('div.row', null, [h('button.btn.btn-primary.btn-sm', { text: '▶ Run (Ctrl+Enter)', onclick: go }),
+      h('span.small.muted', { text: 'This sandbox resets when you leave the page — break whatever you like.' })]), out]);
+  };
+
+  RdbmsView.prototype.build = function () {
+    var self = this;
+    var sections = [
+      ['grid', '1. Grid vs. database', this.secFlat()],
+      ['tables', '2. Tables, columns & types', this.secTables()],
+      ['keys', '3. Keys connect tables', this.secKeys()],
+      ['no', '4. The database says NO', this.secNo()],
+      ['tx', '5. Transactions: all or nothing', this.secTx()],
+      ['where', '6. Where you will meet one', this.secWhere()]
+    ];
+    var nav = h('nav.rd-nav', null, sections.map(function (s) { return h('button.chip', { text: s[1], onclick: function () { document.getElementById('rd-' + s[0]).scrollIntoView({ behavior: 'smooth', block: 'start' }); } }); }));
+    var root = h('main.compare.rdbms', null, [
+      h('div.cmp-hero.rd-hero', null, [
+        h('button.back-btn.light', { onclick: function () { UI.go('home'); } }, '← Home'),
+        h('h1', { html: 'What is an <span>RDBMS</span>?' }),
+        h('p', { html: 'A <b>R</b>elational <b>D</b>ata<b>b</b>ase <b>M</b>anagement <b>S</b>ystem stores data in <b>tables</b> that are connected by <b>keys</b>, and it <b>protects</b> that data with rules and transactions. Spreadsheets hold data; an RDBMS <i>guards</i> it. Click, edit and break things below to see the difference.' }),
+        nav
+      ])
+    ].concat(sections.map(function (s) { return h('section.cmp-section.rd-section#rd-' + s[0], null, [h('h2', { text: s[1] }), s[2]]); })).concat([
+      h('section.cmp-section#rd-play', null, [h('h2', { text: '🧪 Free play' }),
+        h('p.small', { html: 'Your own sandbox database: <code>products</code>, <code>sales</code>, <code>stores</code> (with real keys and rules), plus the loose <code>raw_orders</code> import. Try <code>PRAGMA table_info(sales);</code> to see a table\'s rules.' }),
+        this.console('SELECT s.order_id, p.product, st.city\nFROM sales s\nJOIN products p ON s.sku = p.sku\nJOIN stores st ON s.store_id = st.store_id\nLIMIT 5;', 6)]),
+      h('section.cmp-section#rd-challenges', null, [h('h2', { text: '🏆 Lesson 9 challenges' }),
+        UI.challengePanel('rdbms', function () { return self.helpers(); })])
+    ]));
+    this.host.appendChild(root);
+  };
+
+  RdbmsView.prototype.helpers = function () {
+    var db = this.db;
+    function table(name) { return db.tables[name.toLowerCase()] || null; }
+    return { db: db, table: table, anomaly: this.anomaly, errorsSeen: Object.keys(this.errorsSeen), sawRollbackDelete: this.sawRollbackDelete,
+      bankDone: this.bankDone, last: this.last };
+  };
+
+  // ---------- 1. Flat sheet vs tables ----------
+  RdbmsView.prototype.secFlat = function () {
+    var self = this;
+    var counts = {}; D.SALES.forEach(function (s) { counts[s[3]] = (counts[s[3]] || 0) + 1; });
+    var sku = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; })[0];
+    var prod = D.PRODUCTS.filter(function (p) { return p[0] === sku; })[0];
+    var city = {}, mgr = {}; D.STORES.forEach(function (s) { city[s[0]] = s[1]; mgr[s[0]] = s[4]; });
+    var picked = D.SALES.filter(function (s) { return s[3] === sku; }).concat(D.SALES.filter(function (s) { return s[3] !== sku; }).slice(0, 3))
+      .sort(function (a, b) { return a[0] - b[0]; });
+    var newPrice = Math.round((prod[3] + 0.5) * 100) / 100;
+    var status = h('div.rd-status');
+    var inputs = [];
+    var table = h('table.rd-flat', null, [h('tr', null, ['OrderID', 'Product', 'Price', 'Qty', 'Store city', 'Manager'].map(function (x) { return h('th', { text: x }); }))].concat(picked.map(function (s) {
+      var p = D.PRODUCTS.filter(function (x) { return x[0] === s[3]; })[0];
+      var inp = h('input.rd-cell', { value: money(p[3]), 'aria-label': 'Price for order ' + s[0] });
+      if (s[3] === sku) inputs.push(inp);
+      inp.addEventListener('input', check);
+      return h('tr' + (s[3] === sku ? '.rd-hl' : ''), null, [h('td', { text: s[0] }), h('td', { text: p[1] }), h('td', null, inp), h('td', { text: s[4] }), h('td', { text: city[s[2]] }), h('td', { text: mgr[s[2]] })]);
+    })));
+    function check() {
+      var vals = inputs.map(function (i) { return i.value.trim(); });
+      var distinct = vals.filter(function (v, i) { return vals.indexOf(v) === i; });
+      status.innerHTML = '';
+      if (distinct.length > 1) {
+        self.anomaly = true;
+        status.className = 'rd-status bad';
+        status.innerHTML = '<b>Update anomaly!</b> The sheet now says ' + prod[1] + ' costs ' + distinct.map(UI.esc).join(' AND ') + '. Which one is true? The sheet cannot tell you — the same fact is stored ' + inputs.length + ' times and you missed some.';
+      } else if (vals[0] !== money(prod[3])) {
+        status.className = 'rd-status good';
+        status.textContent = 'You updated all ' + inputs.length + ' copies. Imagine doing that for 50,000 orders — and never missing one.';
+      } else {
+        status.className = 'rd-status';
+        status.innerHTML = '<b>Your job:</b> ' + UI.esc(prod[1]) + ' now costs <b>' + money(newPrice) + '</b>. Change the price in the sheet above. (Try changing just ONE of the highlighted rows first.)';
+      }
+    }
+    check();
+    var dbOut = h('div');
+    var sql = "UPDATE products SET price = " + newPrice + " WHERE sku = '" + sku + "';";
+    return h('div.rd-two', null, [
+      h('div', null, [h('h3', { text: '📄 One big sheet' }),
+        h('p.small', { text: 'Every order row repeats the product\'s price and the store\'s city and manager.' }), table, status]),
+      h('div', null, [h('h3', { text: '🗄️ Tables in a database' }),
+        h('p.small', { html: 'The price lives in <b>one</b> row of <code>products</code>. Orders only store the <code>sku</code> and look the price up through the key.' }),
+        h('pre.cs-pre', { text: sql }),
+        h('button.btn.btn-primary.btn-sm', { text: '▶ Run the one-line fix', onclick: function () {
+          var out = self.exec(sql + "\nSELECT s.order_id, p.product, p.price, s.qty FROM sales s JOIN products p ON s.sku = p.sku WHERE s.sku = '" + sku + "';");
+          dbOut.innerHTML = ''; dbOut.appendChild(resultView(out));
+          dbOut.appendChild(h('p.small.rd-status.good', { text: 'One change, and every order that uses ' + prod[1] + ' agrees. This idea — store each fact once — is called normalization.' }));
+        } }), dbOut])
+    ]);
+  };
+
+  // ---------- 2. Tables, columns & types ----------
+  RdbmsView.prototype.secTables = function () {
+    var self = this, detail = h('div.rd-detail', { text: 'Click any column to see what the database knows about it.' });
+    function explain(t, c) {
+      var bits = [];
+      bits.push('<b>' + UI.esc(t.name + '.' + c.name) + '</b> holds <b>' + c.type + '</b> values' + (t.strict ? ' — and only ' + c.type + ' (this is a STRICT table).' : '.'));
+      if (c.pk) bits.push('🔑 <b>Primary key:</b> every row has a different value. It is the row\'s ID card.');
+      if (c.ref) bits.push('→ <b>Foreign key:</b> must match a <code>' + UI.esc(c.ref.table + '.' + (c.ref.refCol || '')) + '</code> that exists.');
+      if (c.notNull && !c.pk) bits.push('❗ <b>NOT NULL:</b> it can never be empty.');
+      t.checks.forEach(function (ck) { if (ck.text.indexOf(c.name) >= 0) bits.push('✔ <b>CHECK rule:</b> <code>' + UI.esc(ck.text) + '</code>'); });
+      if (bits.length === 1) bits.push('No extra rules — any ' + c.type + ' value (or nothing) is allowed.');
+      detail.innerHTML = bits.join('<br>');
+    }
+    var cards = ['stores', 'products', 'sales'].map(function (n) {
+      var t = self.db.tables[n];
+      return h('div.rd-tcard', null, [h('div.rd-tname', null, [n, h('span.small.muted', { text: ' · ' + t.rows.length + ' rows' })]),
+        h('div', null, t.cols.map(function (c) {
+          return h('button.rd-col', { onclick: function () { explain(t, c); } }, [h('span', null, [c.pk ? '🔑 ' : '', c.name, c.ref ? h('span.key-fk', { text: ' → ' + c.ref.table }) : null]), h('span.col-type', { text: c.type })]);
+        }))]);
+    });
+    var tryOut = h('div');
+    var sheetCell = h('input.rd-cell.rd-sheetcell', { value: 'cheap', 'aria-label': 'Spreadsheet cell' });
+    return h('div', null, [
+      h('p', { html: 'A <b>table</b> is like one sheet, but stricter: every <b>column</b> has a name and a <b>data type</b>, and every <b>row</b> is one thing (one product, one sale, one store).' }),
+      h('div.rd-tcards', null, cards), detail,
+      h('div.rd-two', null, [
+        h('div', null, [h('h3', { text: 'Spreadsheet cell' }), h('p.small', { text: 'Type anything into a price cell. A spreadsheet just accepts it — and SUM quietly skips it later.' }), h('div.row', null, [h('span', { text: 'Price: ' }), sheetCell, h('span.rd-ok', { text: '✓ accepted' })])]),
+        h('div', null, [h('h3', { text: 'Database column' }), h('pre.cs-pre', { text: "UPDATE products SET price = 'cheap' WHERE sku = 'SKU-101';" }),
+          h('button.btn.btn-primary.btn-sm', { text: '▶ Try it', onclick: function () { tryOut.innerHTML = ''; tryOut.appendChild(resultView(self.exec("UPDATE products SET price = 'cheap' WHERE sku = 'SKU-101';"))); } }), tryOut])
+      ])
+    ]);
+  };
+
+  // ---------- 3. Keys connect tables (clickable ER diagram) ----------
+  RdbmsView.prototype.secKeys = function () {
+    var self = this;
+    var T = { products: { x: 10, cols: ['sku', 'product', 'category', 'price'] }, sales: { x: 280, cols: ['order_id', 'order_date', 'store_id', 'sku', 'qty'] }, stores: { x: 550, cols: ['store_id', 'city', 'state', 'manager'] } };
+    var BW = 200, RH = 22, TOP = 34;
+    function rowY(t, c) { return TOP + 30 + T[t].cols.indexOf(c) * RH + RH / 2; }
+    var diagram = h('div.rd-er');
+    function draw(sel) {
+      var svg = '<svg viewBox="0 0 760 200" width="100%" role="img" aria-label="Diagram: sales.sku points to products.sku, sales.store_id points to stores.store_id">';
+      Object.keys(T).forEach(function (n) {
+        var t = T[n], hgt = 30 + t.cols.length * RH;
+        svg += '<g class="er-box"><rect x="' + t.x + '" y="' + TOP + '" width="' + BW + '" height="' + hgt + '" rx="8"/><rect class="er-head" x="' + t.x + '" y="' + TOP + '" width="' + BW + '" height="28" rx="8"/>' +
+          '<text class="er-title" x="' + (t.x + 12) + '" y="' + (TOP + 19) + '">' + n + '</text>';
+        t.cols.forEach(function (c, i) {
+          var y = TOP + 30 + i * RH;
+          var isPk = (n === 'products' && c === 'sku') || (n === 'stores' && c === 'store_id') || (n === 'sales' && c === 'order_id');
+          var isFk = n === 'sales' && (c === 'sku' || c === 'store_id');
+          var val = sel ? sel[n] && sel[n][c] : null;
+          svg += '<text class="er-col' + (isPk ? ' pk' : '') + (isFk ? ' fk' : '') + '" x="' + (t.x + 12) + '" y="' + (y + 15) + '">' + (isPk ? '🔑 ' : isFk ? '→ ' : '') + c + '</text>';
+          if (val != null) svg += '<text class="er-val" x="' + (t.x + BW - 10) + '" y="' + (y + 15) + '" text-anchor="end">' + UI.esc(String(val)) + '</text>';
+        });
+        svg += '</g>';
+      });
+      // links: sales.sku -> products.sku ; sales.store_id -> stores.store_id
+      [['sku', 'products', 'sku', T.sales.x, T.products.x + BW], ['store_id', 'stores', 'store_id', T.sales.x + BW, T.stores.x]].forEach(function (l) {
+        var y1 = rowY('sales', l[0]), y2 = rowY(l[1], l[2]), x1 = l[3], x2 = l[4];
+        var mid = (x1 + x2) / 2;
+        svg += '<path class="er-link' + (sel ? ' on' : '') + '" d="M' + x1 + ',' + y1 + ' C' + mid + ',' + y1 + ' ' + mid + ',' + y2 + ' ' + x2 + ',' + y2 + '"/>' +
+          '<text class="er-card" x="' + (x1 + (x2 > x1 ? 6 : -6)) + '" y="' + (y1 - 5) + '" text-anchor="' + (x2 > x1 ? 'start' : 'end') + '">many</text>' +
+          '<text class="er-card" x="' + (x2 + (x2 > x1 ? -6 : 6)) + '" y="' + (y2 - 5) + '" text-anchor="' + (x2 > x1 ? 'end' : 'start') + '">1</text>';
+      });
+      diagram.innerHTML = svg + '</svg>';
+    }
+    draw(null);
+    var follow = h('div.rd-follow', { text: 'Click an order below to follow its keys.' });
+    var list = h('div.rd-orders', null, D.SALES.slice(0, 8).map(function (s) {
+      var b = h('button.rd-order', { onclick: function () {
+        Array.prototype.forEach.call(list.children, function (x) { x.classList.remove('on'); }); b.classList.add('on');
+        var p = D.PRODUCTS.filter(function (x) { return x[0] === s[3]; })[0], st = D.STORES.filter(function (x) { return x[0] === s[2]; })[0];
+        draw({ sales: { order_id: s[0], order_date: s[1], store_id: s[2], sku: s[3], qty: s[4] }, products: { sku: p[0], product: p[1], category: p[2], price: money(p[3]) }, stores: { store_id: st[0], city: st[1], state: st[2], manager: st[4] } });
+        var sql = 'SELECT s.order_id, p.product, p.price, st.city\nFROM sales s\nJOIN products p ON s.sku = p.sku\nJOIN stores st ON s.store_id = st.store_id\nWHERE s.order_id = ' + s[0] + ';';
+        follow.innerHTML = '';
+        follow.appendChild(h('p', { html: 'Order <b>' + s[0] + '</b> stores only <code>sku = ' + s[3] + '</code> and <code>store_id = ' + s[2] + '</code>. The database follows those keys to find <b>' + UI.esc(p[1]) + '</b> (' + money(p[3]) + ') and the <b>' + UI.esc(st[1]) + '</b> store. That is exactly what a <b>JOIN</b> does — a VLOOKUP for every row at once:' }));
+        follow.appendChild(h('pre.cs-pre', { text: sql }));
+        follow.appendChild(resultView(self.exec(sql)));
+        self.followed = true;
+      } }, [h('b', { text: '#' + s[0] }), ' ' + s[3] + ' @ ' + s[2]]);
+      return b;
+    }));
+    return h('div', null, [
+      h('p', { html: 'A <b>primary key</b> (🔑) uniquely identifies each row. A <b>foreign key</b> (→) is a column that holds another table\'s primary key — a pointer. One store has <b>many</b> sales; each sale belongs to exactly <b>1</b> store. That is a <b>relationship</b>, and it is the "R" in RDBMS.' }),
+      diagram, list, follow
+    ]);
+  };
+
+  // ---------- 4. The database says NO ----------
+  RdbmsView.prototype.secNo = function () {
+    var self = this;
+    var tries = [
+      ['Two products with the same ID', "INSERT INTO products VALUES ('SKU-101', 'Fake Granola', 'Snacks', 1.00, 0.40, 10, 5, 'Nobody');",
+        'Without a unique key you could have two "SKU-101"s — and every report would double-count.'],
+      ['A product with no name', "INSERT INTO products (sku, category, price, in_stock) VALUES ('SKU-999', 'Snacks', 1.00, 5);",
+        'NOT NULL means "required". A spreadsheet happily keeps half-empty rows.'],
+      ['A negative price', "UPDATE products SET price = -5 WHERE sku = 'SKU-101';", 'A CHECK rule describes what a sensible value looks like.'],
+      ['A sale of a product that does not exist', "INSERT INTO sales VALUES (2001, '2026-10-01', 'S01', 'SKU-777', 2, 'J. Patel');",
+        'A foreign key stops "orphan" rows that point at nothing — the #N/A of databases, caught before it happens.'],
+      ['Closing a store that still has sales', "DELETE FROM stores WHERE store_id = 'S03';", 'The database will not let you break existing links.'],
+      ['Text in a number column', "UPDATE sales SET qty = 'a few' WHERE order_id = 1001;", 'Types are enforced, so math on the column always works.']
+    ];
+    return h('div', null, [
+      h('p', { text: 'An RDBMS refuses bad data at the door, instead of letting it pile up for you to clean later. Each button tries something a spreadsheet would allow:' }),
+      h('div.rd-no-grid', null, tries.map(function (t) {
+        var out = h('div');
+        return h('div.rd-no', null, [h('b', { text: t[0] }), h('pre.cs-pre', { text: t[1] }),
+          h('button.btn.btn-sm', { text: '▶ Try it', onclick: function () {
+            out.innerHTML = ''; out.appendChild(resultView(self.exec(t[1])));
+            out.appendChild(h('p.small.muted', { text: t[2] }));
+          } }), out]);
+      })),
+      h('h3', { text: 'Your turn: invent your own bad data' }),
+      this.console("INSERT INTO stores VALUES ('S01', 'Duluth', 'GA', 30096, 'Pat Lee', '2026-10-01');")
+    ]);
+  };
+
+  // ---------- 5. Transactions ----------
+  RdbmsView.prototype.secTx = function () {
+    var self = this;
+    var bank, mode = 'none', step = 0, log = [];
+    var cards = h('div.rd-bank'), logBox = h('pre.cs-pre.rd-log'), msg = h('div.rd-status'), controls = h('div.row');
+    function reset() {
+      bank = new SX.sql.Database();
+      SX.sql.execute(bank, "CREATE TABLE lunch (name TEXT PRIMARY KEY, balance REAL NOT NULL CHECK (balance >= 0)) STRICT; INSERT INTO lunch VALUES ('Jordan', 20), ('Maria', 5);");
+      step = 0; log = []; msg.className = 'rd-status'; msg.textContent = 'Move $10 from Jordan\'s lunch account to Maria\'s. It takes TWO updates.'; render();
+    }
+    function run(sql) {
+      log.push(sql);
+      try { SX.sql.execute(bank, sql); } catch (e) { log.push('-- Error: ' + e.message); }
+      render();
+    }
+    function bal() { var r = {}; bank.tables.lunch.rows.forEach(function (x) { r[x[0]] = x[1]; }); return r; }
+    function render() {
+      var b = bal(), total = b.Jordan + b.Maria;
+      cards.innerHTML = '';
+      ['Jordan', 'Maria'].forEach(function (n) { cards.appendChild(h('div.rd-acct', null, [h('div.small.muted', { text: n + '\'s lunch account' }), h('b', { text: money(b[n]) })])); });
+      cards.appendChild(h('div.rd-acct.total' + (total !== 25 ? '.bad' : ''), null, [h('div.small.muted', { text: 'Total money' }), h('b', { text: money(total) })]));
+      logBox.textContent = log.length ? log.join('\n') : '-- the SQL that runs will appear here';
+      controls.innerHTML = '';
+      var B = function (txt, fn, primary) { controls.appendChild(h('button.btn.btn-sm' + (primary ? '.btn-primary' : ''), { text: txt, onclick: fn })); };
+      if (step === 0) {
+        B('Without a transaction', function () { mode = 'none'; step = 1; render(); });
+        B('With a transaction (BEGIN)', function () { mode = 'tx'; step = 1; run('BEGIN;'); }, true);
+      } else if (step === 1) {
+        B('Step 1: take $10 from Jordan', function () { run("UPDATE lunch SET balance = balance - 10 WHERE name = 'Jordan';"); step = 2; render(); }, true);
+      } else if (step === 2) {
+        B('Step 2: give $10 to Maria', function () { run("UPDATE lunch SET balance = balance + 10 WHERE name = 'Maria';"); step = 3; render(); }, true);
+        B('⚡ Power failure!', function () {
+          if (mode === 'tx') {
+            log.push('-- 💥 POWER FAILURE before step 2 …', '-- on restart the database finds an unfinished transaction and undoes it:');
+            if (bank.tx) SX.sql.execute(bank, 'ROLLBACK;'); log.push('ROLLBACK;'); step = 0; render();
+            msg.className = 'rd-status good'; msg.innerHTML = '<b>Saved by the transaction.</b> The half-finished transfer was rolled back: nobody lost money. Now run the whole transfer again and COMMIT it.';
+            self.survivedCrash = true;
+          } else {
+            log.push('-- 💥 POWER FAILURE before step 2 … step 2 never runs'); step = 4; render();
+            msg.className = 'rd-status bad'; msg.innerHTML = '<b>$10 vanished.</b> Jordan was charged but Maria never got paid, and the total dropped to ' + money(bal().Jordan + bal().Maria) + '. Try again <b>with a transaction</b>.';
+          }
+        });
+      } else if (step === 3) {
+        if (mode === 'tx') B('COMMIT', function () {
+          run('COMMIT;'); step = 4;
+          msg.className = 'rd-status good'; msg.innerHTML = '<b>Committed.</b> Both updates happened together. That is <b>atomicity</b>: all or nothing.';
+          if (self.survivedCrash) self.bankDone = true;
+          render(); if (self.onChange) self.onChange();
+        }, true);
+        else { step = 4; msg.className = 'rd-status'; msg.textContent = 'It worked this time — because nothing went wrong between step 1 and step 2. Try the power failure!'; render(); }
+      }
+      if (step === 4 || step > 0) B('Start over', function () { reset(); });
+    }
+    reset();
+    return h('div', null, [
+      h('p', { html: 'A <b>transaction</b> groups several changes so they happen <b>all together or not at all</b>. Banks, ticket sites and stores depend on this. Run the transfer, then pull the plug in the middle.' }),
+      cards, controls, msg, logBox,
+      h('details.small', null, [h('summary', { text: 'ACID: the four promises of a transaction' }), h('ul', null, [
+        h('li', { html: '<b>Atomic</b> — all of it happens, or none of it does.' }),
+        h('li', { html: '<b>Consistent</b> — every rule (keys, CHECKs) still holds afterwards.' }),
+        h('li', { html: '<b>Isolated</b> — other people never see your half-finished work.' }),
+        h('li', { html: '<b>Durable</b> — once COMMIT says done, it survives a crash.' })])]),
+      h('h3', { text: 'Try it on the store data' }),
+      this.console('BEGIN;\nDELETE FROM sales;\nSELECT COUNT(*) AS sales_left FROM sales;', 4),
+      h('p.small.muted', { html: 'Run that, then run <code>ROLLBACK;</code> and count again.' })
+    ]);
+  };
+
+  // ---------- 6. Where you will meet one ----------
+  RdbmsView.prototype.secWhere = function () {
+    var sys = [['PostgreSQL', 'Free and open source; used by Instagram, Reddit and many AI startups.'], ['MySQL', 'Runs a huge share of websites (WordPress, many online stores).'],
+      ['Microsoft SQL Server', 'Common in schools, hospitals and businesses that use Microsoft tools.'], ['Oracle Database', 'Banks, airlines and very large companies.'],
+      ['SQLite', 'A tiny database inside your phone, your browser and most apps. This practice database copies its style.']];
+    return h('div', null, [
+      h('div.rd-sys', null, sys.map(function (s) { return h('div.rd-syscard', null, [h('b', { text: s[0] }), h('span.small', { text: s[1] })]); })),
+      h('div.rd-two', null, [
+        h('div', null, [h('h3', { text: 'Spreadsheet or database?' }), h('table.cs-keys', null, [
+          ['', 'Spreadsheet', 'RDBMS'], ['Best for', 'Quick analysis, one person', 'Shared, important data'], ['Rows', 'Up to about a million', 'Billions'],
+          ['Bad data', 'Accepted silently', 'Refused by rules'], ['Many users at once', 'Messy', 'Built for it'], ['Undo', 'Ctrl+Z (just you)', 'Transactions / ROLLBACK']
+        ].map(function (r, i) { return h('tr', null, r.map(function (x) { return h(i ? 'td' : 'th', { text: x }); })); }))]),
+        h('div', null, [h('h3', { text: 'Why AI people care' }), h('ul', null, [
+          h('li', { text: 'Most AI training data starts life in a database and is pulled out with SQL queries.' }),
+          h('li', { text: 'Keys prevent duplicate rows, which can leak test answers into training data.' }),
+          h('li', { text: 'Constraints stop garbage before it reaches the model — cleaning you never have to do.' }),
+          h('li', { text: 'Joins combine tables into the single "feature table" a model learns from.' })])])
+      ])
+    ]);
   };
 })(globalThis.SX = globalThis.SX || {});
 
