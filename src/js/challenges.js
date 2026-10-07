@@ -94,8 +94,10 @@
       for (var k = 0; k < expected.length; k++) {
         var addr = sheet + '!' + col + (r1 + k), v = h.val(addr);
         var ex = expected[k];
-        var good = typeof ex === 'number' ? near(v, ex, 0.006) : String(v) === String(ex);
+        if (opts.skip && opts.skip.indexOf(k) >= 0) continue;
+        var good = ex === null ? (v === null || v === '' || v === undefined) : typeof ex === 'number' ? near(v, ex, 0.006) : String(v) === String(ex);
         if (!good) {
+          if (ex === null) return no(addr + ' shows "' + h.text(addr) + '" but this order has no usable value, so it should be blank ("").');
           if (v === null || v === undefined || v === '') return no(addr + ' is empty. Did you fill the formula down to row ' + (r1 + expected.length - 1) + '? (Select the cells and press Ctrl+D, or drag the fill handle.)');
           return no(addr + ' shows "' + h.text(addr) + '" but should be "' + (typeof ex === 'number' ? E.displayValue(ex) : ex) + '".');
         }
@@ -464,6 +466,122 @@
       });
       return bad.length ? no(bad[0] + '. Reset the database and try again if needed.') : ok();
     } });
+
+
+  // ===== v2: Data Wrangling Lab =====
+  var W = SX.wrangle.X, WR = 'RawOrders';
+  var EURO = SX.wrangle.EURO_ROW;
+  add({ id: 'wr-quiz-zero', plat: 'wr1', type: 'quiz', title: 'Where Did the Zero Go?', xp: 10, level: 1,
+    task: 'RawOrders!C2 shows <b>104</b>, but the real item code is <b>0104</b>. Why?',
+    options: ['Someone typed it wrong', 'It was stored as a NUMBER, and numbers never keep leading zeros', 'The cell is too narrow', 'Leading zeros are hidden by formatting'], answer: 1,
+    hints: ['Look at how the cell is aligned. Numbers line up on the right, text on the left.'],
+    learn: 'IDs, ZIP codes and phone numbers are TEXT, even though they are made of digits. An AI model will treat 104 and "0104" as two different items.' });
+  add({ id: 'wr-code', plat: 'wr1', title: 'Rebuild the Item Codes', xp: 20, level: 1, target: 'RawOrders!I2',
+    task: 'Type <b>CleanCode</b> in RawOrders!I1. In <b>I2:I31</b>, turn every ItemCode (column C) into a 4-character text code like <b>0104</b> — whether it arrived as 104, "0104" or " 0402".',
+    hints: ['TEXT(value, "0000") writes a number with at least 4 digits, adding zeros in front.', 'TEXT also understands digits stored as text, and ignores the stray spaces.', '<code>=TEXT(C2, "0000")</code> then fill down to row 31 (Ctrl+D).'],
+    learn: 'TEXT(x, "0000") is the spreadsheet version of zero-padding. SQL: printf(\'%04d\', x). Python: str(x).zfill(4).',
+    check: columnCheck(WR, 'I', 2, W.codes) });
+  add({ id: 'wr-blanks', plat: 'wr1', title: 'Count the Holes', xp: 10, level: 1, target: 'Report!B2',
+    task: 'In <b>Report!B2</b>, count how many Qty cells (RawOrders!E2:E31) are <b>completely empty</b>.',
+    hints: ['COUNTBLANK(range) counts empty cells.', '<code>=COUNTBLANK(RawOrders!E2:E31)</code>'],
+    learn: 'Empty is only ONE kind of missing data. Look at the next challenge…',
+    check: valueCheck('Report!B2', W.blankQty) });
+  add({ id: 'wr-fakenull', plat: 'wr1', title: 'Fake Nulls', xp: 20, level: 2, target: 'Report!B3',
+    task: 'Some systems write missing values as words. In <b>Report!B3</b>, count Qty cells that say <b>N/A</b>, <b>-</b> or <b>null</b>.',
+    hints: ['COUNTIF counts one kind of value. You can add several COUNTIFs together.', '<code>=COUNTIF(RawOrders!E2:E31, "N/A") + COUNTIF(RawOrders!E2:E31, "-") + COUNTIF(RawOrders!E2:E31, "null")</code>'],
+    learn: 'COUNTBLANK said ' + W.blankQty + ' — the real number of missing quantities is ' + W.missingQty + '. "null", "N/A" and "-" are TEXT that MEANS missing. Before training a model, they must all become one true blank/NA.',
+    check: valueCheck('Report!B3', W.fakeNullQty) });
+  add({ id: 'wr-qty', plat: 'wr1', title: 'One Kind of Missing', xp: 25, level: 2, target: 'RawOrders!J2',
+    task: 'Type <b>CleanQty</b> in J1. In <b>J2:J31</b>, turn Qty into a real number — "12" (text) becomes 12 — and turn every kind of missing value into a blank <code>""</code>.',
+    hints: ['VALUE(text) turns "12" into 12. VALUE("N/A") and VALUE("") give #VALUE!.', 'IFERROR(x, "") replaces any error with an empty string.', '<code>=IFERROR(VALUE(E2), "")</code> then fill down.'],
+    learn: 'Text that looks like a number does not add up: SUM ignores "12". Converting types is step one of every data-cleaning job.',
+    check: columnCheck(WR, 'J', 2, W.qty) });
+  add({ id: 'wr-store', plat: 'wr1', title: 'Same Store, Different Spelling', xp: 15, level: 1, target: 'RawOrders!K2',
+    task: 'Type <b>CleanStore</b> in K1. In <b>K2:K31</b>, clean the Store codes so "s04" and " S02 " become <b>S04</b> and <b>S02</b>.',
+    hints: ['TRIM removes extra spaces. UPPER makes capitals.', 'Nest them: one function inside the other.', '<code>=UPPER(TRIM(B2))</code>'],
+    learn: 'To a computer "S04", "s04" and " S04" are three different stores. A model trained on this would think you have 13 stores!',
+    check: columnCheck(WR, 'K', 2, W.stores) });
+  add({ id: 'wr-price', plat: 'wr1', title: 'Prices That Are Really Text', xp: 15, level: 1, target: 'RawOrders!L2',
+    task: 'Type <b>CleanPrice</b> in L1. In <b>L2:L31</b>, turn UnitPrice into real numbers ("$3.25" → 3.25, "14.99 " → 14.99).',
+    hints: ['VALUE understands $ signs, commas and extra spaces.', '<code>=VALUE(F2)</code>'],
+    learn: 'If a column has even ONE text price, averages and sums silently skip it. Always check types.',
+    check: columnCheck(WR, 'L', 2, W.prices) });
+  add({ id: 'wr-date', plat: 'wr1', title: 'Four Kinds of Dates', xp: 30, level: 2, target: 'RawOrders!M2',
+    task: 'Type <b>CleanDate</b> in M1. In <b>M2:M31</b>, make every OrderDate a <b>real date</b>. Some are already dates, others are text like "2026-09-12", "9/23/2026" or "Sep 4, 2026". (Row 19 is special — skip it for now.)',
+    hints: ['ISNUMBER(D2) is TRUE when D2 is already a real date (dates are numbers underneath).', 'DATEVALUE("Sep 4, 2026") turns date TEXT into a real date.', '<code>=IF(ISNUMBER(D2), D2, DATEVALUE(D2))</code> — then format column M as Date.'],
+    learn: 'Real dates are numbers (days since 1900), so you can sort them, subtract them and group them by month. Text dates cannot do any of that.',
+    check: columnCheck(WR, 'M', 2, W.dates, { skip: [EURO] }) });
+  add({ id: 'wr-euro', plat: 'wr1', title: 'The European Date', xp: 30, level: 3, target: 'Report!B5',
+    task: 'RawOrders!D19 says <b>03.09.2026</b> — in Europe that means <b>3 September 2026</b>. DATEVALUE cannot read it. In <b>Report!B5</b>, build the real date from its pieces.',
+    hints: ['DATE(year, month, day) builds a date from numbers.', 'Cut the text apart: RIGHT(text, 4) is the year, MID(text, 4, 2) is the month, LEFT(text, 2) is the day.', '<code>=DATE(RIGHT(RawOrders!D19, 4), MID(RawOrders!D19, 4, 2), LEFT(RawOrders!D19, 2))</code>'],
+    learn: 'Is 03/09 March 9th or September 3rd? It depends on the country. Merging data from different places is one of the most common ways datasets go wrong.',
+    check: valueCheck('Report!B5', W.euroDate) });
+  add({ id: 'wr-name', plat: 'wr1', title: 'Fix the Names', xp: 35, level: 3, target: 'RawOrders!N2',
+    task: 'Type <b>CleanName</b> in N1. In <b>N2:N31</b>, turn every Customer into <b>First Last</b> with proper capitals: "jordan smith", "  Avery Johnson ", "TAYLOR KIM" and even "Davis, Morgan" → "Morgan Davis".',
+    hints: ['PROPER(TRIM(G2)) fixes spaces and capitals for most rows.', 'For "Last, First": FIND(",", G2) gives the comma position. LEFT gets the last name, MID gets everything after the comma.', '<code>=IF(ISNUMBER(FIND(",", G2)), PROPER(TRIM(MID(G2, FIND(",", G2) + 1, 99)) &amp; " " &amp; LEFT(G2, FIND(",", G2) - 1)), PROPER(TRIM(G2)))</code>'],
+    learn: 'This is a nested formula: IF, ISNUMBER, FIND, PROPER, TRIM, MID and LEFT working together. Building it one piece at a time is the skill.',
+    check: columnCheck(WR, 'N', 2, W.names) });
+  add({ id: 'wr-missing', plat: 'wr1', title: 'How Dirty Was It?', xp: 10, level: 1, target: 'Report!B4',
+    task: 'After CleanQty is done, count in <b>Report!B4</b> how many orders have <b>no usable quantity</b>.',
+    hints: ['Your CleanQty column turned every kind of missing into "". COUNTBLANK counts "" too.', '<code>=COUNTBLANK(RawOrders!J2:J31)</code>'],
+    learn: 'Report your missing data. A model trained without telling anyone that 1 in 6 rows was dropped can be badly biased.',
+    check: valueCheck('Report!B4', W.missingQty) });
+
+  add({ id: 'wr-quiz-na', plat: 'wr2', type: 'quiz', title: 'The #N/A Mystery', xp: 15, level: 1,
+    task: '<code>=VLOOKUP(RawOrders!C2, ItemCodes!A2:D25, 2, FALSE)</code> gives <b>#N/A</b>, even though code 0104 IS in the ItemCodes table. Why?',
+    options: ['VLOOKUP only works on sorted data', 'C2 is the NUMBER 104 and the table has the TEXT "0104" — they never match', 'FALSE should be TRUE', 'ItemCodes is on a different sheet'], answer: 1,
+    hints: ['Compare how C2 and ItemCodes!A2 are aligned in their cells.'],
+    learn: 'A lookup only matches the same TYPE: number 104 ≠ text "0104". This is the #1 reason lookups fail on real data.' });
+  add({ id: 'wr-vlookup', plat: 'wr2', title: 'Look Up the Products', xp: 20, level: 1, target: 'RawOrders!O2',
+    task: 'Type <b>Product</b> in O1. In <b>O2:O31</b>, use <b>VLOOKUP</b> with your <b>CleanCode</b> (column I) to show each product name from ItemCodes.',
+    hints: ['Look up I2, not C2 — I2 is the cleaned text code.', 'Lock the table with $ so it does not slide when you fill down.', '<code>=VLOOKUP(I2, ItemCodes!$A$2:$D$25, 2, FALSE)</code>'],
+    learn: 'Clean first, then join. In SQL this is a JOIN; in Python pandas it is merge().',
+    check: columnCheck(WR, 'O', 2, W.products, { mustUse: ['VLOOKUP'] }) });
+  add({ id: 'wr-total', plat: 'wr2', title: 'Line Totals', xp: 25, level: 2, target: 'RawOrders!P2',
+    task: 'Type <b>LineTotal</b> in P1. In <b>P2:P31</b>, calculate CleanQty × the ItemCodes price. If CleanQty is blank, leave LineTotal blank.',
+    hints: ['Look the price up with XLOOKUP (or INDEX/MATCH) using I2.', 'Wrap it: IF(J2 = "", "", ...)', '<code>=IF(J2 = "", "", J2 * XLOOKUP(I2, ItemCodes!$A$2:$A$25, ItemCodes!$D$2:$D$25))</code>'],
+    learn: 'Missing values spread: blank × price should stay blank, not turn into 0 — a fake 0 would teach a model that people order nothing.',
+    check: columnCheck(WR, 'P', 2, W.lineTotals) });
+  add({ id: 'wr-hlookup', plat: 'wr2', title: 'HLOOKUP Goes Sideways', xp: 15, level: 1, target: 'Report!B7',
+    task: 'The Targets sheet is laid out <b>sideways</b> (stores across the top). In <b>Report!B7</b>, use <b>HLOOKUP</b> to find the Sept Target for store <b>S03</b>.',
+    hints: ['HLOOKUP searches the FIRST ROW, then returns from a row below.', 'Sept Target is the 3rd row of Targets!A1:F3.', '<code>=HLOOKUP("S03", Targets!A1:F3, 3, FALSE)</code>'],
+    learn: 'VLOOKUP = vertical tables, HLOOKUP = horizontal tables. XLOOKUP and INDEX/MATCH handle both.',
+    check: valueCheck('Report!B7', W.targetS03, { mustUse: ['HLOOKUP'] }) });
+  add({ id: 'wr-region', plat: 'wr2', title: 'Region for Every Order', xp: 20, level: 2, target: 'RawOrders!Q2',
+    task: 'Type <b>Region</b> in Q1. In <b>Q2:Q31</b>, use HLOOKUP with your <b>CleanStore</b> (column K) to show each order\'s region.',
+    hints: ['Use the cleaned store in K2 — " S02 " would not match.', '<code>=HLOOKUP(K2, Targets!$B$1:$F$2, 2, FALSE)</code>'],
+    learn: 'Every lookup in this lab worked only because you cleaned the key column first.',
+    check: columnCheck(WR, 'Q', 2, W.regions, { mustUse: ['HLOOKUP'] }) });
+  add({ id: 'wr-units', plat: 'wr2', title: 'Now the Math Works', xp: 10, level: 1, target: 'Report!B8',
+    task: 'In <b>Report!B8</b>, add up all the cleaned quantities (CleanQty).',
+    hints: ['<code>=SUM(RawOrders!J2:J31)</code>. Try SUM on column E too and compare — the text "12"s were being skipped!'],
+    learn: 'SUM(E2:E31) gives a smaller, WRONG total because it skips text numbers. Clean data changes the answer.',
+    check: valueCheck('Report!B8', W.totalUnits) });
+  add({ id: 'wr-lastfirst', plat: 'wr2', title: 'Last, First', xp: 15, level: 1, target: 'Contacts!G2',
+    task: 'On <b>Contacts</b>, fill <b>G2:G9</b> with names written as <b>Last, First</b> (e.g. "Whitfield, Dana").',
+    hints: ['The & operator joins text. The comma and space go inside quotes: ", "', '<code>=B2 &amp; ", " &amp; A2</code>'],
+    learn: 'A delimiter is the character that separates pieces of text — here it is ", ".',
+    check: columnCheck('Contacts', 'G', 2, W.lastFirst) });
+  add({ id: 'wr-mailing', plat: 'wr2', title: 'Keep the Zero (Again)', xp: 25, level: 2, target: 'Contacts!H2',
+    task: 'In <b>Contacts!H2:H9</b>, build a mailing line like <b>Burlington, VT 05401</b>. Watch out: the Zip column lost its leading zeros!',
+    hints: ['Join City, ", ", State, " " and the Zip.', 'TEXT(E2, "00000") puts the missing zero back.', '<code>=C2 &amp; ", " &amp; D2 &amp; " " &amp; TEXT(E2, "00000")</code>'],
+    learn: 'ZIP codes in New England start with 0. Treat ZIPs as text from the start and this problem never happens.',
+    check: columnCheck('Contacts', 'H', 2, W.mailing) });
+  add({ id: 'wr-tags', plat: 'wr2', title: 'Count the Delimited Tags', xp: 30, level: 3, target: 'Contacts!I2',
+    task: 'Column F holds tags separated by a pipe: <code>snacks|drinks</code>. In <b>Contacts!I2:I9</b>, count how many tags each contact has (blank = 0).',
+    hints: ['Number of tags = number of | characters + 1.', 'Count the pipes: LEN(F2) - LEN(SUBSTITUTE(F2, "|", "")).', '<code>=IF(F2 = "", 0, LEN(F2) - LEN(SUBSTITUTE(F2, "|", "")) + 1)</code>'],
+    learn: 'Sheets has SPLIT(F2, "|") and Excel 365 has TEXTSPLIT to break the tags into cells. Counting delimiters is the trick that works everywhere.',
+    check: columnCheck('Contacts', 'I', 2, W.tagCounts) });
+  add({ id: 'wr-csvline', plat: 'wr2', title: 'Write a CSV Line', xp: 15, level: 1, target: 'Report!B10',
+    task: 'In <b>Report!B10</b>, join Contacts!A2:E2 into one CSV line with commas between the values.',
+    hints: ['TEXTJOIN(delimiter, ignore_empty, range).', '<code>=TEXTJOIN(",", FALSE, Contacts!A2:E2)</code>'],
+    learn: 'This is exactly what "Save as CSV" does for every row. Now you know why a comma INSIDE a value breaks the file.',
+    check: valueCheck('Report!B10', W.csvRow2) });
+  add({ id: 'wr-filter', plat: 'wr2', title: 'Filter the Feed', xp: 30, level: 3, target: 'Report!D2',
+    task: 'In <b>Report!D2</b>, use <b>FILTER</b> to list the OrderIDs whose CleanQty is <b>more than 10</b>. (Careful — try <code>J2:J31&gt;10</code> alone first and look at what sneaks in!)',
+    hints: ['Blank text "" counts as BIGGER than any number in spreadsheet comparisons — so the missing rows sneak in.', 'Only keep real numbers: ISNUMBER(J2:J31) * (J2:J31 &gt; 10). Multiplying two tests means AND.', '<code>=FILTER(RawOrders!A2:A31, ISNUMBER(RawOrders!J2:J31) * (RawOrders!J2:J31 &gt; 10))</code>'],
+    learn: 'Missing values break filters in sneaky ways. Always ask "what happens to the blanks?"',
+    check: spillCheck('Report!D2', W.bigOrders, { mustUse: ['FILTER'] }) });
 
   // ===== Compare-page quizzes =====
   add({ id: 'cmp-name', plat: 'compare', type: 'quiz', title: 'Who Says #NAME?', xp: 10, level: 1,

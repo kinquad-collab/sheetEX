@@ -1,7 +1,7 @@
 // Every challenge must be solvable: run a reference solution through its real checker.
 const test = require('node:test');
 const assert = require('node:assert');
-const SX = require('./load.js')(['platforms.js', 'csv.js', 'challenges.js']);
+const SX = require('./load.js')(['platforms.js', 'challenges.js']);
 
 function sheetSolve(plat, steps) {
   const wb = SX.makeStoreWorkbook(plat);
@@ -86,6 +86,7 @@ const CSV = {
 };
 
 for (const ch of SX.challenges.LIST) {
+  if (/^wr[12]$/.test(ch.plat)) continue; // covered by the wrangling-lab tests below
   if (ch.type === 'quiz') {
     test('quiz ' + ch.id + ' is well-formed', () => { assert.ok(ch.options[ch.answer]); });
     continue;
@@ -120,4 +121,81 @@ test('SQL integer-division answer is rejected', () => {
 test('SQL update without WHERE is rejected', () => {
   const r = SX.challenges.byId('sql-update').check(sqlHelpers('UPDATE products SET in_stock = reorder_at * 2;'));
   assert.ok(!r.ok);
+});
+
+// ---- v2: Data Wrangling Lab — every challenge solvable in BOTH Excel 365 and Google Sheets ----
+function wrSolve(plat, steps) {
+  const wb = SX.wrangle.makeWorkbook(plat);
+  for (const [addr, input] of steps) {
+    const m = /^(.+)!([A-Z]+)(\d+)(?::([A-Z]+)(\d+))?$/.exec(addr);
+    const c = SX.f.colToIdx(m[2]), r1 = +m[3] - 1, r2 = m[5] ? +m[5] - 1 : r1;
+    const p = wb.prepare(input);
+    assert.ok(!p.dialog, addr + ' ' + input + ' -> ' + p.dialog);
+    wb.applyEdits([{ sheet: m[1], r: r1, c, cell: p.cell }]);
+    if (r2 > r1) wb.applyEdits(wb.pasteEdits(wb.copy(m[1], r1, c, r1, c), m[1], r1 + 1, c, r2 - r1, 1));
+  }
+  return SX.challenges.sheetHelpers(wb);
+}
+const WR_ALL = [
+  ['RawOrders!I2:I31', '=TEXT(C2,"0000")'],
+  ['Report!B2', '=COUNTBLANK(RawOrders!E2:E31)'],
+  ['Report!B3', '=COUNTIF(RawOrders!E2:E31,"N/A")+COUNTIF(RawOrders!E2:E31,"-")+COUNTIF(RawOrders!E2:E31,"null")'],
+  ['RawOrders!J2:J31', '=IFERROR(VALUE(E2),"")'],
+  ['RawOrders!K2:K31', '=UPPER(TRIM(B2))'],
+  ['RawOrders!L2:L31', '=VALUE(F2)'],
+  ['RawOrders!M2:M31', '=IF(ISNUMBER(D2),D2,DATEVALUE(D2))'],
+  ['Report!B5', '=DATE(RIGHT(RawOrders!D19,4),MID(RawOrders!D19,4,2),LEFT(RawOrders!D19,2))'],
+  ['RawOrders!N2:N31', '=IF(ISNUMBER(FIND(",",G2)),PROPER(TRIM(MID(G2,FIND(",",G2)+1,99))&" "&LEFT(G2,FIND(",",G2)-1)),PROPER(TRIM(G2)))'],
+  ['Report!B4', '=COUNTBLANK(RawOrders!J2:J31)'],
+  ['RawOrders!O2:O31', '=VLOOKUP(I2,ItemCodes!$A$2:$D$25,2,FALSE)'],
+  ['RawOrders!P2:P31', '=IF(J2="","",J2*XLOOKUP(I2,ItemCodes!$A$2:$A$25,ItemCodes!$D$2:$D$25))'],
+  ['Report!B7', '=HLOOKUP("S03",Targets!A1:F3,3,FALSE)'],
+  ['RawOrders!Q2:Q31', '=HLOOKUP(K2,Targets!$B$1:$F$2,2,FALSE)'],
+  ['Report!B8', '=SUM(RawOrders!J2:J31)'],
+  ['Contacts!G2:G9', '=B2&", "&A2'],
+  ['Contacts!H2:H9', '=C2&", "&D2&" "&TEXT(E2,"00000")'],
+  ['Contacts!I2:I9', '=IF(F2="",0,LEN(F2)-LEN(SUBSTITUTE(F2,"|",""))+1)'],
+  ['Report!B10', '=TEXTJOIN(",",FALSE,Contacts!A2:E2)'],
+  ['Report!D2', '=FILTER(RawOrders!A2:A31,ISNUMBER(RawOrders!J2:J31)*(RawOrders!J2:J31>10))'],
+];
+for (const plat of ['xl365', 'gs']) {
+  test('wrangling lab: every challenge solvable in ' + plat, () => {
+    const h = wrSolve(plat, WR_ALL);
+    for (const ch of SX.challenges.LIST.filter((c) => /^wr[12]$/.test(c.plat) && c.type !== 'quiz')) {
+      const r = ch.check(h);
+      assert.ok(r.ok, plat + ' ' + ch.id + ': ' + r.msg);
+    }
+  });
+}
+test('wrangling lab: untouched workbook passes nothing', () => {
+  const h = SX.challenges.sheetHelpers(SX.wrangle.makeWorkbook('xl365'));
+  for (const ch of SX.challenges.LIST.filter((c) => /^wr[12]$/.test(c.plat) && c.type !== 'quiz')) assert.ok(!ch.check(h).ok, ch.id);
+});
+test('wrangling lab: classic mistakes are caught', () => {
+  const bad = [
+    ['wr-code', [['RawOrders!I2:I31', '=C2']]],
+    ['wr-qty', [['RawOrders!J2:J31', '=VALUE(E2)']]],
+    ['wr-filter', [['RawOrders!J2:J31', '=IFERROR(VALUE(E2),"")'], ['Report!D2', '=FILTER(RawOrders!A2:A31,RawOrders!J2:J31>10)']]],
+    ['wr-mailing', [['Contacts!H2:H9', '=C2&", "&D2&" "&E2']]],
+    ['wr-vlookup', [['RawOrders!O2:O31', '=VLOOKUP(C2,ItemCodes!$A$2:$D$25,2,FALSE)']]],
+  ];
+  for (const [id, steps] of bad) assert.ok(!SX.challenges.byId(id).check(wrSolve('xl365', steps)).ok, id + ' should fail');
+});
+
+test('certificate codes round-trip and reject tampering', () => {
+  const L = require('./load.js')(['lessons.js']).lessons;
+  const code = L.certCode({ name: 'Jordan Smith', lesson: 'wr1', xp: 200, maxXp: 225, hints: 2, count: 11, time: 1790000000000 });
+  const back = L.readCert(code);
+  assert.strictEqual(back.name, 'Jordan Smith');
+  assert.strictEqual(back.title, 'Data Wrangling I: Cleaning Data for AI');
+  assert.strictEqual(back.xp, 200);
+  const parts = code.split('-');
+  const forged = L.certCode({ name: 'Jordan Smith', lesson: 'wr1', xp: 225, maxXp: 225, hints: 0, count: 11, time: 1790000000000 }).split('-')[1];
+  assert.strictEqual(L.readCert(parts[0] + '-' + forged + '-' + parts[2]), null);
+  assert.strictEqual(L.readCert(code.replace(/.$/, (c) => (c === 'a' ? 'b' : 'a'))), null);
+  assert.ok(L.readCert(L.certCode({ name: 'José Núñez', lesson: 'sql', xp: 1, maxXp: 2, hints: 0, count: 1, time: 1 })).name === 'José Núñez');
+});
+test('every challenge belongs to a lesson', () => {
+  const S = require('./load.js')(['platforms.js', 'challenges.js', 'lessons.js']);
+  for (const c of S.challenges.LIST) assert.ok(S.lessons.byId(c.plat), c.id + ' has no lesson');
 });

@@ -51,21 +51,40 @@
 
   // Workbooks / database / files live in memory, loaded lazily from saved state.
   UI.wbs = {};
-  UI.workbook = function (plat) {
-    if (!UI.wbs[plat]) {
-      var saved = UI.state.wb[plat];
-      if (saved) { var w = new SX.Workbook(plat); try { w.load(saved); UI.wbs[plat] = w; } catch (e) { UI.wbs[plat] = SX.makeStoreWorkbook(plat); } }
-      else UI.wbs[plat] = SX.makeStoreWorkbook(plat);
+  // Workbook keys: 'xl365' etc. for the store workbooks, 'wr-xl365' / 'wr-gs' for the Data Wrangling Lab.
+  function wbSpec(key) {
+    var m = /^wr-(.+)$/.exec(key);
+    return m ? { plat: m[1], make: SX.wrangle.makeWorkbook } : { plat: key, make: SX.makeStoreWorkbook };
+  }
+  UI.workbook = function (key) {
+    if (!UI.wbs[key]) {
+      var spec = wbSpec(key), saved = UI.state.wb[key];
+      if (saved) { var w = new SX.Workbook(spec.plat); try { w.load(saved); UI.wbs[key] = w; } catch (e) { UI.wbs[key] = spec.make(spec.plat); } }
+      else UI.wbs[key] = spec.make(spec.plat);
     }
-    return UI.wbs[plat];
+    return UI.wbs[key];
   };
-  UI.resetWorkbook = function (plat) { UI.wbs[plat] = SX.makeStoreWorkbook(plat); delete UI.state.wb[plat]; UI.save(); return UI.wbs[plat]; };
+  UI.resetWorkbook = function (key) { var spec = wbSpec(key); UI.wbs[key] = spec.make(spec.plat); delete UI.state.wb[key]; UI.save(); return UI.wbs[key]; };
   UI.database = function () {
-    if (!UI.db) { try { UI.db = UI.state.db ? SX.sql.Database.load(UI.state.db) : SX.sql.makeStoreDb(); } catch (e) { UI.db = SX.sql.makeStoreDb(); } }
+    if (!UI.db) {
+      try { UI.db = UI.state.db ? SX.sql.Database.load(UI.state.db) : SX.sql.makeStoreDb(); } catch (e) { UI.db = SX.sql.makeStoreDb(); }
+      var fresh = SX.sql.makeStoreDb(); // v2 tables for older saves
+      Object.keys(fresh.tables).forEach(function (k) { if (!UI.db.tables[k]) UI.db.tables[k] = fresh.tables[k]; });
+    }
     return UI.db;
   };
   UI.resetDatabase = function () { UI.db = SX.sql.makeStoreDb(); UI.save(); return UI.db; };
-  UI.csvFiles = function () { if (!UI.files) UI.files = UI.state.files || SX.csv.defaultFiles(); return UI.files; };
+  UI.csvFiles = function () {
+    if (!UI.files) {
+      UI.files = UI.state.files || SX.csv.defaultFiles();
+      if (!UI.state.ui.v2files) { // v2 adds the messy wrangling files to older saves
+        var extra = SX.wrangle.files();
+        Object.keys(extra).forEach(function (n) { if (UI.files[n] === undefined) UI.files[n] = extra[n]; });
+        UI.state.ui.v2files = true;
+      }
+    }
+    return UI.files;
+  };
   UI.resetFiles = function () { UI.files = SX.csv.defaultFiles(); UI.save(); return UI.files; };
 
   // ---------- Levels, XP, badges ----------
@@ -96,6 +115,9 @@
     { id: 'done-gs', icon: '🟦', name: 'Sheets Specialist', desc: 'Finish every Google Sheets challenge.', xp: 30 },
     { id: 'done-csv', icon: '📄', name: 'File Whisperer', desc: 'Finish every CSV/TSV challenge.', xp: 30 },
     { id: 'done-sql', icon: '🔮', name: 'SQL Sorcerer', desc: 'Finish every SQL challenge.', xp: 30 },
+    { id: 'researcher', icon: '📚', name: 'Researcher', desc: 'Run 10 examples in the Interactive Cheat Sheet.', xp: 15 },
+    { id: 'done-wr1', icon: '🧽', name: 'Data Janitor', desc: 'Finish Data Wrangling I: Cleaning.', xp: 30 },
+    { id: 'done-wr2', icon: '🔗', name: 'Data Joiner', desc: 'Finish Data Wrangling II: Combining & Lookups.', xp: 30 },
     { id: 'done-compare', icon: '🔭', name: 'Big Picture', desc: 'Answer every Compare quiz.', xp: 20 },
     { id: 'all', icon: '🏆', name: 'Completionist', desc: 'Finish every challenge in SheetEX.', xp: 100 }
   ];
@@ -152,6 +174,8 @@
     if (SX.challenges.LIST.every(function (c) { return UI.state.done[c.id]; })) UI.badge('all');
     if (window.confettiBurst) window.confettiBurst(30);
     UI.save();
+    if (UI.cloudAutoSave) UI.cloudAutoSave();
+    if (UI.lessonFinished && mine.every(function (c) { return UI.state.done[c.id]; })) setTimeout(function () { UI.lessonFinished(ch.plat); }, 1800);
     return true;
   };
   UI.platProgress = function (plat) {
@@ -241,7 +265,7 @@
   // ---------- Profile & progress code ----------
   function checksum(s) { var x = 7; for (var i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) % 1000003; return x.toString(36); }
   UI.progressCode = function () {
-    var p = { n: UI.state.name, x: UI.state.xp, d: Object.keys(UI.state.done).map(function (k) { return k + ':' + UI.state.done[k].xp; }).join(','),
+    var p = { n: UI.state.name, x: UI.state.xp, d: Object.keys(UI.state.done).map(function (k) { return k + ':' + UI.state.done[k].xp + ':' + (UI.state.done[k].hints || 0); }).join(','),
       b: Object.keys(UI.state.badges).join(','), e: Object.keys(UI.state.errors).join(' '), t: Date.now() };
     var json = JSON.stringify(p);
     return 'SX1-' + btoa(unescape(encodeURIComponent(json))) + '-' + checksum(json);
@@ -254,6 +278,17 @@
       if (checksum(json) !== m[2]) return null;
       return JSON.parse(json);
     } catch (e) { return null; }
+  };
+  // Merge a progress code into this browser (never lowers XP or removes anything)
+  UI.restoreFromCode = function (code) {
+    var p = UI.decodeCode(code), st = UI.state;
+    if (!p) return false;
+    st.name = p.n || st.name; st.xp = Math.max(st.xp, p.x);
+    (p.d ? p.d.split(',') : []).forEach(function (s) { var q = s.split(':'); if (q[0] && !st.done[q[0]]) st.done[q[0]] = { xp: +q[1], at: p.t, hints: q[2] ? +q[2] : 0 }; });
+    (p.b ? p.b.split(',') : []).forEach(function (b) { if (b) st.badges[b] = st.badges[b] || p.t; });
+    (p.e ? p.e.split(' ') : []).forEach(function (e) { if (e) st.errors[e] = st.errors[e] || p.t; });
+    UI.save();
+    return true;
   };
   UI.profile = function () {
     var st = UI.state, lv = UI.level(st.xp);
@@ -277,6 +312,12 @@
       ]),
       h('h3', { text: 'Badges' }), badgeGrid,
       h('h3', { text: 'Error collection (' + Object.keys(st.errors).length + '/' + UI.ERROR_CODES.length + ')' }), errGrid,
+      h('h3', { text: 'Certificates' }),
+      h('div.cert-list', null, SX.lessons.LIST.map(function (L) {
+        var pr = UI.platProgress(L.id), done = pr.total && pr.done === pr.total;
+        return h('button.chip' + (done ? '' : '.chip-off'), { disabled: !done, text: (done ? '🎓 ' : '🔒 ') + L.n + '. ' + L.title, onclick: function () { UI.showCert(L.id); } });
+      })),
+      UI.cloudPanel ? UI.cloudPanel() : null,
       h('h3', { text: 'Progress code' }),
       h('p.small', { text: 'Paste this code into Canvas to show your teacher your progress, or use it to move your XP to another computer.' }),
       codeBox,
@@ -287,13 +328,8 @@
           loadMsg.textContent = p ? (p.n || 'Unnamed') + ': ' + p.x + ' XP, level ' + UI.level(p.x).n + ', ' + (p.d ? p.d.split(',').length : 0) + ' challenges, ' + (p.b ? p.b.split(',').length : 0) + ' badges (saved ' + new Date(p.t).toLocaleString() + ').' : 'That code is not valid (it may have been changed).';
         } }),
         h('button.btn', { text: 'Restore my progress from code', onclick: function () {
-          var p = UI.decodeCode(loadIn.value);
-          if (!p) { loadMsg.textContent = 'That code is not valid.'; return; }
-          st.name = p.n || st.name; st.xp = Math.max(st.xp, p.x);
-          (p.d ? p.d.split(',') : []).forEach(function (s) { var q = s.split(':'); if (!st.done[q[0]]) st.done[q[0]] = { xp: +q[1], at: p.t, hints: 0 }; });
-          (p.b ? p.b.split(',') : []).forEach(function (b) { st.badges[b] = st.badges[b] || p.t; });
-          (p.e ? p.e.split(' ') : []).forEach(function (e) { if (e) st.errors[e] = st.errors[e] || p.t; });
-          UI.save(); UI.render(); loadMsg.textContent = 'Progress restored!';
+          if (!UI.restoreFromCode(loadIn.value)) { loadMsg.textContent = 'That code is not valid.'; return; }
+          UI.render(); loadMsg.textContent = 'Progress restored!';
         } })
       ]), loadMsg]),
       h('details.danger-zone', null, [h('summary', { text: 'Start over' }), h('p.small', { text: 'Erase all XP, badges, and your work in every app on this computer.' }),
@@ -338,11 +374,26 @@
   function teacherTool() {
     var ta = h('textarea.input.code-box', { rows: 5, placeholder: 'Paste progress codes here — one per line, or the whole Canvas export. Anything that is not a code is ignored.' });
     var out = h('div');
+    var certOut = h('div');
+    function runCerts() {
+      var codes = ta.value.match(/SXC1-[A-Za-z0-9_-]+-[a-z0-9]+/g) || [];
+      certOut.innerHTML = '';
+      if (!codes.length) return;
+      var t = h('table.cs-keys', null, [h('tr', null, ['Certificate', 'Name', 'Lesson', 'XP', 'Hints', 'Date'].map(function (x) { return h('th', { text: x }); }))]);
+      codes.forEach(function (c) {
+        var d = SX.lessons.readCert(c);
+        if (!d) { t.appendChild(h('tr', null, [h('td', { colspan: 6, text: '⚠ Invalid or edited certificate code: ' + c.slice(0, 24) + '…' })])); return; }
+        t.appendChild(h('tr', null, ['✓ ' + SX.lessons.shortId(c), d.name, d.title, d.xp + '/' + d.maxXp, d.hints, new Date(d.time).toLocaleDateString()].map(function (x) { return h('td', { text: String(x) }); })));
+      });
+      certOut.appendChild(h('h4', { text: 'Certificates' })); certOut.appendChild(t);
+    }
     function run() {
-      var codes = ta.value.match(/SX1-[A-Za-z0-9+/=]+-[a-z0-9]+/g) || [];
+      runCerts();
+      var codes = ta.value.match(/(?:^|[^C])(SX1-[A-Za-z0-9+/=]+-[a-z0-9]+)/g) || [];
+      codes = codes.map(function (c) { return c.replace(/^[^S]/, ''); });
       var rows = codes.map(function (c) { var p = UI.decodeCode(c); return p ? p : { bad: c }; });
       out.innerHTML = '';
-      if (!rows.length) { out.appendChild(h('p.small', { text: 'No codes found yet.' })); return; }
+      if (!rows.length) { if (!certOut.childNodes.length) out.appendChild(h('p.small', { text: 'No codes found yet.' })); return; }
       var t = h('table.cs-keys', null, [h('tr', null, ['Name', 'Level', 'XP', 'Challenges', 'Badges', 'Errors', 'Saved'].map(function (x) { return h('th', { text: x }); }))]);
       rows.forEach(function (p) {
         if (p.bad) { t.appendChild(h('tr', null, [h('td', { colspan: 7, text: '⚠ Invalid or edited code: ' + p.bad.slice(0, 24) + '…' })])); return; }
@@ -352,7 +403,7 @@
       out.appendChild(t);
     }
     ta.addEventListener('input', run);
-    return h('div', null, [h('p.small', { text: 'Have students paste their progress code (click their name ▸ Copy code) into a Canvas text submission. Paste all of them here to see everyone at once. Codes are checksummed, so hand-edited codes show as invalid.' }), ta, out]);
+    return h('div', null, [h('p.small', { text: 'Paste progress codes (SX1-…) and/or certificate codes (SXC1-…) — one per line, or a whole Canvas export. Codes are checksummed, so hand-edited codes show as invalid.' }), ta, certOut, out]);
   }
 
   // ---------- Home ----------
@@ -362,14 +413,23 @@
   UI.platIcon = platIcon;
   function homeView() {
     var st = UI.state, totalDone = Object.keys(st.done).length;
-    var cards = SX.platforms.ORDER.map(function (id) {
-      var p = PL[id], pr = UI.platProgress(id);
+    var EXTRA = {
+      wrangle: { id: 'wrangle', name: 'Data Wrangling Lab', icon: 'WR', tagline: 'Clean messy data for AI', lessons: ['wr1', 'wr2'],
+        blurb: 'A real-world messy order feed: lost leading zeros, four date formats, fake nulls, messy names. Clean it, join it with VLOOKUP/HLOOKUP, get it AI-ready. NEW in v2.' },
+      reference: { id: 'reference', name: 'Interactive Cheat Sheet', icon: '?!', tagline: 'Every task, every tool', lessons: [],
+        blurb: 'Look up a task like "pad leading zeros" or "find nulls" and see the answer in Excel 365, Excel 2013, Google Sheets, SQL and CSV — then run it live.' }
+    };
+    function sumProgress(ids) {
+      return ids.reduce(function (a, id) { var p = UI.platProgress(id); return { done: a.done + p.done, total: a.total + p.total, xp: a.xp + p.xp, maxXp: a.maxXp + p.maxXp }; }, { done: 0, total: 0, xp: 0, maxXp: 0 });
+    }
+    var cards = SX.platforms.ORDER.slice(0, 4).concat(['wrangle', 'sql', 'reference']).map(function (id) {
+      var p = PL[id] || EXTRA[id], pr = EXTRA[id] ? sumProgress(EXTRA[id].lessons) : UI.platProgress(id);
       return h('button.plat-card.pc-' + id, { onclick: function () { UI.go(id); } }, [
         h('div.pc-top', null, [platIcon(p, true), h('div', null, [h('div.pc-name', { text: p.name }), h('div.pc-tag', { text: p.tagline })])]),
         h('p.pc-blurb', { text: p.blurb }),
         h('div.pc-progress', null, [
           h('div.pbar', null, h('div.pfill', { style: { width: (pr.total ? 100 * pr.done / pr.total : 0) + '%' } })),
-          h('div.pc-stats', null, [h('span', { text: pr.done + '/' + pr.total + ' challenges' }), h('span', { text: pr.xp + '/' + pr.maxXp + ' XP' })])
+          pr.total ? h('div.pc-stats', null, [h('span', { text: pr.done + '/' + pr.total + ' challenges' }), h('span', { text: pr.xp + '/' + pr.maxXp + ' XP' })]) : h('div.pc-stats', null, h('span', { text: 'Reference · try-it examples' }))
         ]),
         h('div.pc-go', { text: st.visited[id] ? 'Continue →' : 'Start →' })
       ]);
@@ -381,8 +441,8 @@
       h('section.hero', null, [
         h('div.hero-text', null, [
           h('div.hero-kicker', { text: 'Welcome' + (st.name ? ', ' + st.name : '') + '! Your first day as a data analyst' }),
-          h('h1', { html: 'One store. <span>Five tools.</span> Zero surprises at home.' }),
-          h('p', { html: SX.data.COMPANY + ' keeps the same inventory and sales data in Excel 365, an old copy of Excel 2013, Google Sheets, plain CSV files, and a SQL database. Learn how each one thinks — so a formula that works at school still works on the laptop at home.' })
+          h('h1', { html: 'One store. <span>Every tool.</span> Data an AI can trust.' }),
+          h('p', { html: SX.data.COMPANY + ' keeps the same inventory and sales data in Excel 365, an old copy of Excel 2013, Google Sheets, plain CSV files, and a SQL database. Learn how each one thinks, clean messy data until it is ready for an AI model, and earn a certificate for every lesson.' })
         ]),
         h('div.hero-stats', null, [
           stat(UI.level(st.xp).n, 'Level'), stat(st.xp, 'XP'), stat(totalDone + '/' + SX.challenges.LIST.length, 'Challenges'), stat(errCount + '/9', 'Errors found')
@@ -390,6 +450,9 @@
       ]),
       h('h2.section-title', { text: 'Choose your workspace' }),
       h('div.plat-grid', null, cards),
+      h('h2.section-title', { text: '🎓 Lessons & certificates' }),
+      h('p.section-sub', { text: 'Finish every challenge in a lesson to earn its certificate. Print it, save it as a PDF or image, or paste its code into Canvas.' }),
+      h('div.lesson-grid', null, SX.lessons.LIST.map(lessonTile)),
       h('div.extra-grid', null, [
         h('button.extra-card.cmp-card', { onclick: function () { UI.go('compare'); } }, [
           h('div.extra-icon', { text: '⚖️' }),
@@ -404,6 +467,19 @@
         ])
       ]),
       h('footer.home-foot', { html: 'SheetEX is a classroom simulator — it mimics how each app behaves, but always double-check in the real software.' })
+    ]);
+  }
+  function lessonTile(L) {
+    var pr = UI.platProgress(L.id), done = pr.total && pr.done === pr.total;
+    var has = UI.state.certs && UI.state.certs[L.id];
+    return h('div.lesson-tile' + (done ? '.done' : ''), null, [
+      h('div.lt-top', null, [h('span.lt-n', { text: L.n }), h('div', null, [h('div.lt-title', { text: L.title }), h('div.lt-tool', { text: L.tool })])]),
+      h('div.pbar', null, h('div.pfill', { style: { width: (100 * pr.done / Math.max(1, pr.total)) + '%' } })),
+      h('div.lt-foot', null, [
+        h('span.small', { text: pr.done + '/' + pr.total + ' challenges' }),
+        done ? h('button.btn.btn-sm.btn-primary', { text: has ? '🎓 Certificate' : '🎓 Claim certificate', onclick: function () { UI.showCert(L.id); } })
+          : h('button.btn.btn-sm', { text: pr.done ? 'Continue →' : 'Start →', onclick: function () { UI.go(L.workspace); } })
+      ])
     ]);
   }
   function stat(v, l) { return h('div.stat', null, [h('div.stat-v', { text: v }), h('div.stat-l', { text: l })]); }
@@ -426,23 +502,26 @@
     if (view === 'home') { app.appendChild(homeView()); return; }
     var host = h('div.view-host');
     app.appendChild(host);
-    if (view !== 'compare') UI.visit(view);
+    if (SX.platforms.ORDER.indexOf(view) >= 0) UI.visit(view);
     if (view === 'xl365' || view === 'xl2013' || view === 'gs') UI.activeView = new UI.SheetView(view, host);
     else if (view === 'csv') UI.activeView = new UI.CsvView(host);
     else if (view === 'sql') UI.activeView = new UI.SqlView(host);
     else if (view === 'compare') UI.activeView = new UI.CompareView(host);
+    else if (view === 'wrangle') UI.activeView = UI.wrangleView(host);
+    else if (view === 'reference') UI.activeView = new UI.ReferenceView(host);
   };
 
   UI.start = function () {
     UI.render();
     if (!UI.state.name) {
-      var inp = h('input.input', { maxlength: 30, placeholder: 'First name or nickname' });
+      var inp = h('input.input', { maxlength: 40, placeholder: 'First and last name' });
       var done = function () { UI.state.name = inp.value.trim() || 'Analyst'; UI.save(); UI.refreshHeader(); UI.render(); };
       inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { done(); document.querySelector('.modal-overlay').remove(); } });
       UI.modal('Welcome to ' + SX.data.COMPANY + '!', [
         h('p', { text: 'You were just hired as our new data analyst. Our data lives in five different tools, and they do not all speak the same language.' }),
         h('p', { text: 'Earn XP by solving challenges, discovering errors, and translating formulas between apps.' }),
-        h('label.lbl', { text: 'What should we call you?' }), inp
+        h('label.lbl', { text: 'What should we call you?' }), inp,
+        SX.cloud && SX.cloud.available() ? h('p.small', null, [h('b', { text: 'Coming back? ' }), 'Type your name, start, then click your name ▸ Class cloud save ▸ Load.']) : null
       ], [{ text: 'Start my first day', primary: true, onclick: done }], { sticky: true, noX: true });
     }
   };
@@ -504,19 +583,27 @@
       el.appendChild(msg);
       return el;
     }
+    var plats = Array.isArray(plat) ? plat : [plat];
     function rerender(openId) {
       wrap.innerHTML = '';
-      var list = SX.challenges.forPlat(plat), pr = UI.platProgress(plat);
-      wrap.appendChild(h('div.ch-summary', null, [
-        h('div', { text: pr.done + ' of ' + pr.total + ' complete · ' + pr.xp + ' XP earned' }),
-        h('div.pbar', null, h('div.pfill', { style: { width: (100 * pr.done / Math.max(1, pr.total)) + '%' } }))
-      ]));
-      var firstOpen = list.filter(function (c) { return !UI.state.done[c.id]; })[0];
-      list.forEach(function (ch) {
-        var c = card(ch);
-        if (ch.id === openId || (!openId && firstOpen && ch.id === firstOpen.id)) c.classList.add('open');
-        c.querySelector('.ch-head').addEventListener('click', function () { c.classList.toggle('open'); });
-        wrap.appendChild(c);
+      var firstOpen = null;
+      plats.forEach(function (lp) {
+        var list = SX.challenges.forPlat(lp), pr = UI.platProgress(lp), lesson = SX.lessons && SX.lessons.byId(lp);
+        if (!firstOpen) firstOpen = list.filter(function (c) { return !UI.state.done[c.id]; })[0];
+        var complete = pr.total && pr.done === pr.total;
+        wrap.appendChild(h('div.ch-summary' + (complete ? '.complete' : ''), null, [
+          lesson ? h('div.ch-lesson', null, [h('span.ch-lesson-n', { text: 'Lesson ' + lesson.n }), h('b', { text: lesson.title })]) : null,
+          h('div', { text: pr.done + ' of ' + pr.total + ' complete · ' + pr.xp + ' XP earned' }),
+          h('div.pbar', null, h('div.pfill', { style: { width: (100 * pr.done / Math.max(1, pr.total)) + '%' } })),
+          lesson ? h('button.btn.btn-sm.cert-btn' + (complete ? '.btn-primary' : ''), { disabled: !complete, title: complete ? 'Open your certificate' : 'Finish every challenge in this lesson to unlock it',
+            text: complete ? '🎓 View my certificate' : '🔒 Certificate (finish all ' + pr.total + ')', onclick: function () { UI.showCert(lp); } }) : null
+        ]));
+        list.forEach(function (ch) {
+          var c = card(ch);
+          if (ch.id === openId || (!openId && firstOpen && ch.id === firstOpen.id)) c.classList.add('open');
+          c.querySelector('.ch-head').addEventListener('click', function () { c.classList.toggle('open'); });
+          wrap.appendChild(c);
+        });
       });
       if (openId) { var o = wrap.querySelector('[data-id="' + openId + '"]'); if (o) setTimeout(function () { o.scrollIntoView({ block: 'nearest' }); }, 0); }
     }

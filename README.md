@@ -1,4 +1,7 @@
-# SheetEX — Spreadsheet Explorer
+# SheetEX — Spreadsheet Explorer (v2)
+
+> **v2** adds the **Data Wrangling Lab**, an **Interactive Cheat Sheet**, **8 lessons with certificates**, and an
+> optional **class gradebook + cloud save** through Google Apps Script. v1 is preserved on its own branch.
 
 A classroom simulator that teaches students **why a formula that works at school breaks at home**.
 The same store data (Peachtree Supply Co. — products, sales, stores) lives in five tools, and each
@@ -11,22 +14,60 @@ one behaves like the real thing, errors included:
 | **Google Sheets** | `FILTER`/`SORT` take different arguments, `SORT(…, -1)` silently sorts the wrong way, `CONCAT` takes only 2 values, `ARRAYFORMULA`, `QUERY`, `SPLIT`, `REGEXMATCH`, open ranges like `E2:E`, `#ERROR!` instead of a pop-up |
 | **CSV / TSV** | Files store values only. Formulas and formatting vanish on export, commas need quotes, quotes get doubled, and spreadsheets mangle `05401` and 16-digit IDs on open |
 | **SQL** | WHERE = FILTER, GROUP BY = SUMIF, JOIN = VLOOKUP, HAVING, integer division (`7/2 = 3`), case-sensitive text, UPDATE without WHERE |
+| **Data Wrangling Lab** (v2) | Cleaning a messy order feed before an AI model sees it. Item codes that lost their zeros (`104` vs `"0104"`), text that looks like numbers, four date formats plus a European `03.09.2026`, blanks vs fake nulls (`N/A`, `-`, `null`), messy names and store codes, `$` prices stored as text. Then VLOOKUP/HLOOKUP/XLOOKUP joins, why lookups return `#N/A` (number vs text), concatenation, delimiters, TEXTJOIN, and FILTER around missing values. Runs on an Excel 365 **or** Google Sheets engine (switch at the top) |
+| **Interactive Cheat Sheet** (v2) | 33 everyday data tasks ("pad leading zeros", "count fake nulls", "split at a delimiter", "why does my lookup say #N/A?") with the answer for Excel 365, Excel 2013, Google Sheets, SQL and CSV side by side, plus a **▶ Run** button that runs it live on the Peachtree data |
 
 Students start on a home page, pick a workspace, and earn **XP**, **levels** (Intern → Chief Data Officer)
 and **badges**. Every workspace has a free-play sandbox plus a side panel with:
 
-- **🏆 Challenges** — 49 auto-checked challenges with 2–3 progressive hints each. A hint costs 20% of that challenge's XP.
+- **🏆 Challenges** — 71 auto-checked challenges with progressive hints, grouped into 8 lessons. A hint costs 20% of that challenge's XP.
 - **📘 Cheat sheet** — what is different on this platform, keyboard shortcuts, a searchable function list using *that* platform's argument names, and error codes.
 - **🌐 Will it work elsewhere?** — runs the selected cell's formula in Excel 365, Excel 2013 and Google Sheets on the same data, shows each result, and writes the rewrite (for example XLOOKUP → `IFERROR(INDEX(…, MATCH(…, 0)), …)`, or MAXIFS → `{=MAX(IF(…))}`). One click applies the fix.
 
 Other details: students collect all 9 error types (`#NAME?`, `#VALUE!`, `#REF!`, `#DIV/0!`, `#N/A`, `#NUM!`, `#SPILL!`, `#CALC!`, `#ERROR!`) for XP. There is also a **Compare** page with a formula playground, a function-availability matrix, and a spreadsheet → SQL dictionary.
+
+## Lessons and certificates (v2)
+
+| # | Lesson | Workspace |
+|---|---|---|
+| 1 | Spreadsheet Foundations | Excel 365 |
+| 2 | Classic Excel & Nested Functions | Excel 2013 |
+| 3 | Google Sheets Survival Guide | Google Sheets |
+| 4 | Data Files: CSV & TSV | CSV / TSV |
+| 5 | Data Wrangling I: Cleaning Data for AI | Data Wrangling Lab |
+| 6 | Data Wrangling II: Combining & Lookups | Data Wrangling Lab |
+| 7 | SQL for Data Analysts | SQL |
+| 8 | Cross-Platform Translator | Compare |
+
+Finishing every challenge in a lesson unlocks its **certificate**: the student's full name, the lesson, the skills
+covered, challenges completed, XP earned, hints used, the date, and a verification ID. Students can turn it in three ways:
+
+1. **🖨 Print / Save as PDF** (prints only the certificate, one landscape page)
+2. **⬇ Download image** (PNG; if a school site blocks downloads, the image appears on screen to right-click → Save)
+3. **📋 Copy certificate code** (`SXC1-…`) to paste into a Canvas text submission
+
+To check codes, click **?** → *For teachers* and paste a whole class's codes (certificate and progress codes can be mixed).
+
+## Class gradebook and cloud save (optional, v2)
+
+When SheetEX runs from your Apps Script deployment, it can also write to a Google Sheet in **your** Drive:
+
+- **Certificates tab:** every certificate earned is recorded automatically (time, student, lesson, XP, hints, code). No codes to collect.
+- **Saves tab:** students click their name → *Class cloud save*, then save or load with **first + last name and a 4–8 digit PIN**. That carries XP, challenges and certificates to another day or computer. The work inside the spreadsheets stays on the device.
+
+Setup: deploy as below. The first time, Apps Script asks you to allow access to Google Sheets and Drive, because the
+script creates and writes the gradebook as you. The gradebook (**SheetEX Gradebook**) is created the first time a student earns a certificate or saves.
+To create it right away and get its link, select `setup` in the Apps Script editor's function menu and click **Run**.
+The link appears in the execution log.
+
+When the app is opened anywhere else (a local file, GitHub Pages), the cloud features hide themselves and everything else works the same.
 
 ## Deploy on Google Apps Script and embed in Canvas
 
 `apps-script/` holds everything Apps Script needs. The whole app is **one self-contained file**
 (`apps-script/Index.html`, ~410 KB) with no outside requests, so school web filters cannot break it.
 
-1. Go to <https://script.google.com> → **New project**. Name it `SheetEX`.
+1. Go to <https://script.google.com> → **New project**. Name it `SheetEX`. (Updating from v1? Replace both files, then do step 4's *New version* deploy.)
 2. Replace everything in `Code.gs` with the contents of [`apps-script/Code.gs`](apps-script/Code.gs).
 3. Click **＋ → HTML**, name the file exactly `Index` (Apps Script adds `.html`), and paste in the whole
    contents of [`apps-script/Index.html`](apps-script/Index.html).
@@ -76,6 +117,9 @@ src/
   js/platforms.js     platform descriptions, cheat-sheet text, cross-platform translator
   js/csv.js           CSV/TSV parse/write/export and "what a spreadsheet does on open"
   js/challenges.js    the challenge bank and its auto-checkers
+  js/wrangle.js       v2: the messy order feed (generated from clean "truth" records) + expected answers
+  js/lessons.js       v2: lesson list and certificate codes
+  js/reference.js     v2: interactive cheat sheet data + live runner
   js/ui-*.js          home page, XP/badges, spreadsheet grid, CSV editor, SQL console, Compare page
 build.js              inlines everything into dist/index.html and apps-script/Index.html
 tests/                node:test suites + a Playwright browser smoke test
@@ -83,7 +127,8 @@ tests/                node:test suites + a Playwright browser smoke test
 
 ```bash
 npm run build          # writes dist/index.html and apps-script/Index.html
-npm test               # engine behaviour + "every challenge is solvable" tests
+npm test               # engine behaviour, every challenge solvable (wrangling in BOTH Excel 365 and Sheets),
+                       # every cheat-sheet example runs, certificate codes, Code.gs against Apps Script mocks
 npm run test:browser   # optional: Playwright smoke test (normal page + locked-down iframe)
 ```
 
@@ -94,6 +139,12 @@ After editing anything in `src/`, run `npm run build` and paste the new `apps-sc
 Add an entry in `src/js/challenges.js` (`plat`, `title`, `xp`, `task`, `hints`, `learn`, and either
 `check(h)` or `type: 'quiz'` with `options`/`answer`). Then add its reference solution to
 `tests/challenges.test.js`. The test suite fails if any challenge cannot be solved.
+
+## Honest limits
+
+- **Certificate and progress codes are tamper-*evident*, not tamper-*proof*.** They catch casual editing, but a determined student who reads the source could forge one. The same goes for the gradebook: a tech-savvy student could call the save function directly. Treat both as strong evidence of completion, not cryptographic proof — the same level of trust as a screenshot.
+- **Cloud save PINs** protect against classmates loading each other's progress by accident. A 4-digit PIN is not a password, and saves hold only XP and challenge progress (no personal data beyond the name).
+- **One sitting is not required:** progress stays in the browser on the same device/login, and cloud save or progress codes move it anywhere.
 
 ## Accuracy notes
 

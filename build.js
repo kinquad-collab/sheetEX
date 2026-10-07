@@ -6,8 +6,8 @@ const path = require('path');
 
 const SRC = path.join(__dirname, 'src');
 const JS_ORDER = [
-  'data.js', 'formula.js', 'engine.js', 'workbook.js', 'sql.js', 'platforms.js', 'csv.js', 'challenges.js',
-  'ui-core.js', 'ui-sheet.js', 'ui-csv.js', 'ui-sql.js', 'main.js'
+  'data.js', 'formula.js', 'engine.js', 'workbook.js', 'sql.js', 'platforms.js', 'csv.js', 'wrangle.js', 'challenges.js',
+  'lessons.js', 'reference.js', 'ui-core.js', 'ui-sheet.js', 'ui-csv.js', 'ui-sql.js', 'ui-wrangle.js', 'ui-cert.js', 'ui-reference.js', 'main.js'
 ];
 
 const css = fs.readFileSync(path.join(SRC, 'css', 'styles.css'), 'utf8');

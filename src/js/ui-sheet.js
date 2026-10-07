@@ -8,7 +8,12 @@
     Products: { 0: 74, 1: 168, 2: 116, 3: 70, 4: 64, 5: 66, 6: 80, 7: 160, 8: 90 },
     Sales: { 0: 70, 1: 84, 2: 64, 3: 74, 4: 50, 5: 84, 6: 84 },
     Stores: { 0: 64, 1: 92, 2: 50, 3: 60, 4: 120, 5: 84 },
-    Scratch: { 0: 120, 1: 140 }
+    Scratch: { 0: 120, 1: 140 },
+    RawOrders: { 0: 66, 1: 58, 2: 70, 3: 96, 4: 50, 5: 72, 6: 140, 7: 76, 8: 90, 9: 80, 10: 80, 11: 80, 12: 90, 13: 120, 14: 150, 15: 80, 16: 80 },
+    ItemCodes: { 0: 60, 1: 168, 2: 116, 3: 70 },
+    Targets: { 0: 90, 1: 110, 2: 110, 3: 110, 4: 110, 5: 110 },
+    Contacts: { 0: 70, 1: 80, 2: 90, 3: 50, 4: 60, 5: 200, 6: 130, 7: 170, 8: 70 },
+    Report: { 0: 360, 1: 150, 2: 30, 3: 90 }
   };
   var RIBBON = {
     xl365: ['File', 'Home', 'Insert', 'Draw', 'Page Layout', 'Formulas', 'Data', 'Review', 'View', 'Help'],
@@ -18,12 +23,17 @@
   var HIDDEN_IN_EXCEL_AC = ['DATEDIF']; // Excel never autocompletes DATEDIF (it is "hidden")
   var REF_COLORS = ['#3b82f6', '#ef4444', '#a855f7', '#16a34a', '#f59e0b', '#0891b2'];
 
-  function SheetView(plat, host) {
+  // opts (v2): key = workbook/state key, challenges = lesson ids for the panel, firstSheet, titleExtra, docTitle
+  function SheetView(plat, host, opts) {
+    opts = opts || {};
+    this.opts = opts;
     this.plat = plat; this.P = PL[plat];
-    this.wb = UI.workbook(plat);
+    this.key = opts.key || plat;
+    this.chPlats = opts.challenges || [plat];
+    this.wb = UI.workbook(this.key);
     this.excel = plat !== 'gs';
-    var saved = UI.state.ui['sheet_' + plat];
-    this.sheet = saved && this.wb.sheet(saved) ? saved : 'Products';
+    var saved = UI.state.ui['sheet_' + this.key];
+    this.sheet = saved && this.wb.sheet(saved) ? saved : (opts.firstSheet || 'Products');
     this.r = 1; this.c = 0; this.ar = 1; this.ac = 0;
     this.editing = null;
     this.showFormulas = false;
@@ -68,7 +78,8 @@
     root.appendChild(h('div.app-title', null, [
       h('button.back-btn', { onclick: function () { UI.go('home'); }, title: 'Back to home' }, '← Home'),
       UI.platIcon(this.P),
-      h('span.doc-title', { text: this.P.title }),
+      h('span.doc-title', { text: this.opts.docTitle || this.P.title }),
+      this.opts.titleExtra || null,
       h('span.app-ver', { text: this.P.name })
     ]));
     // Menu / ribbon tabs (decorative, helps it feel like the real app)
@@ -133,13 +144,13 @@
     root.appendChild(this.acPop); root.appendChild(this.sigTip);
     this.host.appendChild(root);
 
-    var open = UI.state.ui['panel_' + plat];
+    var open = UI.state.ui['panel_' + this.key];
     this.togglePanel(open === undefined ? 'challenges' : open, true);
   };
 
   SheetView.prototype.renderGrid = function () {
     var self = this, s = this.sheet;
-    var widths = (UI.state.colw[this.plat] && UI.state.colw[this.plat][s]) || {};
+    var widths = (UI.state.colw[this.key] && UI.state.colw[this.key][s]) || {};
     var dw = DEFAULT_W[s] || {};
     var colgroup = h('colgroup', null, [h('col', { style: { width: '46px' } })]);
     this.cols = [];
@@ -199,7 +210,7 @@
     var formulaEdit = this.editing && this.isFormulaText(this.editValue());
     if (this.editing && !formulaEdit) { if (!this.endEdit(true, 0, 0)) return; }
     this.sheet = name;
-    UI.state.ui['sheet_' + this.plat] = name;
+    UI.state.ui['sheet_' + this.key] = name;
     if (!keepSel) { this.r = this.ar = 1; this.c = this.ac = 0; }
     this.renderGrid();
     if (formulaEdit) { this.editor.style.display = 'none'; this.fx.focus(); }
@@ -433,7 +444,7 @@
   SheetView.prototype.endResize = function () {
     var rz = this.resizing; this.resizing = null;
     if (rz.nw) {
-      var cw = UI.state.colw[this.plat] = UI.state.colw[this.plat] || {};
+      var cw = UI.state.colw[this.key] = UI.state.colw[this.key] || {};
       (cw[this.sheet] = cw[this.sheet] || {})[rz.c] = rz.nw; UI.save();
     }
     this.positionSel();
@@ -861,7 +872,7 @@
     var self = this;
     UI.modal('Reset ' + this.P.name + ' data?', [h('p', { text: 'This puts every sheet back to the original store data and erases your formulas in this app. Your XP and badges stay.' })], [
       { text: 'Cancel' },
-      { text: 'Reset workbook', danger: true, onclick: function () { self.wb = UI.resetWorkbook(self.plat); self.renderGrid(); self.refresh(); UI.toast('Workbook reset', 'Back to the original data.'); } }
+      { text: 'Reset workbook', danger: true, onclick: function () { self.wb = UI.resetWorkbook(self.key); self.renderGrid(); self.refresh(); UI.toast('Workbook reset', 'Back to the original data.'); } }
     ]);
   };
   SheetView.prototype.insertFunctionDialog = function () {
@@ -945,7 +956,7 @@
   SheetView.prototype.togglePanel = function (id, initial) {
     var self = this;
     if (!initial && this.panel && this.panel.current() === id && this.panelHost.classList.contains('open')) {
-      this.panelHost.classList.remove('open'); UI.state.ui['panel_' + this.plat] = null; this.markPanelBtns(null); UI.save(); this.positionSel(); return;
+      this.panelHost.classList.remove('open'); UI.state.ui['panel_' + this.key] = null; this.markPanelBtns(null); UI.save(); this.positionSel(); return;
     }
     if (!id) { this.panelHost.classList.remove('open'); this.markPanelBtns(null); return; }
     if (!this.panel) {
@@ -954,12 +965,12 @@
         { id: 'cheat', label: '📘 Cheat sheet', render: function () { return self.cheatTab(); } },
         { id: 'elsewhere', label: '🌐 Elsewhere', render: function () { return self.elsewhereTab(); } }
       ], id);
-      this.panel.el.querySelector('.sp-tabs').addEventListener('click', function () { self.markPanelBtns(self.panel.current()); UI.state.ui['panel_' + self.plat] = self.panel.current(); });
+      this.panel.el.querySelector('.sp-tabs').addEventListener('click', function () { self.markPanelBtns(self.panel.current()); UI.state.ui['panel_' + self.key] = self.panel.current(); });
       this.panel.el.appendChild(h('button.sp-close', { title: 'Close panel', 'aria-label': 'Close panel', text: '×', onclick: function () { self.togglePanel(self.panel.current()); } }));
       this.panelHost.appendChild(this.panel.el);
     } else this.panel.show(id);
     this.panelHost.classList.add('open');
-    UI.state.ui['panel_' + this.plat] = id;
+    UI.state.ui['panel_' + this.key] = id;
     this.markPanelBtns(id);
     if (!initial) UI.save();
     setTimeout(function () { self.positionSel(); }, 0);
@@ -969,7 +980,7 @@
   };
   SheetView.prototype.challengesTab = function () {
     var self = this;
-    return UI.challengePanel(this.plat, function () { return SX.challenges.sheetHelpers(self.wb); }, { goTo: function (addr) { if (self.editing) self.endEdit(true, 0, 0); self.goToAddr(addr); self.focusGrid(); } });
+    return UI.challengePanel(this.chPlats, function () { return SX.challenges.sheetHelpers(self.wb); }, { goTo: function (addr) { if (self.editing) self.endEdit(true, 0, 0); self.goToAddr(addr); self.focusGrid(); } });
   };
   SheetView.prototype.cheatTab = function () {
     var self = this, plat = this.wb.plat, pid = this.plat;
@@ -1004,7 +1015,7 @@
       if (pid === 'xl365') return c !== '#ERROR!';
       return c !== '#SPILL!' && c !== '#CALC!';
     }).map(function (c) { return h('tr', null, [h('td', null, h('code', { text: c })), h('td', { text: F.ERR_TEXT[c] })]); }))]);
-    return h('div.cheat', null, [UI.diffList(pid), UI.keyTable(pid), h('div.cs-section', null, [h('h4', { text: 'Functions in ' + this.P.name }), search, list]), miss, errs]);
+    return h('div.cheat', null, [this.opts.cheatExtra ? this.opts.cheatExtra() : null, UI.diffList(pid), UI.keyTable(pid), h('div.cs-section', null, [h('h4', { text: 'Functions in ' + this.P.name }), search, list]), miss, errs]);
   };
 
   // "Will it work elsewhere?" — run the active cell's formula on every platform

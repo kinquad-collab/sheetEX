@@ -481,6 +481,92 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
 }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 
+/* ---------- v2: wrangle lab, lessons, certificates ---------- */
+.pc-wrangle { --accent: #0d9488; } .pc-reference { --accent: #4f46e5; }
+.pi-wrangle { background: linear-gradient(135deg, #2dd4bf, #0f766e); } .pi-reference { background: linear-gradient(135deg, #818cf8, #4338ca); }
+.engine-sel { color: #222; }
+.section-sub { margin: -6px 2px 12px; color: var(--muted); font-size: 13px; }
+.lesson-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.lesson-tile { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow); }
+.lesson-tile.done { border-color: #fdba74; background: linear-gradient(180deg, #fff7ed, #fff); }
+.lt-top { display: flex; gap: 10px; align-items: center; }
+.lt-n { width: 32px; height: 32px; border-radius: 50%; background: var(--navy); color: #fff; display: grid; place-items: center; font-weight: 800; flex: none; }
+.lesson-tile.done .lt-n { background: var(--peach); }
+.lt-title { font-weight: 700; font-size: 13.5px; line-height: 1.25; } .lt-tool { font-size: 12px; color: var(--muted); }
+.lt-foot { display: flex; justify-content: space-between; align-items: center; }
+.ch-summary.complete { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 8px; }
+.ch-summary + .ch-card { margin-top: 6px; }
+.ch-card + .ch-summary { margin-top: 18px; }
+.ch-lesson { display: flex; gap: 6px; align-items: baseline; color: var(--ink); margin-bottom: 2px; }
+.ch-lesson-n { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--peach); }
+.cert-btn { margin-top: 8px; width: 100%; }
+.cert-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.7); z-index: 180; overflow: auto; padding: 20px; outline: none; }
+.cert-wrap { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+.cert-bar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.cert-paper { background: #fffdf8; padding: 18px; border-radius: 6px; box-shadow: 0 20px 60px rgba(0,0,0,.4); aspect-ratio: 1.414 / 1; }
+.cert-inner { height: 100%; border: 8px double #172033; outline: 2px solid #f26b1d; outline-offset: -18px; padding: 34px 50px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: space-between; font-family: Georgia, "Times New Roman", serif; color: #172033; }
+.cert-brand { display: flex; align-items: center; gap: 8px; font: 600 14px var(--font); color: #475467; }
+.cert-brand .brand-logo { color: #fff; }
+.cert-kicker { font-size: clamp(22px, 4vw, 40px); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #b4470e; }
+.cert-small { font-style: italic; color: #475467; font-size: 15px; }
+.cert-name { font-size: clamp(28px, 5vw, 52px); font-weight: 700; border-bottom: 3px solid #f26b1d; padding: 0 30px 4px; }
+.cert-lesson { font: 700 clamp(16px, 2.4vw, 26px) var(--font); }
+.cert-tool { font: 15px var(--font); color: #667085; margin-top: -8px; }
+.cert-skills { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; font: 13px var(--font); color: #344054; }
+.cert-skills li::before { content: "✓ "; color: #15803d; }
+.cert-stats { display: flex; gap: 26px; font-family: var(--font); }
+.cert-stat b { display: block; font-size: 22px; } .cert-stat span { font-size: 12px; color: #667085; }
+.cert-foot { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
+.cert-foot > div:not(.cert-seal) { width: 32%; }
+.cert-line { border-bottom: 1px solid #98a2b3; height: 26px; margin-bottom: 4px; }
+.cert-seal { width: 76px; height: 76px; border-radius: 50%; background: radial-gradient(circle, #ff9a55, #f26b1d); color: #fff; font-size: 40px; display: grid; place-items: center; box-shadow: 0 0 0 6px #fde3d0; }
+.cert-verify { font: 11.5px var(--mono); color: #667085; }
+.cert-howto { background: #fff; border-radius: 10px; padding: 12px; font-size: 13.5px; }
+.cert-howto .code-box { margin-top: 6px; }
+.cert-sent { color: var(--good); margin-top: 6px; font-weight: 700; }
+.cert-img { max-width: 100%; margin-top: 8px; border: 1px solid #ddd; }
+.cloud-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 10px 12px; margin-top: 12px; }
+.cloud-box h3 { margin: 0 0 4px !important; }
+.cloud-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media print {
+  body.print-cert > *:not(#cert-overlay) { display: none !important; }
+  body.print-cert #cert-overlay { position: static; background: none; padding: 0; overflow: visible; }
+  body.print-cert .cert-bar, body.print-cert .cert-howto { display: none !important; }
+  html, body.print-cert { height: auto !important; background: #fff !important; }
+  body.print-cert .cert-wrap { max-width: none; }
+  body.print-cert .cert-paper { box-shadow: none; padding: 0; aspect-ratio: auto; height: 180mm; break-inside: avoid; }
+  @page { size: landscape; margin: 10mm; }
+}
+
+/* ---------- v2: interactive cheat sheet ---------- */
+.ref-hero { background: linear-gradient(135deg, #1e1b4b, #4338ca); }
+.ref-search { margin-top: 12px; max-width: 640px; font-size: 15px; padding: 10px 14px; }
+.ref-controls { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; margin: 14px 0 6px; }
+.chip.on { background: var(--navy); color: #fff; border-color: var(--navy); }
+.ref-toggles { display: flex; flex-wrap: wrap; gap: 10px; font-size: 13px; }
+.ref-toggle { display: flex; align-items: center; gap: 3px; cursor: pointer; }
+.ref-list { display: flex; flex-direction: column; gap: 12px; }
+.ref-card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; box-shadow: var(--shadow); }
+.ref-card-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.ref-card-head h3 { margin: 0; font-size: 16px; }
+.ref-cat { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: #4f46e5; }
+.ref-why { margin: 4px 0 8px; color: #475467; font-size: 13.5px; }
+.ref-tip { margin: 0 0 8px; background: #fffbeb; padding: 6px 10px; border-radius: 8px; font-size: 13px; }
+.ref-tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(205px, 1fr)); gap: 8px; }
+.ref-tool { border: 1px solid #ebe9e4; border-top: 3px solid #98a2b3; border-radius: 10px; padding: 8px; background: #fcfcfb; min-width: 0; }
+.rt-xl365 { border-top-color: var(--xl365); } .rt-xl2013 { border-top-color: var(--xl2013); } .rt-gs { border-top-color: #188038; } .rt-sql { border-top-color: var(--sql); } .rt-csv { border-top-color: var(--csv); }
+.ref-tool-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 13px; }
+.ref-tool-head .plat-icon { width: 20px; height: 20px; font-size: 7.5px; border-radius: 4px; }
+.ref-code { margin: 0; background: #f2f4f7; border-radius: 6px; padding: 6px 8px; font-size: 12px; white-space: pre-wrap; word-break: break-word; }
+.ref-btns { display: flex; gap: 6px; margin-top: 6px; }
+.ref-note { font-size: 12px; color: #475467; margin-top: 6px; }
+.ref-none { font-size: 12.5px; color: var(--bad); background: var(--bad-bg); padding: 6px 8px; border-radius: 6px; }
+.ref-out:not(:empty) { margin-top: 6px; }
+.ref-val { font-size: 14px; } .ref-err { color: var(--bad); font-size: 12.5px; font-family: var(--mono); }
+.ref-table { border-collapse: collapse; font-size: 11.5px; width: 100%; display: block; overflow-x: auto; }
+.ref-table td, .ref-table th { border: 1px solid #e5e7eb; padding: 2px 5px; white-space: nowrap; text-align: left; }
+.ref-table th { background: #f5f3ff; }
+
 </style>
 </head>
 <body>
@@ -1106,6 +1192,8 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     var ip = s.split('.')[0], fp = s.split('.')[1];
     var intPart = core.slice(0, dot >= 0 ? dot : core.length);
     if (ip === '0' && intPart.indexOf('0') < 0) ip = '';
+    var minInt = intPart.replace(/[^0]/g, '').length; // "0000" pads 101 -> 0101
+    while (ip.length < minInt) ip = '0' + ip;
     if (commas) ip = addCommas(ip);
     s = ip + (fp !== undefined ? '.' + fp : '');
     return (neg && r !== 0 ? '-' : '') + prefix + s + suffix;
@@ -2249,6 +2337,33 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       return new XErr('#NUM!', 'unit must be "Y", "M", "D", "YM", "MD" or "YD".');
     } });
 
+  // Text -> date serial, for the formats US-English spreadsheets accept
+  var MON3 = MONTHS.map(function (m) { return m.slice(0, 3).toLowerCase(); });
+  function parseDateText(t) {
+    t = String(t).trim();
+    var m;
+    if ((m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(t))) return valid(+m[1], +m[2], +m[3]);
+    if ((m = /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/.exec(t))) { var y = +m[3]; if (y < 100) y += y < 30 ? 2000 : 1900; return valid(y, +m[1], +m[2]); }
+    if ((m = /^([A-Za-z]{3,9})\.?\s+(\d{1,2}),?\s+(\d{4})$/.exec(t))) { var mi = MON3.indexOf(m[1].slice(0, 3).toLowerCase()); return mi < 0 ? null : valid(+m[3], mi + 1, +m[2]); }
+    if ((m = /^(\d{1,2})[\s-]([A-Za-z]{3,9})[\s-](\d{4})$/.exec(t))) { var mj = MON3.indexOf(m[2].slice(0, 3).toLowerCase()); return mj < 0 ? null : valid(+m[3], mj + 1, +m[1]); }
+    return null;
+    function valid(y, mo, d) {
+      if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+      var sv = serial(y, mo, d), back = fromSerial(sv);
+      return back.m === mo && back.d === d ? sv : null;
+    }
+  }
+  def('DATEVALUE', { min: 1, max: 1, args: 'v', cat: 'Date', sig: 'DATEVALUE(date_text)', desc: 'Turns a date written as TEXT ("2026-09-03", "9/3/2026", "Sep 3, 2026") into a real date number.', fmt: 'date',
+    fn: function (v) {
+      if (typeof v[0] === 'number') return new XErr('#VALUE!', 'DATEVALUE needs TEXT. This value is already a number/real date — use it as it is.');
+      var d = parseDateText(toStr(v[0]));
+      return d === null ? new XErr('#VALUE!', '"' + toStr(v[0]) + '" is not a date format this spreadsheet understands (US English). Try rebuilding it with DATE(year, month, day).') : d;
+    } });
+  def('CLEAN', { min: 1, max: 1, args: 'v', cat: 'Text', sig: 'CLEAN(text)', desc: 'Removes invisible non-printing characters (like line breaks pasted from other systems).',
+    fn: function (v) { return toStr(v[0]).replace(/[\x00-\x1f]/g, ''); } });
+  def('CHAR', { min: 1, max: 1, args: 'v', cat: 'Text', sig: 'CHAR(number)', desc: 'The character with this code. CHAR(10) is a line break, CHAR(9) is a TAB.',
+    fn: function (v) { var n = num(v[0]); if (isErr(n)) return n; if (n < 1 || n > 255) return new XErr('#VALUE!'); return String.fromCharCode(n); } });
+
   // --- Info ---
   function info(name, f, desc) {
     def(name, { min: 1, max: 1, args: 'v', passErr: true, cat: 'Info', sig: name + '(value)', desc: desc, fn: function (v) { return f(v[0]); } });
@@ -2314,7 +2429,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     toNum: toNum, toStr: toStr, toBool: toBool, cmp: cmp, sortCmp: sortCmp,
     parseNumberText: parseNumberText, displayValue: displayValue, formatWithCode: formatWithCode,
     generalDisplay: generalDisplay, serial: serial, fromSerial: fromSerial, toMat: toMat,
-    makeCriterion: makeCriterion, wildcardRe: wildcardRe, FORMATS: FORMATS, MONTHS: MONTHS
+    makeCriterion: makeCriterion, parseDateText: parseDateText, wildcardRe: wildcardRe, FORMATS: FORMATS, MONTHS: MONTHS
   };
 })(globalThis.SX = globalThis.SX || {});
 
@@ -3400,6 +3515,24 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       case 'LOWER': need(1); return a[0] === null ? null : toText(a[0]).toLowerCase();
       case 'LENGTH': case 'LEN': need(1); return a[0] === null ? null : toText(a[0]).length;
       case 'TRIM': need(1); return a[0] === null ? null : toText(a[0]).trim();
+      case 'LTRIM': need(1); return a[0] === null ? null : toText(a[0]).replace(/^\s+/, '');
+      case 'RTRIM': need(1); return a[0] === null ? null : toText(a[0]).replace(/\s+$/, '');
+      case 'PRINTF': case 'FORMAT': {
+        if (!a.length) throw new SqlError('wrong number of arguments to function ' + name + '()');
+        var k = 1;
+        return toText(a[0]).replace(/%(0?)(\d*)(?:\.(\d+))?([dsf%])/g, function (m0, zero, width, prec, kind) {
+          if (kind === '%') return '%';
+          var v = a[k++], out;
+          if (v === null || v === undefined) out = kind === 's' ? '' : '0';
+          else if (kind === 'd') out = String(Math.trunc(sqlNumify(v)));
+          else if (kind === 'f') out = sqlNumify(v).toFixed(prec === undefined ? 6 : +prec);
+          else out = toText(v);
+          var w = +width || 0;
+          while (out.length < w) out = (zero && kind !== 's' ? '0' : ' ') + out;
+          if (zero && kind !== 's' && out.indexOf('-') > 0) out = '-' + out.replace('-', '0');
+          return out;
+        });
+      }
       case 'ABS': need(1); return a[0] === null ? null : Math.abs(sqlNumify(a[0]));
       case 'ROUND': {
         need(1, 2); if (a[0] === null) return null;
@@ -3652,6 +3785,20 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     db.create('stores', [
       { name: 'store_id', type: 'TEXT' }, { name: 'city', type: 'TEXT' }, { name: 'state', type: 'TEXT' },
       { name: 'zip', type: 'INTEGER' }, { name: 'manager', type: 'TEXT' }, { name: 'opened', type: 'TEXT' }], D.STORES.map(function (r) { return r.slice(); }));
+    // v2: the messy order feed, imported "as is" (everything TEXT, blanks become NULL)
+    if (SX.wrangle) {
+      var W = SX.wrangle;
+      db.create('raw_orders', [
+        { name: 'order_id', type: 'INTEGER' }, { name: 'store', type: 'TEXT' }, { name: 'item_code', type: 'TEXT' }, { name: 'order_date', type: 'TEXT' },
+        { name: 'qty', type: 'TEXT' }, { name: 'unit_price', type: 'TEXT' }, { name: 'customer', type: 'TEXT' }, { name: 'channel', type: 'TEXT' }],
+        W.MESSY.map(function (m, i) {
+          var t = W.TRUTH[i];
+          var date = m.dateKind === 'real' ? t.m + '/' + t.d + '/' + t.y : m.date;
+          return [t.id, m.store, String(m.code), date, m.qty === '' ? null : String(m.qty), String(m.price), m.customer, m.channel];
+        }));
+      db.create('item_codes', [{ name: 'code', type: 'TEXT' }, { name: 'product', type: 'TEXT' }, { name: 'category', type: 'TEXT' }, { name: 'price', type: 'REAL' }],
+        W.ITEMS.map(function (it) { return [it.code, it.product, it.category, it.price]; }));
+    }
     return db;
   }
 
@@ -4240,11 +4387,189 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       'sales.csv': stringify(rowsOf(D.SALES_HEADERS, D.SALES), ','),
       'stores.csv': stringify(rowsOf(D.STORE_HEADERS, D.STORES), ','),
       'suppliers.csv': stringify(rowsOf(D.SUPPLIER_HEADERS, D.SUPPLIERS), ','),
-      'broken_products.csv': broken
+      'broken_products.csv': broken,
+      'messy_orders.csv': SX.wrangle.files()['messy_orders.csv'],
+      'item_codes.csv': SX.wrangle.files()['item_codes.csv']
     };
   }
 
   SX.csv = { parse: parse, stringify: stringify, detectDelimiter: detectDelimiter, autoConvert: autoConvert, exportSheet: exportSheet, defaultFiles: defaultFiles, quote: quote };
+})(globalThis.SX = globalThis.SX || {});
+
+// ---- wrangle.js ----
+/* SheetEX v2 — Data Wrangling Lab dataset.
+ * "Before Peachtree can train an AI model on its orders, someone has to clean the data."
+ * Every messy value is generated from a clean TRUTH record, so challenge answers are exact. */
+(function (SX) {
+  'use strict';
+  var D = SX.data, E = SX.engine;
+
+  // Item codes are the SKU digits padded to 4 characters: SKU-101 -> "0101"
+  function code4(sku) { return ('0000' + sku.replace(/\D/g, '')).slice(-4); }
+  var ITEMS = D.PRODUCTS.map(function (p) { return { code: code4(p[0]), product: p[1], category: p[2], price: p[3] }; });
+  var byCode = {}; ITEMS.forEach(function (it) { byCode[it.code] = it; });
+
+  var PEOPLE = [['Jordan', 'Smith'], ['Maria', 'Lopez'], ['Chris', 'Lee'], ['Taylor', 'Kim'], ['Avery', 'Johnson'],
+    ['Sam', 'Patel'], ['Riley', 'Brooks'], ['Morgan', 'Davis'], ['Jamie', 'Nguyen'], ['Casey', 'Wright']];
+  var STORES = ['S01', 'S02', 'S03', 'S04', 'S05'];
+  var MONTH3 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  // ---- TRUTH: 30 clean orders ----
+  var TRUTH = [];
+  for (var i = 0; i < 30; i++) {
+    var item = ITEMS[(i * 7 + 3) % ITEMS.length];
+    var person = PEOPLE[(i * 3 + 1) % PEOPLE.length];
+    var missingQty = [4, 9, 13, 21, 26].indexOf(i) >= 0;
+    TRUTH.push({
+      id: 5001 + i,
+      store: STORES[(i * 2 + i % 3) % 5],
+      code: item.code,
+      y: 2026, m: 9, d: 1 + (i * 11) % 30,
+      qty: missingQty ? null : 1 + (i * 5) % 14,
+      price: item.price,
+      first: person[0], last: person[1],
+      channel: i % 3 === 0 ? 'Online' : 'In-Store'
+    });
+  }
+  var EURO_ROW = 17; // this one arrives as a European date: 03.09.2026
+
+  // ---- How each truth value arrives messy ----
+  var NULL_TOKENS = ['', 'N/A', '-', 'null', ''];
+  function messy(t, i) {
+    var r = {};
+    r.store = i % 4 === 1 ? t.store.toLowerCase() : i % 4 === 2 ? ' ' + t.store + ' ' : t.store;
+    r.codeKind = i % 3 === 0 ? 'number' : i % 3 === 1 ? 'text' : 'spaced';
+    r.code = r.codeKind === 'number' ? Number(t.code) : r.codeKind === 'text' ? t.code : ' ' + t.code;
+    var us = t.m + '/' + t.d + '/' + t.y, iso = t.y + '-' + ('0' + t.m).slice(-2) + '-' + ('0' + t.d).slice(-2);
+    if (i === EURO_ROW) { r.dateKind = 'euro'; r.date = ('0' + t.d).slice(-2) + '.' + ('0' + t.m).slice(-2) + '.' + t.y; }
+    else {
+      r.dateKind = ['real', 'iso', 'us', 'mon', 'real'][i % 5];
+      r.date = r.dateKind === 'iso' ? iso : r.dateKind === 'us' ? us : r.dateKind === 'mon' ? MONTH3[t.m - 1] + ' ' + t.d + ', ' + t.y : iso;
+    }
+    if (t.qty === null) { r.qtyKind = 'null'; r.qty = NULL_TOKENS[[4, 9, 13, 21, 26].indexOf(i)]; }
+    else if (i % 4 === 3) { r.qtyKind = 'text'; r.qty = String(t.qty); }
+    else { r.qtyKind = 'number'; r.qty = t.qty; }
+    r.priceKind = ['number', 'dollar', 'space'][i % 3];
+    r.price = r.priceKind === 'number' ? t.price : r.priceKind === 'dollar' ? '$' + t.price.toFixed(2) : t.price.toFixed(2) + ' ';
+    var k = i % 4;
+    r.customer = k === 0 ? (t.first + ' ' + t.last).toLowerCase() : k === 1 ? '  ' + t.first + ' ' + t.last + ' ' : k === 2 ? t.last + ', ' + t.first : (t.first + ' ' + t.last).toUpperCase();
+    r.channel = [t.channel, t.channel.toLowerCase(), t.channel === 'Online' ? 'online ' : 'in store'][i % 3];
+    return r;
+  }
+  var MESSY = TRUTH.map(messy);
+
+  // HLOOKUP table: stores across the top
+  var TARGETS = [['Store', 'S01', 'S02', 'S03', 'S04', 'S05'],
+    ['Region', 'North', 'North', 'Metro', 'Coast', 'East'],
+    ['Sept Target', 60, 85, 120, 70, 55],
+    ['Manager', 'Dana Whitfield', 'Marcus Bell', 'Priya Raman', 'Luis Ortega', 'Hannah Cho']];
+
+  // Contacts for concatenation & delimiters. Zip stored as a NUMBER, so 05401 already lost its zero.
+  var CONTACTS = [
+    ['Dana', 'Whitfield', 'Cumming', 'GA', 30040, 'snacks|drinks'],
+    ['Marcus', 'Bell', 'Alpharetta', 'GA', 30009, 'supplies'],
+    ['Priya', 'Raman', 'Atlanta', 'GA', 30303, 'electronics|apparel|snacks'],
+    ['Luis', 'Ortega', 'Savannah', 'GA', 31401, ''],
+    ['Hannah', 'Cho', 'Athens', 'GA', 30601, 'drinks'],
+    ['Erin', 'Walsh', 'Burlington', 'VT', 5401, 'apparel|supplies'],
+    ['Omar', 'Haddad', 'Boston', 'MA', 2110, 'supplies|electronics'],
+    ['Grace', 'Liu', 'Asheville', 'NC', 28801, 'snacks|drinks|apparel|supplies']
+  ];
+
+  var ORDER_HEADERS = ['OrderID', 'Store', 'ItemCode', 'OrderDate', 'Qty', 'UnitPrice', 'Customer', 'Channel'];
+  var REPORT_ROWS = [
+    ['Question', 'Your answer (formula)'],
+    ['How many Qty cells are completely blank?', ''],
+    ['How many Qty cells hold a fake-null word (N/A, -, null)?', ''],
+    ['How many orders have NO usable quantity after cleaning?', ''],
+    ['Real date for the European date 03.09.2026 (row 19)', ''],
+    ['', ''],
+    ['Sept target for store S03 (HLOOKUP)', ''],
+    ['Total units of all orders with a usable quantity', ''],
+    ['', ''],
+    ['CSV line for Contacts row 2', ''],
+    ['Orders with more than 10 units (list spills from D2)', '']
+  ];
+
+  function serialOf(t) { return E.serial(t.y, t.m, t.d); }
+
+  function makeWorkbook(platId) {
+    var wb = new SX.Workbook(platId);
+    function put(sheet, r, c, v, fmt) {
+      var input = v === null || v === undefined ? '' : typeof v === 'number' ? String(v) : (E.parseNumberText(v) || /^(TRUE|FALSE)$/i.test(v.trim()) || v === '-' ? "'" + v : v);
+      if (typeof v === 'string' && /^\s|\s$/.test(v)) input = "'" + v; // keep surrounding spaces as text
+      if (input === '' && !fmt) return;
+      wb.setCell(sheet, r, c, { input: input, fmt: fmt });
+    }
+    wb.addSheet('RawOrders');
+    ORDER_HEADERS.forEach(function (hd, c) { put('RawOrders', 0, c, hd); });
+    MESSY.forEach(function (m, i) {
+      var t = TRUTH[i], r = i + 1;
+      put('RawOrders', r, 0, t.id);
+      put('RawOrders', r, 1, m.store);
+      put('RawOrders', r, 2, m.code);
+      if (m.dateKind === 'real') wb.setCell('RawOrders', r, 3, { input: String(serialOf(t)), fmt: 'date' });
+      else put('RawOrders', r, 3, m.date);
+      put('RawOrders', r, 4, m.qty === '' ? null : m.qty);
+      put('RawOrders', r, 5, m.price, m.priceKind === 'number' ? 'currency' : undefined);
+      put('RawOrders', r, 6, m.customer);
+      put('RawOrders', r, 7, m.channel);
+    });
+    wb.addSheet('ItemCodes');
+    ['Code', 'Product', 'Category', 'Price'].forEach(function (hd, c) { put('ItemCodes', 0, c, hd); });
+    ITEMS.forEach(function (it, i) { put('ItemCodes', i + 1, 0, it.code); put('ItemCodes', i + 1, 1, it.product); put('ItemCodes', i + 1, 2, it.category); put('ItemCodes', i + 1, 3, it.price, 'currency'); });
+    wb.addSheet('Targets');
+    TARGETS.forEach(function (row, r) { row.forEach(function (v, c) { put('Targets', r, c, v); }); });
+    wb.addSheet('Contacts');
+    ['First', 'Last', 'City', 'State', 'Zip', 'Tags'].forEach(function (hd, c) { put('Contacts', 0, c, hd); });
+    CONTACTS.forEach(function (row, i) { row.forEach(function (v, c) { put('Contacts', i + 1, c, v === '' ? null : v); }); });
+    wb.addSheet('Report');
+    REPORT_ROWS.forEach(function (row, r) { put('Report', r, 0, row[0]); put('Report', r, 1, row[1]); });
+    wb.recalc();
+    return wb;
+  }
+
+  // CSV versions for the CSV workspace (and the cheat sheet)
+  function files() {
+    var csv = SX.csv;
+    var orders = [ORDER_HEADERS].concat(MESSY.map(function (m, i) {
+      var t = TRUTH[i];
+      var date = m.dateKind === 'real' ? t.m + '/' + t.d + '/' + t.y : m.date;
+      return [t.id, m.store, m.codeKind === 'number' ? String(m.code) : m.code, date, m.qty, m.price, m.customer, m.channel];
+    }));
+    return {
+      'messy_orders.csv': csv.stringify(orders, ','),
+      'item_codes.csv': csv.stringify([['Code', 'Product', 'Category', 'Price']].concat(ITEMS.map(function (it) { return [it.code, it.product, it.category, it.price.toFixed(2)]; })), ',')
+    };
+  }
+
+  // ---- Expected answers ----
+  function properName(t) { return t.first + ' ' + t.last; }
+  var X = {
+    codes: TRUTH.map(function (t) { return t.code; }),
+    qty: TRUTH.map(function (t) { return t.qty; }),
+    stores: TRUTH.map(function (t) { return t.store; }),
+    prices: TRUTH.map(function (t) { return t.price; }),
+    dates: TRUTH.map(serialOf),
+    names: TRUTH.map(properName),
+    products: TRUTH.map(function (t) { return byCode[t.code].product; }),
+    lineTotals: TRUTH.map(function (t) { return t.qty === null ? null : Math.round(t.qty * byCode[t.code].price * 100) / 100; }),
+    regions: TRUTH.map(function (t) { return TARGETS[1][TARGETS[0].indexOf(t.store)]; }),
+    blankQty: MESSY.filter(function (m) { return m.qty === ''; }).length,
+    fakeNullQty: MESSY.filter(function (m) { return m.qtyKind === 'null' && m.qty !== ''; }).length,
+    missingQty: TRUTH.filter(function (t) { return t.qty === null; }).length,
+    euroDate: serialOf(TRUTH[EURO_ROW]),
+    targetS03: TARGETS[2][3],
+    totalUnits: TRUTH.reduce(function (a, t) { return a + (t.qty || 0); }, 0),
+    lastFirst: CONTACTS.map(function (c) { return c[1] + ', ' + c[0]; }),
+    mailing: CONTACTS.map(function (c) { return c[2] + ', ' + c[3] + ' ' + ('00000' + c[4]).slice(-5); }),
+    tagCounts: CONTACTS.map(function (c) { return c[5] === '' ? 0 : c[5].split('|').length; }),
+    csvRow2: CONTACTS[0].slice(0, 5).join(','),
+    bigOrders: TRUTH.filter(function (t) { return t.qty !== null && t.qty > 10; }).map(function (t) { return t.id; })
+  };
+
+  SX.wrangle = { TRUTH: TRUTH, MESSY: MESSY, ITEMS: ITEMS, TARGETS: TARGETS, CONTACTS: CONTACTS, EURO_ROW: EURO_ROW,
+    makeWorkbook: makeWorkbook, files: files, X: X, code4: code4 };
 })(globalThis.SX = globalThis.SX || {});
 
 // ---- challenges.js ----
@@ -4344,8 +4669,10 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       for (var k = 0; k < expected.length; k++) {
         var addr = sheet + '!' + col + (r1 + k), v = h.val(addr);
         var ex = expected[k];
-        var good = typeof ex === 'number' ? near(v, ex, 0.006) : String(v) === String(ex);
+        if (opts.skip && opts.skip.indexOf(k) >= 0) continue;
+        var good = ex === null ? (v === null || v === '' || v === undefined) : typeof ex === 'number' ? near(v, ex, 0.006) : String(v) === String(ex);
         if (!good) {
+          if (ex === null) return no(addr + ' shows "' + h.text(addr) + '" but this order has no usable value, so it should be blank ("").');
           if (v === null || v === undefined || v === '') return no(addr + ' is empty. Did you fill the formula down to row ' + (r1 + expected.length - 1) + '? (Select the cells and press Ctrl+D, or drag the fill handle.)');
           return no(addr + ' shows "' + h.text(addr) + '" but should be "' + (typeof ex === 'number' ? E.displayValue(ex) : ex) + '".');
         }
@@ -4715,6 +5042,122 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       return bad.length ? no(bad[0] + '. Reset the database and try again if needed.') : ok();
     } });
 
+
+  // ===== v2: Data Wrangling Lab =====
+  var W = SX.wrangle.X, WR = 'RawOrders';
+  var EURO = SX.wrangle.EURO_ROW;
+  add({ id: 'wr-quiz-zero', plat: 'wr1', type: 'quiz', title: 'Where Did the Zero Go?', xp: 10, level: 1,
+    task: 'RawOrders!C2 shows <b>104</b>, but the real item code is <b>0104</b>. Why?',
+    options: ['Someone typed it wrong', 'It was stored as a NUMBER, and numbers never keep leading zeros', 'The cell is too narrow', 'Leading zeros are hidden by formatting'], answer: 1,
+    hints: ['Look at how the cell is aligned. Numbers line up on the right, text on the left.'],
+    learn: 'IDs, ZIP codes and phone numbers are TEXT, even though they are made of digits. An AI model will treat 104 and "0104" as two different items.' });
+  add({ id: 'wr-code', plat: 'wr1', title: 'Rebuild the Item Codes', xp: 20, level: 1, target: 'RawOrders!I2',
+    task: 'Type <b>CleanCode</b> in RawOrders!I1. In <b>I2:I31</b>, turn every ItemCode (column C) into a 4-character text code like <b>0104</b> — whether it arrived as 104, "0104" or " 0402".',
+    hints: ['TEXT(value, "0000") writes a number with at least 4 digits, adding zeros in front.', 'TEXT also understands digits stored as text, and ignores the stray spaces.', '<code>=TEXT(C2, "0000")</code> then fill down to row 31 (Ctrl+D).'],
+    learn: 'TEXT(x, "0000") is the spreadsheet version of zero-padding. SQL: printf(\'%04d\', x). Python: str(x).zfill(4).',
+    check: columnCheck(WR, 'I', 2, W.codes) });
+  add({ id: 'wr-blanks', plat: 'wr1', title: 'Count the Holes', xp: 10, level: 1, target: 'Report!B2',
+    task: 'In <b>Report!B2</b>, count how many Qty cells (RawOrders!E2:E31) are <b>completely empty</b>.',
+    hints: ['COUNTBLANK(range) counts empty cells.', '<code>=COUNTBLANK(RawOrders!E2:E31)</code>'],
+    learn: 'Empty is only ONE kind of missing data. Look at the next challenge…',
+    check: valueCheck('Report!B2', W.blankQty) });
+  add({ id: 'wr-fakenull', plat: 'wr1', title: 'Fake Nulls', xp: 20, level: 2, target: 'Report!B3',
+    task: 'Some systems write missing values as words. In <b>Report!B3</b>, count Qty cells that say <b>N/A</b>, <b>-</b> or <b>null</b>.',
+    hints: ['COUNTIF counts one kind of value. You can add several COUNTIFs together.', '<code>=COUNTIF(RawOrders!E2:E31, "N/A") + COUNTIF(RawOrders!E2:E31, "-") + COUNTIF(RawOrders!E2:E31, "null")</code>'],
+    learn: 'COUNTBLANK said ' + W.blankQty + ' — the real number of missing quantities is ' + W.missingQty + '. "null", "N/A" and "-" are TEXT that MEANS missing. Before training a model, they must all become one true blank/NA.',
+    check: valueCheck('Report!B3', W.fakeNullQty) });
+  add({ id: 'wr-qty', plat: 'wr1', title: 'One Kind of Missing', xp: 25, level: 2, target: 'RawOrders!J2',
+    task: 'Type <b>CleanQty</b> in J1. In <b>J2:J31</b>, turn Qty into a real number — "12" (text) becomes 12 — and turn every kind of missing value into a blank <code>""</code>.',
+    hints: ['VALUE(text) turns "12" into 12. VALUE("N/A") and VALUE("") give #VALUE!.', 'IFERROR(x, "") replaces any error with an empty string.', '<code>=IFERROR(VALUE(E2), "")</code> then fill down.'],
+    learn: 'Text that looks like a number does not add up: SUM ignores "12". Converting types is step one of every data-cleaning job.',
+    check: columnCheck(WR, 'J', 2, W.qty) });
+  add({ id: 'wr-store', plat: 'wr1', title: 'Same Store, Different Spelling', xp: 15, level: 1, target: 'RawOrders!K2',
+    task: 'Type <b>CleanStore</b> in K1. In <b>K2:K31</b>, clean the Store codes so "s04" and " S02 " become <b>S04</b> and <b>S02</b>.',
+    hints: ['TRIM removes extra spaces. UPPER makes capitals.', 'Nest them: one function inside the other.', '<code>=UPPER(TRIM(B2))</code>'],
+    learn: 'To a computer "S04", "s04" and " S04" are three different stores. A model trained on this would think you have 13 stores!',
+    check: columnCheck(WR, 'K', 2, W.stores) });
+  add({ id: 'wr-price', plat: 'wr1', title: 'Prices That Are Really Text', xp: 15, level: 1, target: 'RawOrders!L2',
+    task: 'Type <b>CleanPrice</b> in L1. In <b>L2:L31</b>, turn UnitPrice into real numbers ("$3.25" → 3.25, "14.99 " → 14.99).',
+    hints: ['VALUE understands $ signs, commas and extra spaces.', '<code>=VALUE(F2)</code>'],
+    learn: 'If a column has even ONE text price, averages and sums silently skip it. Always check types.',
+    check: columnCheck(WR, 'L', 2, W.prices) });
+  add({ id: 'wr-date', plat: 'wr1', title: 'Four Kinds of Dates', xp: 30, level: 2, target: 'RawOrders!M2',
+    task: 'Type <b>CleanDate</b> in M1. In <b>M2:M31</b>, make every OrderDate a <b>real date</b>. Some are already dates, others are text like "2026-09-12", "9/23/2026" or "Sep 4, 2026". (Row 19 is special — skip it for now.)',
+    hints: ['ISNUMBER(D2) is TRUE when D2 is already a real date (dates are numbers underneath).', 'DATEVALUE("Sep 4, 2026") turns date TEXT into a real date.', '<code>=IF(ISNUMBER(D2), D2, DATEVALUE(D2))</code> — then format column M as Date.'],
+    learn: 'Real dates are numbers (days since 1900), so you can sort them, subtract them and group them by month. Text dates cannot do any of that.',
+    check: columnCheck(WR, 'M', 2, W.dates, { skip: [EURO] }) });
+  add({ id: 'wr-euro', plat: 'wr1', title: 'The European Date', xp: 30, level: 3, target: 'Report!B5',
+    task: 'RawOrders!D19 says <b>03.09.2026</b> — in Europe that means <b>3 September 2026</b>. DATEVALUE cannot read it. In <b>Report!B5</b>, build the real date from its pieces.',
+    hints: ['DATE(year, month, day) builds a date from numbers.', 'Cut the text apart: RIGHT(text, 4) is the year, MID(text, 4, 2) is the month, LEFT(text, 2) is the day.', '<code>=DATE(RIGHT(RawOrders!D19, 4), MID(RawOrders!D19, 4, 2), LEFT(RawOrders!D19, 2))</code>'],
+    learn: 'Is 03/09 March 9th or September 3rd? It depends on the country. Merging data from different places is one of the most common ways datasets go wrong.',
+    check: valueCheck('Report!B5', W.euroDate) });
+  add({ id: 'wr-name', plat: 'wr1', title: 'Fix the Names', xp: 35, level: 3, target: 'RawOrders!N2',
+    task: 'Type <b>CleanName</b> in N1. In <b>N2:N31</b>, turn every Customer into <b>First Last</b> with proper capitals: "jordan smith", "  Avery Johnson ", "TAYLOR KIM" and even "Davis, Morgan" → "Morgan Davis".',
+    hints: ['PROPER(TRIM(G2)) fixes spaces and capitals for most rows.', 'For "Last, First": FIND(",", G2) gives the comma position. LEFT gets the last name, MID gets everything after the comma.', '<code>=IF(ISNUMBER(FIND(",", G2)), PROPER(TRIM(MID(G2, FIND(",", G2) + 1, 99)) &amp; " " &amp; LEFT(G2, FIND(",", G2) - 1)), PROPER(TRIM(G2)))</code>'],
+    learn: 'This is a nested formula: IF, ISNUMBER, FIND, PROPER, TRIM, MID and LEFT working together. Building it one piece at a time is the skill.',
+    check: columnCheck(WR, 'N', 2, W.names) });
+  add({ id: 'wr-missing', plat: 'wr1', title: 'How Dirty Was It?', xp: 10, level: 1, target: 'Report!B4',
+    task: 'After CleanQty is done, count in <b>Report!B4</b> how many orders have <b>no usable quantity</b>.',
+    hints: ['Your CleanQty column turned every kind of missing into "". COUNTBLANK counts "" too.', '<code>=COUNTBLANK(RawOrders!J2:J31)</code>'],
+    learn: 'Report your missing data. A model trained without telling anyone that 1 in 6 rows was dropped can be badly biased.',
+    check: valueCheck('Report!B4', W.missingQty) });
+
+  add({ id: 'wr-quiz-na', plat: 'wr2', type: 'quiz', title: 'The #N/A Mystery', xp: 15, level: 1,
+    task: '<code>=VLOOKUP(RawOrders!C2, ItemCodes!A2:D25, 2, FALSE)</code> gives <b>#N/A</b>, even though code 0104 IS in the ItemCodes table. Why?',
+    options: ['VLOOKUP only works on sorted data', 'C2 is the NUMBER 104 and the table has the TEXT "0104" — they never match', 'FALSE should be TRUE', 'ItemCodes is on a different sheet'], answer: 1,
+    hints: ['Compare how C2 and ItemCodes!A2 are aligned in their cells.'],
+    learn: 'A lookup only matches the same TYPE: number 104 ≠ text "0104". This is the #1 reason lookups fail on real data.' });
+  add({ id: 'wr-vlookup', plat: 'wr2', title: 'Look Up the Products', xp: 20, level: 1, target: 'RawOrders!O2',
+    task: 'Type <b>Product</b> in O1. In <b>O2:O31</b>, use <b>VLOOKUP</b> with your <b>CleanCode</b> (column I) to show each product name from ItemCodes.',
+    hints: ['Look up I2, not C2 — I2 is the cleaned text code.', 'Lock the table with $ so it does not slide when you fill down.', '<code>=VLOOKUP(I2, ItemCodes!$A$2:$D$25, 2, FALSE)</code>'],
+    learn: 'Clean first, then join. In SQL this is a JOIN; in Python pandas it is merge().',
+    check: columnCheck(WR, 'O', 2, W.products, { mustUse: ['VLOOKUP'] }) });
+  add({ id: 'wr-total', plat: 'wr2', title: 'Line Totals', xp: 25, level: 2, target: 'RawOrders!P2',
+    task: 'Type <b>LineTotal</b> in P1. In <b>P2:P31</b>, calculate CleanQty × the ItemCodes price. If CleanQty is blank, leave LineTotal blank.',
+    hints: ['Look the price up with XLOOKUP (or INDEX/MATCH) using I2.', 'Wrap it: IF(J2 = "", "", ...)', '<code>=IF(J2 = "", "", J2 * XLOOKUP(I2, ItemCodes!$A$2:$A$25, ItemCodes!$D$2:$D$25))</code>'],
+    learn: 'Missing values spread: blank × price should stay blank, not turn into 0 — a fake 0 would teach a model that people order nothing.',
+    check: columnCheck(WR, 'P', 2, W.lineTotals) });
+  add({ id: 'wr-hlookup', plat: 'wr2', title: 'HLOOKUP Goes Sideways', xp: 15, level: 1, target: 'Report!B7',
+    task: 'The Targets sheet is laid out <b>sideways</b> (stores across the top). In <b>Report!B7</b>, use <b>HLOOKUP</b> to find the Sept Target for store <b>S03</b>.',
+    hints: ['HLOOKUP searches the FIRST ROW, then returns from a row below.', 'Sept Target is the 3rd row of Targets!A1:F3.', '<code>=HLOOKUP("S03", Targets!A1:F3, 3, FALSE)</code>'],
+    learn: 'VLOOKUP = vertical tables, HLOOKUP = horizontal tables. XLOOKUP and INDEX/MATCH handle both.',
+    check: valueCheck('Report!B7', W.targetS03, { mustUse: ['HLOOKUP'] }) });
+  add({ id: 'wr-region', plat: 'wr2', title: 'Region for Every Order', xp: 20, level: 2, target: 'RawOrders!Q2',
+    task: 'Type <b>Region</b> in Q1. In <b>Q2:Q31</b>, use HLOOKUP with your <b>CleanStore</b> (column K) to show each order\'s region.',
+    hints: ['Use the cleaned store in K2 — " S02 " would not match.', '<code>=HLOOKUP(K2, Targets!$B$1:$F$2, 2, FALSE)</code>'],
+    learn: 'Every lookup in this lab worked only because you cleaned the key column first.',
+    check: columnCheck(WR, 'Q', 2, W.regions, { mustUse: ['HLOOKUP'] }) });
+  add({ id: 'wr-units', plat: 'wr2', title: 'Now the Math Works', xp: 10, level: 1, target: 'Report!B8',
+    task: 'In <b>Report!B8</b>, add up all the cleaned quantities (CleanQty).',
+    hints: ['<code>=SUM(RawOrders!J2:J31)</code>. Try SUM on column E too and compare — the text "12"s were being skipped!'],
+    learn: 'SUM(E2:E31) gives a smaller, WRONG total because it skips text numbers. Clean data changes the answer.',
+    check: valueCheck('Report!B8', W.totalUnits) });
+  add({ id: 'wr-lastfirst', plat: 'wr2', title: 'Last, First', xp: 15, level: 1, target: 'Contacts!G2',
+    task: 'On <b>Contacts</b>, fill <b>G2:G9</b> with names written as <b>Last, First</b> (e.g. "Whitfield, Dana").',
+    hints: ['The & operator joins text. The comma and space go inside quotes: ", "', '<code>=B2 &amp; ", " &amp; A2</code>'],
+    learn: 'A delimiter is the character that separates pieces of text — here it is ", ".',
+    check: columnCheck('Contacts', 'G', 2, W.lastFirst) });
+  add({ id: 'wr-mailing', plat: 'wr2', title: 'Keep the Zero (Again)', xp: 25, level: 2, target: 'Contacts!H2',
+    task: 'In <b>Contacts!H2:H9</b>, build a mailing line like <b>Burlington, VT 05401</b>. Watch out: the Zip column lost its leading zeros!',
+    hints: ['Join City, ", ", State, " " and the Zip.', 'TEXT(E2, "00000") puts the missing zero back.', '<code>=C2 &amp; ", " &amp; D2 &amp; " " &amp; TEXT(E2, "00000")</code>'],
+    learn: 'ZIP codes in New England start with 0. Treat ZIPs as text from the start and this problem never happens.',
+    check: columnCheck('Contacts', 'H', 2, W.mailing) });
+  add({ id: 'wr-tags', plat: 'wr2', title: 'Count the Delimited Tags', xp: 30, level: 3, target: 'Contacts!I2',
+    task: 'Column F holds tags separated by a pipe: <code>snacks|drinks</code>. In <b>Contacts!I2:I9</b>, count how many tags each contact has (blank = 0).',
+    hints: ['Number of tags = number of | characters + 1.', 'Count the pipes: LEN(F2) - LEN(SUBSTITUTE(F2, "|", "")).', '<code>=IF(F2 = "", 0, LEN(F2) - LEN(SUBSTITUTE(F2, "|", "")) + 1)</code>'],
+    learn: 'Sheets has SPLIT(F2, "|") and Excel 365 has TEXTSPLIT to break the tags into cells. Counting delimiters is the trick that works everywhere.',
+    check: columnCheck('Contacts', 'I', 2, W.tagCounts) });
+  add({ id: 'wr-csvline', plat: 'wr2', title: 'Write a CSV Line', xp: 15, level: 1, target: 'Report!B10',
+    task: 'In <b>Report!B10</b>, join Contacts!A2:E2 into one CSV line with commas between the values.',
+    hints: ['TEXTJOIN(delimiter, ignore_empty, range).', '<code>=TEXTJOIN(",", FALSE, Contacts!A2:E2)</code>'],
+    learn: 'This is exactly what "Save as CSV" does for every row. Now you know why a comma INSIDE a value breaks the file.',
+    check: valueCheck('Report!B10', W.csvRow2) });
+  add({ id: 'wr-filter', plat: 'wr2', title: 'Filter the Feed', xp: 30, level: 3, target: 'Report!D2',
+    task: 'In <b>Report!D2</b>, use <b>FILTER</b> to list the OrderIDs whose CleanQty is <b>more than 10</b>. (Careful — try <code>J2:J31&gt;10</code> alone first and look at what sneaks in!)',
+    hints: ['Blank text "" counts as BIGGER than any number in spreadsheet comparisons — so the missing rows sneak in.', 'Only keep real numbers: ISNUMBER(J2:J31) * (J2:J31 &gt; 10). Multiplying two tests means AND.', '<code>=FILTER(RawOrders!A2:A31, ISNUMBER(RawOrders!J2:J31) * (RawOrders!J2:J31 &gt; 10))</code>'],
+    learn: 'Missing values break filters in sneaky ways. Always ask "what happens to the blanks?"',
+    check: spillCheck('Report!D2', W.bigOrders, { mustUse: ['FILTER'] }) });
+
   // ===== Compare-page quizzes =====
   add({ id: 'cmp-name', plat: 'compare', type: 'quiz', title: 'Who Says #NAME?', xp: 10, level: 1,
     task: 'Where does <code>=XLOOKUP(A2, B:B, C:C)</code> give a <b>#NAME?</b> error?',
@@ -4774,6 +5217,259 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     forPlat: function (p) { return C.filter(function (c) { return c.plat === p; }); } };
 })(globalThis.SX = globalThis.SX || {});
 
+// ---- lessons.js ----
+/* SheetEX v2 — lessons (groups of challenges) and certificate codes. */
+(function (SX) {
+  'use strict';
+
+  var LESSONS = [
+    { id: 'xl365', n: 1, title: 'Spreadsheet Foundations', tool: 'Excel 365', workspace: 'xl365',
+      skills: ['SUM, COUNTIF, SUMIF', 'XLOOKUP', 'FILTER, SORT, UNIQUE (dynamic arrays)', 'IFS and LET', 'Absolute vs relative references'] },
+    { id: 'xl2013', n: 2, title: 'Classic Excel & Nested Functions', tool: 'Excel 2013', workspace: 'xl2013',
+      skills: ['INDEX + MATCH', 'VLOOKUP exact match', 'Nested IF', 'IFERROR', 'Ctrl+Shift+Enter array formulas'] },
+    { id: 'gs', n: 3, title: 'Google Sheets Survival Guide', tool: 'Google Sheets', workspace: 'gs',
+      skills: ['FILTER and SORT the Sheets way', 'ARRAYFORMULA', 'QUERY', 'SPLIT and REGEXMATCH', 'Open-ended ranges'] },
+    { id: 'csv', n: 4, title: 'Data Files: CSV & TSV', tool: 'CSV / TSV', workspace: 'csv',
+      skills: ['Values vs formulas', 'Quoting and escaping', 'Delimiters', 'How spreadsheets change data on import'] },
+    { id: 'wr1', n: 5, title: 'Data Wrangling I: Cleaning Data for AI', tool: 'Data Wrangling Lab', workspace: 'wrangle',
+      skills: ['Leading zeros and text vs numbers', 'Finding blank and fake-null values', 'Converting text to numbers', 'Fixing mixed date formats', 'TRIM, PROPER, UPPER, nested text formulas'] },
+    { id: 'wr2', n: 6, title: 'Data Wrangling II: Combining & Lookups', tool: 'Data Wrangling Lab', workspace: 'wrangle',
+      skills: ['VLOOKUP and HLOOKUP', 'Why lookups fail (type mismatch)', 'Concatenation and delimiters', 'TEXTJOIN', 'Filtering around missing values'] },
+    { id: 'sql', n: 7, title: 'SQL for Data Analysts', tool: 'SQL Database', workspace: 'sql',
+      skills: ['SELECT, WHERE, ORDER BY', 'GROUP BY and HAVING', 'JOIN (the SQL VLOOKUP)', 'Integer division', 'UPDATE safely'] },
+    { id: 'compare', n: 8, title: 'Cross-Platform Translator', tool: 'Compare', workspace: 'compare',
+      skills: ['Which functions exist where', 'Silent differences between apps', 'Spreadsheet ideas in SQL'] }
+  ];
+  function byId(id) { return LESSONS.filter(function (l) { return l.id === id; })[0]; }
+
+  // --- tiny base64 (works in browsers and in tests) ---
+  var B = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+  function utf8(s) { return unescape(encodeURIComponent(s)); }
+  function b64(s) {
+    s = utf8(s); var out = '';
+    for (var i = 0; i < s.length; i += 3) {
+      var n = (s.charCodeAt(i) << 16) | ((s.charCodeAt(i + 1) || 0) << 8) | (s.charCodeAt(i + 2) || 0);
+      out += B[(n >> 18) & 63] + B[(n >> 12) & 63] + (i + 1 < s.length ? B[(n >> 6) & 63] : '') + (i + 2 < s.length ? B[n & 63] : '');
+    }
+    return out;
+  }
+  function unb64(s) {
+    var bytes = '';
+    for (var i = 0; i < s.length; i += 4) {
+      var n = 0, k;
+      for (k = 0; k < 4; k++) { var ch = s[i + k]; n = n * 64 + (ch === undefined ? 0 : B.indexOf(ch)); }
+      var len = Math.min(3, Math.floor((s.length - i) * 3 / 4));
+      for (k = 0; k < len; k++) bytes += String.fromCharCode((n >> (16 - 8 * k)) & 255);
+    }
+    return decodeURIComponent(escape(bytes));
+  }
+  // Tamper-evidence only: anyone who reads the source can recompute this.
+  function sum(s) { var x = 2026; for (var i = 0; i < s.length; i++) x = (x * 33 + s.charCodeAt(i)) % 2147483629; return x.toString(36); }
+
+  function certCode(c) {
+    var json = JSON.stringify({ n: c.name, l: c.lesson, x: c.xp, m: c.maxXp, h: c.hints, c: c.count, t: c.time });
+    return 'SXC1-' + b64(json) + '-' + sum(json);
+  }
+  function readCert(code) {
+    var m = /^SXC1-([A-Za-z0-9_-]+)-([a-z0-9]+)$/.exec(String(code).trim());
+    if (!m) return null;
+    try {
+      var json = unb64(m[1]);
+      if (sum(json) !== m[2]) return null;
+      var o = JSON.parse(json), L = byId(o.l);
+      return { name: o.n, lesson: o.l, title: L ? L.title : o.l, xp: o.x, maxXp: o.m, hints: o.h, count: o.c, time: o.t };
+    } catch (e) { return null; }
+  }
+  function shortId(code) { return code.split('-').pop().toUpperCase(); }
+
+  SX.lessons = { LIST: LESSONS, byId: byId, certCode: certCode, readCert: readCert, shortId: shortId };
+})(globalThis.SX = globalThis.SX || {});
+
+// ---- reference.js ----
+/* SheetEX v2 — Interactive cheat sheet data: one task, every tool.
+ * Each tool entry is a string (runnable code), 'same' (copy the Excel 365 answer),
+ * or { code, note, run:false } / { none: 'why it is not possible' }.
+ * data: 'wr' = Data Wrangling Lab workbook, 'store' = store workbook. Formulas run in a blank cell. */
+(function (SX) {
+  'use strict';
+  var R = [];
+  function add(o) { R.push(o); }
+
+  var CATS = ['Types & leading zeros', 'Cleaning text', 'Missing values (nulls)', 'Dates', 'Joining & delimiters', 'Lookups', 'Filter, sort, unique', 'Summarize'];
+
+  // ---- Types & leading zeros ----
+  add({ cat: 0, task: 'Pad a code with leading zeros', why: '104 → 0104. IDs and ZIPs must keep their zeros.', data: 'wr',
+    xl365: '=TEXT(RawOrders!C2, "0000")', xl2013: 'same', gs: 'same',
+    sql: "SELECT item_code, printf('%04d', item_code) AS clean FROM raw_orders LIMIT 5;",
+    csv: 'A CSV can store 0104 fine. The zero is lost when a spreadsheet OPENS the file and guesses it is a number.' });
+  add({ cat: 0, task: 'Is it text or a number?', why: 'Digits stored as text look the same but behave differently.', data: 'wr',
+    xl365: '=ISTEXT(RawOrders!C3)', xl2013: 'same', gs: 'same',
+    sql: 'SELECT item_code, typeof(item_code) FROM raw_orders LIMIT 3;',
+    csv: 'Everything in a CSV is text. The program reading it decides the types.' });
+  add({ cat: 0, task: 'Text that looks like a number → number', why: '"12" is skipped by SUM; 12 is not.', data: 'wr',
+    xl365: '=VALUE("12") + 1', xl2013: 'same', gs: 'same',
+    sql: "SELECT CAST('12' AS INTEGER) + 1;",
+    csv: 'No conversion needed in the file itself — it is all text.' });
+  add({ cat: 0, task: 'Number → text', why: 'So a lookup key matches a text column.', data: 'wr',
+    xl365: '=RawOrders!C2 & ""', xl2013: 'same', gs: 'same',
+    sql: 'SELECT CAST(123 AS TEXT) || \'\';', csv: '—' });
+
+  // ---- Cleaning text ----
+  add({ cat: 1, task: 'Remove extra spaces', why: '" S02 " and "S02" do not match.', data: 'wr',
+    xl365: '=TRIM(RawOrders!B4)', xl2013: 'same', gs: 'same',
+    sql: 'SELECT store, TRIM(store) FROM raw_orders LIMIT 4;', csv: 'Spaces inside a CSV field are kept exactly. "  Maria" stays "  Maria".' });
+  add({ cat: 1, task: 'Fix capitals', why: '"s04" → "S04", "jordan smith" → "Jordan Smith".', data: 'wr',
+    xl365: '=PROPER(RawOrders!G2)', xl2013: 'same', gs: 'same',
+    sql: 'SELECT customer, UPPER(customer), LOWER(customer) FROM raw_orders LIMIT 3;', note: 'SQL has UPPER and LOWER but no PROPER.', csv: '—' });
+  add({ cat: 1, task: 'Remove a character ($, commas…)', why: 'Turn "$3.25" into "3.25".', data: 'wr',
+    xl365: '=SUBSTITUTE(RawOrders!F3, "$", "")', xl2013: 'same', gs: 'same',
+    sql: "SELECT unit_price, REPLACE(unit_price, '$', '') FROM raw_orders LIMIT 3;", csv: '—' });
+  add({ cat: 1, task: 'Pattern match (contains a digit?)', why: 'Find codes or names that break a rule.', data: 'store',
+    xl365: '=ISNUMBER(SEARCH("4", "Gel Pens, 4-pack"))', xl2013: 'same',
+    gs: '=REGEXMATCH("Gel Pens, 4-pack", "\\d")',
+    sql: "SELECT product FROM products WHERE product LIKE '%4%';", note: 'Only Google Sheets has regular expressions built in.', csv: '—' });
+
+  // ---- Missing values ----
+  add({ cat: 2, task: 'Count empty cells', why: 'How much data is missing?', data: 'wr',
+    xl365: '=COUNTBLANK(RawOrders!E2:E31)', xl2013: 'same', gs: 'same',
+    sql: 'SELECT COUNT(*) FROM raw_orders WHERE qty IS NULL;', csv: 'An empty field is two delimiters in a row: ,,' });
+  add({ cat: 2, task: 'Count fake nulls (N/A, -, null)', why: 'Words that MEAN missing are still text.', data: 'wr',
+    xl365: '=SUMPRODUCT(COUNTIF(RawOrders!E2:E31, {"N/A","-","null"}))', xl2013: 'same', gs: '=ARRAYFORMULA(SUM(COUNTIF(RawOrders!E2:E31, {"N/A","-","null"})))',
+    sql: "SELECT COUNT(*) FROM raw_orders WHERE qty IN ('N/A', '-', 'null');", csv: 'Watch for NA, N/A, null, -, none, 0 and 999 — all common "missing" codes.' });
+  add({ cat: 2, task: 'Turn every kind of missing into one blank', why: 'One consistent missing marker before analysis.', data: 'wr',
+    xl365: '=IFERROR(VALUE(RawOrders!E6), "")', xl2013: 'same', gs: 'same',
+    sql: "SELECT qty, CASE WHEN qty IN ('N/A','-','null') THEN NULL ELSE CAST(qty AS INTEGER) END AS clean_qty FROM raw_orders LIMIT 6;",
+    csv: 'Pick ONE convention (an empty field is best) and use it everywhere.' });
+  add({ cat: 2, task: 'Replace missing with a default', why: 'e.g. treat a missing discount as 0 (only when that is TRUE!).', data: 'wr',
+    xl365: '=IF(RawOrders!E6 = "", 0, RawOrders!E6)', xl2013: 'same', gs: 'same',
+    sql: 'SELECT order_id, COALESCE(qty, 0) FROM raw_orders LIMIT 6;', note: 'Filling with 0 changes averages — a missing quantity is NOT zero.', csv: '—' });
+  add({ cat: 2, task: 'Average that skips blanks', why: 'Blanks are ignored; zeros are not.', data: 'store',
+    xl365: '=AVERAGE(Products!D2:D25)', xl2013: 'same', gs: 'same',
+    sql: 'SELECT AVG(price) FROM products;', note: 'SQL AVG ignores NULL the same way.', csv: '—' });
+
+  // ---- Dates ----
+  add({ cat: 3, task: 'Date text → real date', why: 'Real dates can be sorted and subtracted.', data: 'wr',
+    xl365: '=DATEVALUE("Sep 4, 2026")', xl2013: 'same', gs: 'same',
+    sql: "SELECT date('2026-09-04');", note: 'SQLite stores dates as ISO text: YYYY-MM-DD sorts correctly.', csv: 'Save dates as YYYY-MM-DD in CSVs — every program reads that the same way.' });
+  add({ cat: 3, task: 'Build a date from parts', why: 'Rebuild odd formats like 03.09.2026.', data: 'wr',
+    xl365: '=DATE(RIGHT("03.09.2026", 4), MID("03.09.2026", 4, 2), LEFT("03.09.2026", 2))', xl2013: 'same', gs: 'same',
+    sql: "SELECT printf('%s-%s-%s', substr('03.09.2026', 7, 4), substr('03.09.2026', 4, 2), substr('03.09.2026', 1, 2));", csv: '03.09.2026 is 3 September in Europe but March 9 in the US. Never trust day/month order.' });
+  add({ cat: 3, task: 'Month name / year from a date', why: 'Group sales by month.', data: 'store',
+    xl365: '=TEXT(Sales!B2, "mmmm yyyy")', xl2013: 'same', gs: 'same',
+    sql: "SELECT order_date, strftime('%m', order_date) AS month FROM sales LIMIT 3;", csv: '—' });
+  add({ cat: 3, task: 'Days between two dates', why: 'Dates are numbers underneath — just subtract.', data: 'store',
+    xl365: '=DAYS(DATE(2026,9,30), DATE(2026,9,1))', xl2013: 'same', gs: 'same',
+    sql: { code: "SELECT julianday('2026-09-30') - julianday('2026-09-01');", run: false, note: 'Real SQLite has julianday(); this practice database does not.' }, csv: '—' });
+
+  // ---- Joining & delimiters ----
+  add({ cat: 4, task: 'Join text with a delimiter', why: '"Whitfield" + ", " + "Dana".', data: 'wr',
+    xl365: '=Contacts!B2 & ", " & Contacts!A2', xl2013: '=CONCATENATE(Contacts!B2, ", ", Contacts!A2)', gs: 'same',
+    sql: "SELECT 'Whitfield' || ', ' || 'Dana';", csv: 'If a joined value contains the delimiter, the CSV must wrap it in quotes.' });
+  add({ cat: 4, task: 'Join a whole range', why: 'Build a CSV line or a list.', data: 'wr',
+    xl365: '=TEXTJOIN(",", TRUE, Contacts!A2:E2)', xl2013: { none: 'No TEXTJOIN in 2013: join each cell with & or CONCATENATE.' }, gs: 'same',
+    sql: "SELECT GROUP_CONCAT(product, ', ') FROM products WHERE category = 'Drinks';", csv: 'This is exactly what "Save as CSV" does to every row.' });
+  add({ cat: 4, task: 'Split text at a delimiter', why: '"snacks|drinks" → two cells.', data: 'wr',
+    xl365: { code: '=TEXTSPLIT("snacks|drinks", "|")', run: false, note: 'Newer Excel 365 only — not simulated here. Works everywhere: LEFT/FIND (next row).' },
+    xl2013: { none: 'Use Data ▸ Text to Columns, or LEFT/MID/FIND formulas.' }, gs: '=SPLIT("snacks|drinks", "|")',
+    sql: { code: "SELECT substr('snacks|drinks', 1, instr('snacks|drinks', '|') - 1);", note: 'SQL has no split; cut at the delimiter position.' }, csv: 'Splitting on the delimiter is how a program reads a CSV row.' });
+  add({ cat: 4, task: 'Text before / after a delimiter', why: 'Get the last name out of "Davis, Morgan".', data: 'wr',
+    xl365: '=LEFT("Davis, Morgan", FIND(",", "Davis, Morgan") - 1)', xl2013: 'same', gs: 'same',
+    sql: "SELECT substr('Davis, Morgan', 1, instr('Davis, Morgan', ',') - 1);", csv: '—' });
+  add({ cat: 4, task: 'Count items in a delimited list', why: 'How many tags does "a|b|c" have?', data: 'wr',
+    xl365: '=LEN(Contacts!F4) - LEN(SUBSTITUTE(Contacts!F4, "|", "")) + 1', xl2013: 'same', gs: 'same',
+    sql: "SELECT LENGTH('a|b|c') - LENGTH(REPLACE('a|b|c', '|', '')) + 1;", csv: 'Using | inside a CSV field avoids clashing with the comma delimiter.' });
+
+  // ---- Lookups ----
+  add({ cat: 5, task: 'VLOOKUP (exact match)', why: 'Find a value in the first column, return another column.', data: 'wr',
+    xl365: '=VLOOKUP("0104", ItemCodes!A2:D25, 2, FALSE)', xl2013: 'same', gs: 'same',
+    sql: "SELECT product FROM item_codes WHERE code = '0104';", note: 'Always use FALSE. Without it VLOOKUP guesses on unsorted data.', csv: '—' });
+  add({ cat: 5, task: 'HLOOKUP (sideways table)', why: 'Keys run across the top row.', data: 'wr',
+    xl365: '=HLOOKUP("S03", Targets!A1:F3, 3, FALSE)', xl2013: 'same', gs: 'same',
+    sql: { none: 'Tables in a database are never sideways — each store would be a ROW.' }, csv: '—' });
+  add({ cat: 5, task: 'Modern lookup (any direction)', why: 'Look left, set a "not found" value.', data: 'wr',
+    xl365: '=XLOOKUP("0104", ItemCodes!A2:A25, ItemCodes!B2:B25, "Not found")', xl2013: '=IFERROR(INDEX(ItemCodes!B2:B25, MATCH("0104", ItemCodes!A2:A25, 0)), "Not found")', gs: 'same',
+    sql: "SELECT r.order_id, COALESCE(i.product, 'Not found') FROM raw_orders r LEFT JOIN item_codes i ON r.item_code = i.code LIMIT 5;", csv: '—' });
+  add({ cat: 5, task: 'Why does my lookup say #N/A?', why: 'Number 104 never matches text "0104".', data: 'wr', expectError: true,
+    xl365: '=VLOOKUP(RawOrders!C2, ItemCodes!A2:D25, 2, FALSE)', xl2013: 'same', gs: 'same',
+    sql: "SELECT COUNT(*) AS unmatched FROM raw_orders r LEFT JOIN item_codes i ON r.item_code = i.code WHERE i.code IS NULL;", note: 'Fix the key first: TEXT(C2, "0000"), TRIM(), consistent case.', csv: '—' });
+  add({ cat: 5, task: 'Lookup with the cleaned key', why: 'Clean, then look up.', data: 'wr',
+    xl365: '=VLOOKUP(TEXT(RawOrders!C2, "0000"), ItemCodes!A2:D25, 2, FALSE)', xl2013: 'same', gs: 'same',
+    sql: "SELECT r.order_id, i.product FROM raw_orders r JOIN item_codes i ON printf('%04d', r.item_code) = i.code LIMIT 5;", csv: '—' });
+
+  // ---- Filter, sort, unique ----
+  add({ cat: 6, task: 'Filter rows', why: 'Keep only the rows you need.', data: 'store',
+    xl365: '=FILTER(Products!B2:B25, Products!C2:C25 = "Drinks", "None")', xl2013: { none: 'No FILTER: use Data ▸ Filter (AutoFilter).' },
+    gs: '=FILTER(Products!B2:B25, Products!C2:C25 = "Drinks")', sql: "SELECT product FROM products WHERE category = 'Drinks';",
+    note: 'Sheets FILTER has no "if empty" argument.', csv: '—' });
+  add({ cat: 6, task: 'Filter with two conditions', why: 'AND logic.', data: 'store',
+    xl365: '=FILTER(Products!B2:B25, (Products!C2:C25 = "Snacks") * (Products!D2:D25 > 1))', xl2013: { none: 'Use AutoFilter on two columns.' },
+    gs: '=FILTER(Products!B2:B25, Products!C2:C25 = "Snacks", Products!D2:D25 > 1)', sql: "SELECT product FROM products WHERE category = 'Snacks' AND price > 1;", csv: '—' });
+  add({ cat: 6, task: 'Sort high → low', why: 'Biggest first.', data: 'store',
+    xl365: '=SORT(Products!B2:D25, 3, -1)', xl2013: { none: 'Use Data ▸ Sort.' }, gs: '=SORT(Products!B2:D25, 3, FALSE)',
+    sql: 'SELECT product, category, price FROM products ORDER BY price DESC;', note: 'Excel uses -1, Sheets uses FALSE. Sheets treats -1 as TRUE (ascending)!', csv: '—' });
+  add({ cat: 6, task: 'Unique values', why: 'Remove duplicates.', data: 'store',
+    xl365: '=UNIQUE(Products!C2:C25)', xl2013: { none: 'Use Data ▸ Remove Duplicates.' }, gs: 'same',
+    sql: 'SELECT DISTINCT category FROM products;', csv: '—' });
+
+  // ---- Summarize ----
+  add({ cat: 7, task: 'Sum with a condition', why: 'Total for one store.', data: 'store',
+    xl365: '=SUMIF(Sales!C2:C61, "S01", Sales!E2:E61)', xl2013: 'same', gs: 'same',
+    sql: "SELECT SUM(qty) FROM sales WHERE store_id = 'S01';", csv: '—' });
+  add({ cat: 7, task: 'Count per group', why: 'How many products in each category?', data: 'store',
+    xl365: '=COUNTIF(Products!C2:C25, "Snacks")', xl2013: 'same', gs: '=QUERY(Products!A1:H25, "select C, count(A) group by C")',
+    sql: 'SELECT category, COUNT(*) FROM products GROUP BY category;', csv: '—' });
+  add({ cat: 7, task: 'Biggest value with a condition', why: 'Highest Electronics price.', data: 'store',
+    xl365: '=MAXIFS(Products!D2:D25, Products!C2:C25, "Electronics")', xl2013: { code: '{=MAX(IF(Products!C2:C25="Electronics", Products!D2:D25))}', cse: true, note: 'Confirm with Ctrl+Shift+Enter.' },
+    gs: 'same', sql: "SELECT MAX(price) FROM products WHERE category = 'Electronics';", csv: '—' });
+
+  var TOOLS = [
+    { id: 'xl365', name: 'Excel 365', kind: 'sheet' },
+    { id: 'xl2013', name: 'Excel 2013', kind: 'sheet' },
+    { id: 'gs', name: 'Google Sheets', kind: 'sheet' },
+    { id: 'sql', name: 'SQL', kind: 'sql' },
+    { id: 'csv', name: 'CSV / TSV', kind: 'note' }
+  ];
+
+  // Normalize an entry's tool cell -> { code, run, note, none, cse }
+  function cell(entry, tool) {
+    var v = entry[tool];
+    if (v === 'same') v = entry.xl365;
+    if (v === undefined || v === null) return null;
+    if (typeof v === 'string') return tool === 'csv' ? { note: v === '—' ? '' : v, run: false } : { code: v, run: true };
+    var o = { code: v.code, note: v.note, none: v.none, cse: v.cse, run: v.run !== false && !!v.code };
+    return o;
+  }
+
+  // Run one tool cell. Returns { text, error, rows } — rows is a small 2-D preview.
+  function run(entry, tool) {
+    var c = cell(entry, tool);
+    if (!c || !c.run) return null;
+    if (tool === 'sql') {
+      try {
+        var r = SX.sql.execute(SX.sql.makeStoreDb(), c.code).pop();
+        if (r.type !== 'rows') return { text: r.message };
+        return { rows: [r.columns].concat(r.rows.slice(0, 6)), more: r.rows.length > 6 ? r.rows.length - 6 : 0 };
+      } catch (e) { return { error: e.message + (e.hint ? ' — ' + e.hint : '') }; }
+    }
+    var wb = entry.data === 'wr' ? SX.wrangle.makeWorkbook(tool) : SX.makeStoreWorkbook(tool);
+    var sheet = entry.data === 'wr' ? 'Report' : 'Scratch', r0 = 1, c0 = entry.data === 'wr' ? 6 : 1;
+    var text = c.code.replace(/^\{(.*)\}$/, '$1');
+    var prep = wb.prepare(text, { cse: c.cse });
+    if (prep.dialog) return { error: prep.dialog + ' ' + (prep.detail || '') };
+    wb.applyEdits([{ sheet: sheet, r: r0, c: c0, cell: prep.cell }]);
+    var d = wb.display(sheet, r0, c0);
+    var sp = wb.spills[sheet + '|' + r0 + ',' + c0];
+    if (d.err) return { error: d.err.code + (d.err.msg ? ' — ' + d.err.msg : ''), code: d.err.code };
+    if (sp) {
+      var rows = sp.mat.rows.map(function (row) { return row.map(function (v) { return v === null ? '' : SX.f.isErr(v) ? v.code : SX.engine.displayValue(v); }); });
+      return { rows: rows.slice(0, 6), more: rows.length > 6 ? rows.length - 6 : 0 };
+    }
+    return { text: d.text === '' ? '(blank)' : d.text };
+  }
+
+  SX.reference = { LIST: R, CATS: CATS, TOOLS: TOOLS, cell: cell, run: run };
+})(globalThis.SX = globalThis.SX || {});
+
 // ---- ui-core.js ----
 /* SheetEX — UI core: state, XP/levels/badges, DOM helpers, toasts, modals, home page, routing. */
 (function (SX) {
@@ -4828,21 +5524,40 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
 
   // Workbooks / database / files live in memory, loaded lazily from saved state.
   UI.wbs = {};
-  UI.workbook = function (plat) {
-    if (!UI.wbs[plat]) {
-      var saved = UI.state.wb[plat];
-      if (saved) { var w = new SX.Workbook(plat); try { w.load(saved); UI.wbs[plat] = w; } catch (e) { UI.wbs[plat] = SX.makeStoreWorkbook(plat); } }
-      else UI.wbs[plat] = SX.makeStoreWorkbook(plat);
+  // Workbook keys: 'xl365' etc. for the store workbooks, 'wr-xl365' / 'wr-gs' for the Data Wrangling Lab.
+  function wbSpec(key) {
+    var m = /^wr-(.+)$/.exec(key);
+    return m ? { plat: m[1], make: SX.wrangle.makeWorkbook } : { plat: key, make: SX.makeStoreWorkbook };
+  }
+  UI.workbook = function (key) {
+    if (!UI.wbs[key]) {
+      var spec = wbSpec(key), saved = UI.state.wb[key];
+      if (saved) { var w = new SX.Workbook(spec.plat); try { w.load(saved); UI.wbs[key] = w; } catch (e) { UI.wbs[key] = spec.make(spec.plat); } }
+      else UI.wbs[key] = spec.make(spec.plat);
     }
-    return UI.wbs[plat];
+    return UI.wbs[key];
   };
-  UI.resetWorkbook = function (plat) { UI.wbs[plat] = SX.makeStoreWorkbook(plat); delete UI.state.wb[plat]; UI.save(); return UI.wbs[plat]; };
+  UI.resetWorkbook = function (key) { var spec = wbSpec(key); UI.wbs[key] = spec.make(spec.plat); delete UI.state.wb[key]; UI.save(); return UI.wbs[key]; };
   UI.database = function () {
-    if (!UI.db) { try { UI.db = UI.state.db ? SX.sql.Database.load(UI.state.db) : SX.sql.makeStoreDb(); } catch (e) { UI.db = SX.sql.makeStoreDb(); } }
+    if (!UI.db) {
+      try { UI.db = UI.state.db ? SX.sql.Database.load(UI.state.db) : SX.sql.makeStoreDb(); } catch (e) { UI.db = SX.sql.makeStoreDb(); }
+      var fresh = SX.sql.makeStoreDb(); // v2 tables for older saves
+      Object.keys(fresh.tables).forEach(function (k) { if (!UI.db.tables[k]) UI.db.tables[k] = fresh.tables[k]; });
+    }
     return UI.db;
   };
   UI.resetDatabase = function () { UI.db = SX.sql.makeStoreDb(); UI.save(); return UI.db; };
-  UI.csvFiles = function () { if (!UI.files) UI.files = UI.state.files || SX.csv.defaultFiles(); return UI.files; };
+  UI.csvFiles = function () {
+    if (!UI.files) {
+      UI.files = UI.state.files || SX.csv.defaultFiles();
+      if (!UI.state.ui.v2files) { // v2 adds the messy wrangling files to older saves
+        var extra = SX.wrangle.files();
+        Object.keys(extra).forEach(function (n) { if (UI.files[n] === undefined) UI.files[n] = extra[n]; });
+        UI.state.ui.v2files = true;
+      }
+    }
+    return UI.files;
+  };
   UI.resetFiles = function () { UI.files = SX.csv.defaultFiles(); UI.save(); return UI.files; };
 
   // ---------- Levels, XP, badges ----------
@@ -4873,6 +5588,9 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     { id: 'done-gs', icon: '🟦', name: 'Sheets Specialist', desc: 'Finish every Google Sheets challenge.', xp: 30 },
     { id: 'done-csv', icon: '📄', name: 'File Whisperer', desc: 'Finish every CSV/TSV challenge.', xp: 30 },
     { id: 'done-sql', icon: '🔮', name: 'SQL Sorcerer', desc: 'Finish every SQL challenge.', xp: 30 },
+    { id: 'researcher', icon: '📚', name: 'Researcher', desc: 'Run 10 examples in the Interactive Cheat Sheet.', xp: 15 },
+    { id: 'done-wr1', icon: '🧽', name: 'Data Janitor', desc: 'Finish Data Wrangling I: Cleaning.', xp: 30 },
+    { id: 'done-wr2', icon: '🔗', name: 'Data Joiner', desc: 'Finish Data Wrangling II: Combining & Lookups.', xp: 30 },
     { id: 'done-compare', icon: '🔭', name: 'Big Picture', desc: 'Answer every Compare quiz.', xp: 20 },
     { id: 'all', icon: '🏆', name: 'Completionist', desc: 'Finish every challenge in SheetEX.', xp: 100 }
   ];
@@ -4929,6 +5647,8 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     if (SX.challenges.LIST.every(function (c) { return UI.state.done[c.id]; })) UI.badge('all');
     if (window.confettiBurst) window.confettiBurst(30);
     UI.save();
+    if (UI.cloudAutoSave) UI.cloudAutoSave();
+    if (UI.lessonFinished && mine.every(function (c) { return UI.state.done[c.id]; })) setTimeout(function () { UI.lessonFinished(ch.plat); }, 1800);
     return true;
   };
   UI.platProgress = function (plat) {
@@ -5018,7 +5738,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
   // ---------- Profile & progress code ----------
   function checksum(s) { var x = 7; for (var i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) % 1000003; return x.toString(36); }
   UI.progressCode = function () {
-    var p = { n: UI.state.name, x: UI.state.xp, d: Object.keys(UI.state.done).map(function (k) { return k + ':' + UI.state.done[k].xp; }).join(','),
+    var p = { n: UI.state.name, x: UI.state.xp, d: Object.keys(UI.state.done).map(function (k) { return k + ':' + UI.state.done[k].xp + ':' + (UI.state.done[k].hints || 0); }).join(','),
       b: Object.keys(UI.state.badges).join(','), e: Object.keys(UI.state.errors).join(' '), t: Date.now() };
     var json = JSON.stringify(p);
     return 'SX1-' + btoa(unescape(encodeURIComponent(json))) + '-' + checksum(json);
@@ -5031,6 +5751,17 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       if (checksum(json) !== m[2]) return null;
       return JSON.parse(json);
     } catch (e) { return null; }
+  };
+  // Merge a progress code into this browser (never lowers XP or removes anything)
+  UI.restoreFromCode = function (code) {
+    var p = UI.decodeCode(code), st = UI.state;
+    if (!p) return false;
+    st.name = p.n || st.name; st.xp = Math.max(st.xp, p.x);
+    (p.d ? p.d.split(',') : []).forEach(function (s) { var q = s.split(':'); if (q[0] && !st.done[q[0]]) st.done[q[0]] = { xp: +q[1], at: p.t, hints: q[2] ? +q[2] : 0 }; });
+    (p.b ? p.b.split(',') : []).forEach(function (b) { if (b) st.badges[b] = st.badges[b] || p.t; });
+    (p.e ? p.e.split(' ') : []).forEach(function (e) { if (e) st.errors[e] = st.errors[e] || p.t; });
+    UI.save();
+    return true;
   };
   UI.profile = function () {
     var st = UI.state, lv = UI.level(st.xp);
@@ -5054,6 +5785,12 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       ]),
       h('h3', { text: 'Badges' }), badgeGrid,
       h('h3', { text: 'Error collection (' + Object.keys(st.errors).length + '/' + UI.ERROR_CODES.length + ')' }), errGrid,
+      h('h3', { text: 'Certificates' }),
+      h('div.cert-list', null, SX.lessons.LIST.map(function (L) {
+        var pr = UI.platProgress(L.id), done = pr.total && pr.done === pr.total;
+        return h('button.chip' + (done ? '' : '.chip-off'), { disabled: !done, text: (done ? '🎓 ' : '🔒 ') + L.n + '. ' + L.title, onclick: function () { UI.showCert(L.id); } });
+      })),
+      UI.cloudPanel ? UI.cloudPanel() : null,
       h('h3', { text: 'Progress code' }),
       h('p.small', { text: 'Paste this code into Canvas to show your teacher your progress, or use it to move your XP to another computer.' }),
       codeBox,
@@ -5064,13 +5801,8 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
           loadMsg.textContent = p ? (p.n || 'Unnamed') + ': ' + p.x + ' XP, level ' + UI.level(p.x).n + ', ' + (p.d ? p.d.split(',').length : 0) + ' challenges, ' + (p.b ? p.b.split(',').length : 0) + ' badges (saved ' + new Date(p.t).toLocaleString() + ').' : 'That code is not valid (it may have been changed).';
         } }),
         h('button.btn', { text: 'Restore my progress from code', onclick: function () {
-          var p = UI.decodeCode(loadIn.value);
-          if (!p) { loadMsg.textContent = 'That code is not valid.'; return; }
-          st.name = p.n || st.name; st.xp = Math.max(st.xp, p.x);
-          (p.d ? p.d.split(',') : []).forEach(function (s) { var q = s.split(':'); if (!st.done[q[0]]) st.done[q[0]] = { xp: +q[1], at: p.t, hints: 0 }; });
-          (p.b ? p.b.split(',') : []).forEach(function (b) { st.badges[b] = st.badges[b] || p.t; });
-          (p.e ? p.e.split(' ') : []).forEach(function (e) { if (e) st.errors[e] = st.errors[e] || p.t; });
-          UI.save(); UI.render(); loadMsg.textContent = 'Progress restored!';
+          if (!UI.restoreFromCode(loadIn.value)) { loadMsg.textContent = 'That code is not valid.'; return; }
+          UI.render(); loadMsg.textContent = 'Progress restored!';
         } })
       ]), loadMsg]),
       h('details.danger-zone', null, [h('summary', { text: 'Start over' }), h('p.small', { text: 'Erase all XP, badges, and your work in every app on this computer.' }),
@@ -5115,11 +5847,26 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
   function teacherTool() {
     var ta = h('textarea.input.code-box', { rows: 5, placeholder: 'Paste progress codes here — one per line, or the whole Canvas export. Anything that is not a code is ignored.' });
     var out = h('div');
+    var certOut = h('div');
+    function runCerts() {
+      var codes = ta.value.match(/SXC1-[A-Za-z0-9_-]+-[a-z0-9]+/g) || [];
+      certOut.innerHTML = '';
+      if (!codes.length) return;
+      var t = h('table.cs-keys', null, [h('tr', null, ['Certificate', 'Name', 'Lesson', 'XP', 'Hints', 'Date'].map(function (x) { return h('th', { text: x }); }))]);
+      codes.forEach(function (c) {
+        var d = SX.lessons.readCert(c);
+        if (!d) { t.appendChild(h('tr', null, [h('td', { colspan: 6, text: '⚠ Invalid or edited certificate code: ' + c.slice(0, 24) + '…' })])); return; }
+        t.appendChild(h('tr', null, ['✓ ' + SX.lessons.shortId(c), d.name, d.title, d.xp + '/' + d.maxXp, d.hints, new Date(d.time).toLocaleDateString()].map(function (x) { return h('td', { text: String(x) }); })));
+      });
+      certOut.appendChild(h('h4', { text: 'Certificates' })); certOut.appendChild(t);
+    }
     function run() {
-      var codes = ta.value.match(/SX1-[A-Za-z0-9+/=]+-[a-z0-9]+/g) || [];
+      runCerts();
+      var codes = ta.value.match(/(?:^|[^C])(SX1-[A-Za-z0-9+/=]+-[a-z0-9]+)/g) || [];
+      codes = codes.map(function (c) { return c.replace(/^[^S]/, ''); });
       var rows = codes.map(function (c) { var p = UI.decodeCode(c); return p ? p : { bad: c }; });
       out.innerHTML = '';
-      if (!rows.length) { out.appendChild(h('p.small', { text: 'No codes found yet.' })); return; }
+      if (!rows.length) { if (!certOut.childNodes.length) out.appendChild(h('p.small', { text: 'No codes found yet.' })); return; }
       var t = h('table.cs-keys', null, [h('tr', null, ['Name', 'Level', 'XP', 'Challenges', 'Badges', 'Errors', 'Saved'].map(function (x) { return h('th', { text: x }); }))]);
       rows.forEach(function (p) {
         if (p.bad) { t.appendChild(h('tr', null, [h('td', { colspan: 7, text: '⚠ Invalid or edited code: ' + p.bad.slice(0, 24) + '…' })])); return; }
@@ -5129,7 +5876,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       out.appendChild(t);
     }
     ta.addEventListener('input', run);
-    return h('div', null, [h('p.small', { text: 'Have students paste their progress code (click their name ▸ Copy code) into a Canvas text submission. Paste all of them here to see everyone at once. Codes are checksummed, so hand-edited codes show as invalid.' }), ta, out]);
+    return h('div', null, [h('p.small', { text: 'Paste progress codes (SX1-…) and/or certificate codes (SXC1-…) — one per line, or a whole Canvas export. Codes are checksummed, so hand-edited codes show as invalid.' }), ta, certOut, out]);
   }
 
   // ---------- Home ----------
@@ -5139,14 +5886,23 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
   UI.platIcon = platIcon;
   function homeView() {
     var st = UI.state, totalDone = Object.keys(st.done).length;
-    var cards = SX.platforms.ORDER.map(function (id) {
-      var p = PL[id], pr = UI.platProgress(id);
+    var EXTRA = {
+      wrangle: { id: 'wrangle', name: 'Data Wrangling Lab', icon: 'WR', tagline: 'Clean messy data for AI', lessons: ['wr1', 'wr2'],
+        blurb: 'A real-world messy order feed: lost leading zeros, four date formats, fake nulls, messy names. Clean it, join it with VLOOKUP/HLOOKUP, get it AI-ready. NEW in v2.' },
+      reference: { id: 'reference', name: 'Interactive Cheat Sheet', icon: '?!', tagline: 'Every task, every tool', lessons: [],
+        blurb: 'Look up a task like "pad leading zeros" or "find nulls" and see the answer in Excel 365, Excel 2013, Google Sheets, SQL and CSV — then run it live.' }
+    };
+    function sumProgress(ids) {
+      return ids.reduce(function (a, id) { var p = UI.platProgress(id); return { done: a.done + p.done, total: a.total + p.total, xp: a.xp + p.xp, maxXp: a.maxXp + p.maxXp }; }, { done: 0, total: 0, xp: 0, maxXp: 0 });
+    }
+    var cards = SX.platforms.ORDER.slice(0, 4).concat(['wrangle', 'sql', 'reference']).map(function (id) {
+      var p = PL[id] || EXTRA[id], pr = EXTRA[id] ? sumProgress(EXTRA[id].lessons) : UI.platProgress(id);
       return h('button.plat-card.pc-' + id, { onclick: function () { UI.go(id); } }, [
         h('div.pc-top', null, [platIcon(p, true), h('div', null, [h('div.pc-name', { text: p.name }), h('div.pc-tag', { text: p.tagline })])]),
         h('p.pc-blurb', { text: p.blurb }),
         h('div.pc-progress', null, [
           h('div.pbar', null, h('div.pfill', { style: { width: (pr.total ? 100 * pr.done / pr.total : 0) + '%' } })),
-          h('div.pc-stats', null, [h('span', { text: pr.done + '/' + pr.total + ' challenges' }), h('span', { text: pr.xp + '/' + pr.maxXp + ' XP' })])
+          pr.total ? h('div.pc-stats', null, [h('span', { text: pr.done + '/' + pr.total + ' challenges' }), h('span', { text: pr.xp + '/' + pr.maxXp + ' XP' })]) : h('div.pc-stats', null, h('span', { text: 'Reference · try-it examples' }))
         ]),
         h('div.pc-go', { text: st.visited[id] ? 'Continue →' : 'Start →' })
       ]);
@@ -5158,8 +5914,8 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       h('section.hero', null, [
         h('div.hero-text', null, [
           h('div.hero-kicker', { text: 'Welcome' + (st.name ? ', ' + st.name : '') + '! Your first day as a data analyst' }),
-          h('h1', { html: 'One store. <span>Five tools.</span> Zero surprises at home.' }),
-          h('p', { html: SX.data.COMPANY + ' keeps the same inventory and sales data in Excel 365, an old copy of Excel 2013, Google Sheets, plain CSV files, and a SQL database. Learn how each one thinks — so a formula that works at school still works on the laptop at home.' })
+          h('h1', { html: 'One store. <span>Every tool.</span> Data an AI can trust.' }),
+          h('p', { html: SX.data.COMPANY + ' keeps the same inventory and sales data in Excel 365, an old copy of Excel 2013, Google Sheets, plain CSV files, and a SQL database. Learn how each one thinks, clean messy data until it is ready for an AI model, and earn a certificate for every lesson.' })
         ]),
         h('div.hero-stats', null, [
           stat(UI.level(st.xp).n, 'Level'), stat(st.xp, 'XP'), stat(totalDone + '/' + SX.challenges.LIST.length, 'Challenges'), stat(errCount + '/9', 'Errors found')
@@ -5167,6 +5923,9 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       ]),
       h('h2.section-title', { text: 'Choose your workspace' }),
       h('div.plat-grid', null, cards),
+      h('h2.section-title', { text: '🎓 Lessons & certificates' }),
+      h('p.section-sub', { text: 'Finish every challenge in a lesson to earn its certificate. Print it, save it as a PDF or image, or paste its code into Canvas.' }),
+      h('div.lesson-grid', null, SX.lessons.LIST.map(lessonTile)),
       h('div.extra-grid', null, [
         h('button.extra-card.cmp-card', { onclick: function () { UI.go('compare'); } }, [
           h('div.extra-icon', { text: '⚖️' }),
@@ -5181,6 +5940,19 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
         ])
       ]),
       h('footer.home-foot', { html: 'SheetEX is a classroom simulator — it mimics how each app behaves, but always double-check in the real software.' })
+    ]);
+  }
+  function lessonTile(L) {
+    var pr = UI.platProgress(L.id), done = pr.total && pr.done === pr.total;
+    var has = UI.state.certs && UI.state.certs[L.id];
+    return h('div.lesson-tile' + (done ? '.done' : ''), null, [
+      h('div.lt-top', null, [h('span.lt-n', { text: L.n }), h('div', null, [h('div.lt-title', { text: L.title }), h('div.lt-tool', { text: L.tool })])]),
+      h('div.pbar', null, h('div.pfill', { style: { width: (100 * pr.done / Math.max(1, pr.total)) + '%' } })),
+      h('div.lt-foot', null, [
+        h('span.small', { text: pr.done + '/' + pr.total + ' challenges' }),
+        done ? h('button.btn.btn-sm.btn-primary', { text: has ? '🎓 Certificate' : '🎓 Claim certificate', onclick: function () { UI.showCert(L.id); } })
+          : h('button.btn.btn-sm', { text: pr.done ? 'Continue →' : 'Start →', onclick: function () { UI.go(L.workspace); } })
+      ])
     ]);
   }
   function stat(v, l) { return h('div.stat', null, [h('div.stat-v', { text: v }), h('div.stat-l', { text: l })]); }
@@ -5203,23 +5975,26 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     if (view === 'home') { app.appendChild(homeView()); return; }
     var host = h('div.view-host');
     app.appendChild(host);
-    if (view !== 'compare') UI.visit(view);
+    if (SX.platforms.ORDER.indexOf(view) >= 0) UI.visit(view);
     if (view === 'xl365' || view === 'xl2013' || view === 'gs') UI.activeView = new UI.SheetView(view, host);
     else if (view === 'csv') UI.activeView = new UI.CsvView(host);
     else if (view === 'sql') UI.activeView = new UI.SqlView(host);
     else if (view === 'compare') UI.activeView = new UI.CompareView(host);
+    else if (view === 'wrangle') UI.activeView = UI.wrangleView(host);
+    else if (view === 'reference') UI.activeView = new UI.ReferenceView(host);
   };
 
   UI.start = function () {
     UI.render();
     if (!UI.state.name) {
-      var inp = h('input.input', { maxlength: 30, placeholder: 'First name or nickname' });
+      var inp = h('input.input', { maxlength: 40, placeholder: 'First and last name' });
       var done = function () { UI.state.name = inp.value.trim() || 'Analyst'; UI.save(); UI.refreshHeader(); UI.render(); };
       inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { done(); document.querySelector('.modal-overlay').remove(); } });
       UI.modal('Welcome to ' + SX.data.COMPANY + '!', [
         h('p', { text: 'You were just hired as our new data analyst. Our data lives in five different tools, and they do not all speak the same language.' }),
         h('p', { text: 'Earn XP by solving challenges, discovering errors, and translating formulas between apps.' }),
-        h('label.lbl', { text: 'What should we call you?' }), inp
+        h('label.lbl', { text: 'What should we call you?' }), inp,
+        SX.cloud && SX.cloud.available() ? h('p.small', null, [h('b', { text: 'Coming back? ' }), 'Type your name, start, then click your name ▸ Class cloud save ▸ Load.']) : null
       ], [{ text: 'Start my first day', primary: true, onclick: done }], { sticky: true, noX: true });
     }
   };
@@ -5281,19 +6056,27 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       el.appendChild(msg);
       return el;
     }
+    var plats = Array.isArray(plat) ? plat : [plat];
     function rerender(openId) {
       wrap.innerHTML = '';
-      var list = SX.challenges.forPlat(plat), pr = UI.platProgress(plat);
-      wrap.appendChild(h('div.ch-summary', null, [
-        h('div', { text: pr.done + ' of ' + pr.total + ' complete · ' + pr.xp + ' XP earned' }),
-        h('div.pbar', null, h('div.pfill', { style: { width: (100 * pr.done / Math.max(1, pr.total)) + '%' } }))
-      ]));
-      var firstOpen = list.filter(function (c) { return !UI.state.done[c.id]; })[0];
-      list.forEach(function (ch) {
-        var c = card(ch);
-        if (ch.id === openId || (!openId && firstOpen && ch.id === firstOpen.id)) c.classList.add('open');
-        c.querySelector('.ch-head').addEventListener('click', function () { c.classList.toggle('open'); });
-        wrap.appendChild(c);
+      var firstOpen = null;
+      plats.forEach(function (lp) {
+        var list = SX.challenges.forPlat(lp), pr = UI.platProgress(lp), lesson = SX.lessons && SX.lessons.byId(lp);
+        if (!firstOpen) firstOpen = list.filter(function (c) { return !UI.state.done[c.id]; })[0];
+        var complete = pr.total && pr.done === pr.total;
+        wrap.appendChild(h('div.ch-summary' + (complete ? '.complete' : ''), null, [
+          lesson ? h('div.ch-lesson', null, [h('span.ch-lesson-n', { text: 'Lesson ' + lesson.n }), h('b', { text: lesson.title })]) : null,
+          h('div', { text: pr.done + ' of ' + pr.total + ' complete · ' + pr.xp + ' XP earned' }),
+          h('div.pbar', null, h('div.pfill', { style: { width: (100 * pr.done / Math.max(1, pr.total)) + '%' } })),
+          lesson ? h('button.btn.btn-sm.cert-btn' + (complete ? '.btn-primary' : ''), { disabled: !complete, title: complete ? 'Open your certificate' : 'Finish every challenge in this lesson to unlock it',
+            text: complete ? '🎓 View my certificate' : '🔒 Certificate (finish all ' + pr.total + ')', onclick: function () { UI.showCert(lp); } }) : null
+        ]));
+        list.forEach(function (ch) {
+          var c = card(ch);
+          if (ch.id === openId || (!openId && firstOpen && ch.id === firstOpen.id)) c.classList.add('open');
+          c.querySelector('.ch-head').addEventListener('click', function () { c.classList.toggle('open'); });
+          wrap.appendChild(c);
+        });
       });
       if (openId) { var o = wrap.querySelector('[data-id="' + openId + '"]'); if (o) setTimeout(function () { o.scrollIntoView({ block: 'nearest' }); }, 0); }
     }
@@ -5340,7 +6123,12 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     Products: { 0: 74, 1: 168, 2: 116, 3: 70, 4: 64, 5: 66, 6: 80, 7: 160, 8: 90 },
     Sales: { 0: 70, 1: 84, 2: 64, 3: 74, 4: 50, 5: 84, 6: 84 },
     Stores: { 0: 64, 1: 92, 2: 50, 3: 60, 4: 120, 5: 84 },
-    Scratch: { 0: 120, 1: 140 }
+    Scratch: { 0: 120, 1: 140 },
+    RawOrders: { 0: 66, 1: 58, 2: 70, 3: 96, 4: 50, 5: 72, 6: 140, 7: 76, 8: 90, 9: 80, 10: 80, 11: 80, 12: 90, 13: 120, 14: 150, 15: 80, 16: 80 },
+    ItemCodes: { 0: 60, 1: 168, 2: 116, 3: 70 },
+    Targets: { 0: 90, 1: 110, 2: 110, 3: 110, 4: 110, 5: 110 },
+    Contacts: { 0: 70, 1: 80, 2: 90, 3: 50, 4: 60, 5: 200, 6: 130, 7: 170, 8: 70 },
+    Report: { 0: 360, 1: 150, 2: 30, 3: 90 }
   };
   var RIBBON = {
     xl365: ['File', 'Home', 'Insert', 'Draw', 'Page Layout', 'Formulas', 'Data', 'Review', 'View', 'Help'],
@@ -5350,12 +6138,17 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
   var HIDDEN_IN_EXCEL_AC = ['DATEDIF']; // Excel never autocompletes DATEDIF (it is "hidden")
   var REF_COLORS = ['#3b82f6', '#ef4444', '#a855f7', '#16a34a', '#f59e0b', '#0891b2'];
 
-  function SheetView(plat, host) {
+  // opts (v2): key = workbook/state key, challenges = lesson ids for the panel, firstSheet, titleExtra, docTitle
+  function SheetView(plat, host, opts) {
+    opts = opts || {};
+    this.opts = opts;
     this.plat = plat; this.P = PL[plat];
-    this.wb = UI.workbook(plat);
+    this.key = opts.key || plat;
+    this.chPlats = opts.challenges || [plat];
+    this.wb = UI.workbook(this.key);
     this.excel = plat !== 'gs';
-    var saved = UI.state.ui['sheet_' + plat];
-    this.sheet = saved && this.wb.sheet(saved) ? saved : 'Products';
+    var saved = UI.state.ui['sheet_' + this.key];
+    this.sheet = saved && this.wb.sheet(saved) ? saved : (opts.firstSheet || 'Products');
     this.r = 1; this.c = 0; this.ar = 1; this.ac = 0;
     this.editing = null;
     this.showFormulas = false;
@@ -5400,7 +6193,8 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     root.appendChild(h('div.app-title', null, [
       h('button.back-btn', { onclick: function () { UI.go('home'); }, title: 'Back to home' }, '← Home'),
       UI.platIcon(this.P),
-      h('span.doc-title', { text: this.P.title }),
+      h('span.doc-title', { text: this.opts.docTitle || this.P.title }),
+      this.opts.titleExtra || null,
       h('span.app-ver', { text: this.P.name })
     ]));
     // Menu / ribbon tabs (decorative, helps it feel like the real app)
@@ -5465,13 +6259,13 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     root.appendChild(this.acPop); root.appendChild(this.sigTip);
     this.host.appendChild(root);
 
-    var open = UI.state.ui['panel_' + plat];
+    var open = UI.state.ui['panel_' + this.key];
     this.togglePanel(open === undefined ? 'challenges' : open, true);
   };
 
   SheetView.prototype.renderGrid = function () {
     var self = this, s = this.sheet;
-    var widths = (UI.state.colw[this.plat] && UI.state.colw[this.plat][s]) || {};
+    var widths = (UI.state.colw[this.key] && UI.state.colw[this.key][s]) || {};
     var dw = DEFAULT_W[s] || {};
     var colgroup = h('colgroup', null, [h('col', { style: { width: '46px' } })]);
     this.cols = [];
@@ -5531,7 +6325,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     var formulaEdit = this.editing && this.isFormulaText(this.editValue());
     if (this.editing && !formulaEdit) { if (!this.endEdit(true, 0, 0)) return; }
     this.sheet = name;
-    UI.state.ui['sheet_' + this.plat] = name;
+    UI.state.ui['sheet_' + this.key] = name;
     if (!keepSel) { this.r = this.ar = 1; this.c = this.ac = 0; }
     this.renderGrid();
     if (formulaEdit) { this.editor.style.display = 'none'; this.fx.focus(); }
@@ -5765,7 +6559,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
   SheetView.prototype.endResize = function () {
     var rz = this.resizing; this.resizing = null;
     if (rz.nw) {
-      var cw = UI.state.colw[this.plat] = UI.state.colw[this.plat] || {};
+      var cw = UI.state.colw[this.key] = UI.state.colw[this.key] || {};
       (cw[this.sheet] = cw[this.sheet] || {})[rz.c] = rz.nw; UI.save();
     }
     this.positionSel();
@@ -6193,7 +6987,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     var self = this;
     UI.modal('Reset ' + this.P.name + ' data?', [h('p', { text: 'This puts every sheet back to the original store data and erases your formulas in this app. Your XP and badges stay.' })], [
       { text: 'Cancel' },
-      { text: 'Reset workbook', danger: true, onclick: function () { self.wb = UI.resetWorkbook(self.plat); self.renderGrid(); self.refresh(); UI.toast('Workbook reset', 'Back to the original data.'); } }
+      { text: 'Reset workbook', danger: true, onclick: function () { self.wb = UI.resetWorkbook(self.key); self.renderGrid(); self.refresh(); UI.toast('Workbook reset', 'Back to the original data.'); } }
     ]);
   };
   SheetView.prototype.insertFunctionDialog = function () {
@@ -6277,7 +7071,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
   SheetView.prototype.togglePanel = function (id, initial) {
     var self = this;
     if (!initial && this.panel && this.panel.current() === id && this.panelHost.classList.contains('open')) {
-      this.panelHost.classList.remove('open'); UI.state.ui['panel_' + this.plat] = null; this.markPanelBtns(null); UI.save(); this.positionSel(); return;
+      this.panelHost.classList.remove('open'); UI.state.ui['panel_' + this.key] = null; this.markPanelBtns(null); UI.save(); this.positionSel(); return;
     }
     if (!id) { this.panelHost.classList.remove('open'); this.markPanelBtns(null); return; }
     if (!this.panel) {
@@ -6286,12 +7080,12 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
         { id: 'cheat', label: '📘 Cheat sheet', render: function () { return self.cheatTab(); } },
         { id: 'elsewhere', label: '🌐 Elsewhere', render: function () { return self.elsewhereTab(); } }
       ], id);
-      this.panel.el.querySelector('.sp-tabs').addEventListener('click', function () { self.markPanelBtns(self.panel.current()); UI.state.ui['panel_' + self.plat] = self.panel.current(); });
+      this.panel.el.querySelector('.sp-tabs').addEventListener('click', function () { self.markPanelBtns(self.panel.current()); UI.state.ui['panel_' + self.key] = self.panel.current(); });
       this.panel.el.appendChild(h('button.sp-close', { title: 'Close panel', 'aria-label': 'Close panel', text: '×', onclick: function () { self.togglePanel(self.panel.current()); } }));
       this.panelHost.appendChild(this.panel.el);
     } else this.panel.show(id);
     this.panelHost.classList.add('open');
-    UI.state.ui['panel_' + this.plat] = id;
+    UI.state.ui['panel_' + this.key] = id;
     this.markPanelBtns(id);
     if (!initial) UI.save();
     setTimeout(function () { self.positionSel(); }, 0);
@@ -6301,7 +7095,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
   };
   SheetView.prototype.challengesTab = function () {
     var self = this;
-    return UI.challengePanel(this.plat, function () { return SX.challenges.sheetHelpers(self.wb); }, { goTo: function (addr) { if (self.editing) self.endEdit(true, 0, 0); self.goToAddr(addr); self.focusGrid(); } });
+    return UI.challengePanel(this.chPlats, function () { return SX.challenges.sheetHelpers(self.wb); }, { goTo: function (addr) { if (self.editing) self.endEdit(true, 0, 0); self.goToAddr(addr); self.focusGrid(); } });
   };
   SheetView.prototype.cheatTab = function () {
     var self = this, plat = this.wb.plat, pid = this.plat;
@@ -6336,7 +7130,7 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
       if (pid === 'xl365') return c !== '#ERROR!';
       return c !== '#SPILL!' && c !== '#CALC!';
     }).map(function (c) { return h('tr', null, [h('td', null, h('code', { text: c })), h('td', { text: F.ERR_TEXT[c] })]); }))]);
-    return h('div.cheat', null, [UI.diffList(pid), UI.keyTable(pid), h('div.cs-section', null, [h('h4', { text: 'Functions in ' + this.P.name }), search, list]), miss, errs]);
+    return h('div.cheat', null, [this.opts.cheatExtra ? this.opts.cheatExtra() : null, UI.diffList(pid), UI.keyTable(pid), h('div.cs-section', null, [h('h4', { text: 'Functions in ' + this.P.name }), search, list]), miss, errs]);
   };
 
   // "Will it work elsewhere?" — run the active cell's formula on every platform
@@ -6994,6 +7788,372 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
     }
     cmp.results.forEach(function (r) { if (r.display && r.display.err) UI.discoverError(r.display.err.code); });
     void self;
+  };
+})(globalThis.SX = globalThis.SX || {});
+
+// ---- ui-wrangle.js ----
+/* SheetEX v2 — Data Wrangling Lab: a messy order feed, cleaned in Excel 365 or Google Sheets. */
+(function (SX) {
+  'use strict';
+  var UI = SX.ui, h = UI.h;
+
+  var CHECKLIST = [
+    ['Types', 'Is every number really a number? Digits stored as text ("12") are skipped by SUM. Fix: VALUE().'],
+    ['IDs & ZIPs', 'Codes made of digits are TEXT. A number loses its leading zeros: 0104 → 104. Fix: TEXT(x, "0000").'],
+    ['Missing values', 'Look for blanks AND fake nulls: "N/A", "-", "null", "none", 0. Turn them all into one real blank.'],
+    ['Spaces & case', '" S02 ", "s02" and "S02" are three different values to a computer. Fix: TRIM(), UPPER(), PROPER().'],
+    ['Dates', 'Text dates cannot be sorted or subtracted. Fix: DATEVALUE() for text; DATE(y, m, d) to rebuild odd formats like 03.09.2026.'],
+    ['Lookups', '#N/A usually means the key does not match exactly: number vs text, extra spaces, different case. Clean the key column first.'],
+    ['Delimiters', 'Joining: a & ", " & b or TEXTJOIN. Splitting: SPLIT (Sheets), TEXTSPLIT (newer Excel 365), or LEFT/MID/FIND everywhere.'],
+    ['Document it', 'Write down how many rows were missing or fixed. Hidden data cleaning is how biased AI models happen.']
+  ];
+
+  function checklist() {
+    return h('div.cs-section', null, [h('h4', { text: '🧽 Data-cleaning checklist (before any AI sees it)' }),
+      h('table.cs-keys', null, CHECKLIST.map(function (r) { return h('tr', null, [h('td', null, h('b', { text: r[0] })), h('td.small', { text: r[1] })]); }))]);
+  }
+
+  function intro() {
+    UI.state.ui.wrIntro = true; UI.save();
+    UI.modal('Mission: clean the order feed', [
+      h('p', { html: 'Peachtree wants to train an <b>AI model</b> that predicts how much each store will order. The order feed was merged from three systems — and it is a mess.' }),
+      h('ul', null, [
+        h('li', { html: 'Item codes lost their leading zeros (<code>0104</code> became <code>104</code>).' }),
+        h('li', { html: 'Dates arrived in four different formats — and one from Europe.' }),
+        h('li', { html: 'Missing quantities are written as blanks, <code>N/A</code>, <code>-</code> and <code>null</code>.' }),
+        h('li', { html: 'Names, store codes and prices have random spaces and capitals.' })
+      ]),
+      h('p', { html: '<b>Garbage in, garbage out:</b> a model trained on dirty data learns the dirt. Clean it column by column, then join it to the lookup tables. Two lessons, two certificates.' }),
+      h('p.small', { text: 'Tip: you can switch between Excel 365 and Google Sheets at the top — each one has its own copy of the data.' })
+    ], [{ text: "Let's clean it", primary: true }], { cls: 'wide' });
+  }
+
+  UI.wrangleView = function (host) {
+    var plat = UI.state.ui.wrPlat === 'gs' ? 'gs' : 'xl365';
+    var sel = h('select.tb-select.engine-sel', { title: 'Which spreadsheet app to use', 'aria-label': 'Spreadsheet app', onchange: function () { UI.state.ui.wrPlat = sel.value; UI.save(); UI.go('wrangle'); } },
+      [h('option', { value: 'xl365', text: 'Engine: Excel 365' }), h('option', { value: 'gs', text: 'Engine: Google Sheets' })]);
+    sel.value = plat;
+    var view = new UI.SheetView(plat, host, {
+      key: 'wr-' + plat, challenges: ['wr1', 'wr2'], firstSheet: 'RawOrders',
+      docTitle: 'Order Feed (messy) — Data Wrangling Lab', titleExtra: sel, cheatExtra: checklist
+    });
+    UI.visit('wrangle');
+    if (!UI.state.ui.wrIntro) setTimeout(intro, 200);
+    return view;
+  };
+})(globalThis.SX = globalThis.SX || {});
+
+// ---- ui-cert.js ----
+/* SheetEX v2 — lesson certificates and the optional Apps Script cloud (gradebook + save/load). */
+(function (SX) {
+  'use strict';
+  var UI = SX.ui, h = UI.h, L = SX.lessons;
+
+  // ---------- Cloud (only when served by Google Apps Script) ----------
+  var cloud = SX.cloud = {
+    available: function () { try { return !!(window.google && window.google.script && window.google.script.run); } catch (e) { return false; } },
+    call: function (fn, args) {
+      return new Promise(function (resolve, reject) {
+        var r = window.google.script.run.withSuccessHandler(resolve).withFailureHandler(function (e) { reject(e && e.message ? e : new Error(String(e))); });
+        r[fn].apply(r, args || []);
+      });
+    }
+  };
+
+  // ---------- Lessons ----------
+  UI.lessonProgress = function (id) { return UI.platProgress(id); };
+  UI.lessonComplete = function (id) { var p = UI.platProgress(id); return p.total > 0 && p.done === p.total; };
+
+  function needRealName(then) {
+    var nm = (UI.state.name || '').trim();
+    if (nm && nm !== 'Analyst' && /\s/.test(nm)) { then(); return; }
+    var inp = h('input.input', { value: nm === 'Analyst' ? '' : nm, maxlength: 40, placeholder: 'First and last name' });
+    UI.modal('Name on your certificate', [
+      h('p', { text: 'Certificates show your full name so your teacher knows they are yours. Type your first and last name exactly as your teacher knows you.' }), inp
+    ], [{ text: 'Cancel' }, { text: 'Use this name', primary: true, onclick: function () {
+      var v = inp.value.trim().replace(/\s+/g, ' ');
+      if (!/\S+\s+\S+/.test(v)) { UI.toast('First AND last name, please', 'Example: Jordan Smith'); return false; }
+      UI.state.name = v; UI.save(); UI.refreshHeader(); setTimeout(then, 50);
+    } }]);
+  }
+
+  UI.issueCert = function (id) {
+    var lesson = L.byId(id), list = SX.challenges.forPlat(id), pr = UI.platProgress(id);
+    var hints = list.reduce(function (a, c) { return a + (UI.state.done[c.id] ? UI.state.done[c.id].hints || 0 : 0); }, 0);
+    var cert = { name: UI.state.name, lesson: id, xp: pr.xp, maxXp: pr.maxXp, hints: hints, count: pr.total, time: Date.now() };
+    cert.code = L.certCode(cert);
+    UI.state.certs = UI.state.certs || {};
+    UI.state.certs[id] = { code: cert.code, t: cert.time, sent: false };
+    UI.save();
+    if (cloud.available()) {
+      cloud.call('sxRecordCertificate', [{ name: cert.name, lesson: lesson.title, lessonId: id, xp: cert.xp, maxXp: cert.maxXp, hints: hints, challenges: cert.count, code: cert.code }])
+        .then(function () { UI.state.certs[id].sent = true; UI.save(); UI.toast('🎓 Sent to your teacher', 'Your certificate was recorded in the class gradebook.'); refreshSent(); })
+        .catch(function (e) { UI.toast('Could not reach the gradebook', (e && e.message) || 'Copy your certificate code instead.', 'err'); });
+    }
+    return cert;
+  };
+  var sentBox = null;
+  function refreshSent() { if (sentBox && sentBox.isConnected) sentBox.textContent = '✓ Recorded in your teacher\'s gradebook'; }
+
+  UI.lessonFinished = function (id) {
+    var lesson = L.byId(id); if (!lesson) return;
+    window.confettiBurst(120);
+    UI.modal('🎓 Lesson ' + lesson.n + ' complete!', [
+      h('div.levelup', null, [h('div.levelup-title', { text: lesson.title }),
+        h('p', { text: 'You finished every challenge in this lesson. Claim your certificate — print it, save it, or copy its code into Canvas.' })])
+    ], [{ text: 'Later' }, { text: 'Get my certificate', primary: true, onclick: function () { setTimeout(function () { UI.showCert(id); }, 50); } }]);
+  };
+
+  UI.showCert = function (id) {
+    if (!UI.lessonComplete(id)) { UI.toast('Not yet!', 'Finish every challenge in this lesson to earn its certificate.'); return; }
+    needRealName(function () {
+      var saved = UI.state.certs && UI.state.certs[id];
+      var data = saved && L.readCert(saved.code);
+      // Re-issue if the name changed since the certificate was made
+      if (!data || data.name !== UI.state.name) { UI.issueCert(id); saved = UI.state.certs[id]; data = L.readCert(saved.code); }
+      render(id, data, saved);
+    });
+  };
+
+  function fmtDate(t) { return new Date(t).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }); }
+
+  function render(id, c, saved) {
+    var lesson = L.byId(id);
+    var overlay = h('div.cert-overlay#cert-overlay');
+    var close = function () { overlay.remove(); };
+    var paper = h('div.cert-paper', null, [
+      h('div.cert-inner', null, [
+        h('div.cert-brand', null, [h('span.brand-logo', { text: 'SX' }), h('span', { text: 'SheetEX Data Lab · ' + SX.data.COMPANY })]),
+        h('div.cert-kicker', { text: 'Certificate of Completion' }),
+        h('div.cert-small', { text: 'This certifies that' }),
+        h('div.cert-name', { text: c.name }),
+        h('div.cert-small', { text: 'has completed' }),
+        h('div.cert-lesson', { text: 'Lesson ' + lesson.n + ': ' + lesson.title }),
+        h('div.cert-tool', { text: lesson.tool }),
+        h('ul.cert-skills', null, lesson.skills.map(function (s) { return h('li', { text: s }); })),
+        h('div.cert-stats', null, [
+          stat(c.count, 'challenges'), stat(c.xp + ' / ' + c.maxXp, 'XP earned'), stat(c.hints, c.hints === 1 ? 'hint used' : 'hints used')
+        ]),
+        h('div.cert-foot', null, [
+          h('div', null, [h('div.cert-line'), h('div.cert-small', { text: 'Date: ' + fmtDate(c.time) })]),
+          h('div.cert-seal', { text: '★' }),
+          h('div', null, [h('div.cert-line'), h('div.cert-small', { text: 'Instructor' })])
+        ]),
+        h('div.cert-verify', { text: 'Verification ID ' + L.shortId(saved.code) + ' · check the full code at SheetEX ▸ ? ▸ For teachers' })
+      ])
+    ]);
+    var codeBox = h('textarea.input.code-box', { readonly: true, rows: 2 }, saved.code);
+    sentBox = h('div.small.cert-sent', { text: saved.sent ? '✓ Recorded in your teacher\'s gradebook' : (cloud.available() ? 'Sending to your teacher\'s gradebook…' : '') });
+    var imgHolder = h('div');
+    var bar = h('div.cert-bar', null, [
+      h('button.btn.btn-primary', { text: '🖨 Print / Save as PDF', onclick: function () { printCert(); } }),
+      h('button.btn', { text: '⬇ Download image', onclick: function () { downloadPng(c, lesson, saved.code, imgHolder); } }),
+      h('button.btn', { text: '📋 Copy certificate code', onclick: function () { codeBox.select(); UI.copyText(saved.code); UI.toast('Copied', 'Paste the code into your Canvas assignment.'); } }),
+      h('button.btn', { text: 'Close', onclick: close })
+    ]);
+    overlay.appendChild(h('div.cert-wrap', null, [bar, paper,
+      h('div.cert-howto', null, [h('b', { text: 'Turning it in: ' }), 'print it (choose "Save as PDF"), download the image, or paste this code into Canvas:', codeBox, sentBox, imgHolder])]));
+    overlay.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    document.body.appendChild(overlay);
+    overlay.tabIndex = -1; overlay.focus();
+  }
+  function stat(v, l) { return h('div.cert-stat', null, [h('b', { text: String(v) }), h('span', { text: l })]); }
+
+  function printCert() {
+    document.body.classList.add('print-cert');
+    var done = function () { document.body.classList.remove('print-cert'); window.removeEventListener('afterprint', done); };
+    window.addEventListener('afterprint', done);
+    try { window.print(); } catch (e) { UI.toast('Printing is blocked here', 'Use Download image or the certificate code instead.', 'err'); }
+    setTimeout(done, 1500);
+  }
+
+  // Draw the certificate onto a canvas so it can be saved as a PNG (works offline, no libraries)
+  function downloadPng(c, lesson, code, holder) {
+    var W = 1600, H = 1130, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    var g = cv.getContext('2d');
+    g.fillStyle = '#fffdf8'; g.fillRect(0, 0, W, H);
+    g.strokeStyle = '#172033'; g.lineWidth = 14; g.strokeRect(40, 40, W - 80, H - 80);
+    g.strokeStyle = '#f26b1d'; g.lineWidth = 3; g.strokeRect(70, 70, W - 140, H - 140);
+    g.textAlign = 'center'; g.fillStyle = '#172033';
+    function t(s, y, font, color) { g.font = font; g.fillStyle = color || '#172033'; g.fillText(s, W / 2, y); }
+    t('SheetEX Data Lab · ' + SX.data.COMPANY, 150, '600 26px Arial');
+    t('CERTIFICATE OF COMPLETION', 240, 'bold 58px Georgia, serif', '#b4470e');
+    t('This certifies that', 315, 'italic 28px Georgia, serif', '#475467');
+    t(c.name, 410, 'bold 72px Georgia, serif');
+    g.fillStyle = '#f26b1d'; g.fillRect(W / 2 - 300, 440, 600, 3);
+    t('has completed', 500, 'italic 28px Georgia, serif', '#475467');
+    t('Lesson ' + lesson.n + ': ' + lesson.title, 570, 'bold 42px Arial');
+    t(lesson.tool, 618, '28px Arial', '#667085');
+    t(lesson.skills.join('  •  '), 680, '22px Arial', '#344054');
+    t(c.count + ' challenges   •   ' + c.xp + ' / ' + c.maxXp + ' XP   •   ' + c.hints + ' hints used', 760, 'bold 30px Arial', '#172033');
+    t('Date: ' + fmtDate(c.time), 900, '28px Arial', '#344054');
+    g.beginPath(); g.moveTo(1050, 905); g.lineTo(1400, 905); g.strokeStyle = '#98a2b3'; g.lineWidth = 2; g.stroke();
+    g.font = '22px Arial'; g.fillStyle = '#667085'; g.fillText('Instructor', 1225, 940);
+    t('Verification ID ' + L.shortId(code), 1010, '20px monospace', '#667085');
+    g.beginPath(); g.arc(300, 900, 70, 0, Math.PI * 2); g.fillStyle = '#f26b1d'; g.fill();
+    g.font = 'bold 70px Arial'; g.fillStyle = '#fff'; g.fillText('★', 300, 925);
+    var url = cv.toDataURL('image/png');
+    var file = 'SheetEX-Lesson' + lesson.n + '-' + c.name.replace(/\W+/g, '_') + '.png';
+    try { var a = h('a', { href: url, download: file }); document.body.appendChild(a); a.click(); a.remove(); } catch (e) { /* shown below */ }
+    holder.innerHTML = '';
+    holder.appendChild(h('p.small', { text: 'If nothing downloaded (some school sites block downloads), right-click the image below and choose "Save image as…", or take a screenshot.' }));
+    holder.appendChild(h('img.cert-img', { src: url, alt: 'Certificate image' }));
+  }
+
+  // ---------- Cloud save / load (profile + welcome) ----------
+  UI.cloudPanel = function () {
+    if (!cloud.available()) return null;
+    var nameIn = h('input.input', { value: UI.state.name || '', placeholder: 'First and last name' });
+    var pinIn = h('input.input', { type: 'password', inputmode: 'numeric', maxlength: 8, value: UI.state.ui.pin || '', placeholder: '4–8 digit PIN you will remember' });
+    var msg = h('div.small');
+    function creds() {
+      var n = nameIn.value.trim().replace(/\s+/g, ' '), p = pinIn.value.trim();
+      if (!/\S+\s+\S+/.test(n)) { msg.textContent = 'Type your first and last name.'; return null; }
+      if (!/^\d{4,8}$/.test(p)) { msg.textContent = 'Your PIN must be 4–8 digits.'; return null; }
+      return { n: n, p: p };
+    }
+    return h('div.cloud-box', null, [
+      h('h3', { text: '☁ Class cloud save' }),
+      h('p.small', { text: 'Save your XP, challenges and certificates to your class so you can keep going on another day or another computer. Use the same name + PIN every time. (Your formulas and files stay on this computer.)' }),
+      h('div.cloud-row', null, [nameIn, pinIn]),
+      h('div.row', null, [
+        h('button.btn.btn-primary', { text: 'Save to class cloud', onclick: function () {
+          var c = creds(); if (!c) return;
+          msg.textContent = 'Saving…';
+          UI.state.name = c.n; UI.state.ui.pin = c.p; UI.save(); UI.refreshHeader();
+          cloud.call('sxSaveProgress', [c.n, c.p, UI.progressCode()]).then(function (r) {
+            msg.textContent = r && r.ok ? '✓ Saved ' + new Date().toLocaleTimeString() : (r && r.error) || 'Could not save.';
+          }).catch(function (e) { msg.textContent = 'Could not save: ' + e.message; });
+        } }),
+        h('button.btn', { text: 'Load from class cloud', onclick: function () {
+          var c = creds(); if (!c) return;
+          msg.textContent = 'Loading…';
+          cloud.call('sxLoadProgress', [c.n, c.p]).then(function (r) {
+            if (!r || !r.ok) { msg.textContent = (r && r.error) || 'Nothing saved under that name and PIN.'; return; }
+            if (!UI.restoreFromCode(r.code)) { msg.textContent = 'The saved data could not be read.'; return; }
+            UI.state.name = c.n; UI.state.ui.pin = c.p; UI.save();
+            msg.textContent = '✓ Progress loaded (saved ' + new Date(r.savedAt).toLocaleString() + ')';
+            UI.render();
+          }).catch(function (e) { msg.textContent = 'Could not load: ' + e.message; });
+        } })
+      ]), msg
+    ]);
+  };
+  // Quietly push progress after each challenge when the student has set up cloud save.
+  UI.cloudAutoSave = function () {
+    if (!cloud.available() || !UI.state.ui.pin || !UI.state.name) return;
+    cloud.call('sxSaveProgress', [UI.state.name, UI.state.ui.pin, UI.progressCode()]).catch(function () { /* manual save still available */ });
+  };
+})(globalThis.SX = globalThis.SX || {});
+
+// ---- ui-reference.js ----
+/* SheetEX v2 — Interactive cheat sheet: search a task, see it in every tool, run it live. */
+(function (SX) {
+  'use strict';
+  var UI = SX.ui, h = UI.h, REF = SX.reference, PL = SX.platforms.PLATFORMS;
+
+  function ReferenceView(host) {
+    this.host = host;
+    this.cat = UI.state.ui.refCat == null ? -1 : UI.state.ui.refCat;
+    this.show = UI.state.ui.refTools || { xl365: true, xl2013: true, gs: true, sql: true, csv: true };
+    this.build();
+  }
+  UI.ReferenceView = ReferenceView;
+
+  ReferenceView.prototype.build = function () {
+    var self = this;
+    this.search = h('input.input.ref-search', { placeholder: 'Search: zeros, null, date, VLOOKUP, split, filter…', 'aria-label': 'Search the cheat sheet' });
+    this.search.addEventListener('input', function () { self.draw(); });
+    this.chips = h('div.chips');
+    var toggles = h('div.ref-toggles', null, REF.TOOLS.map(function (t) {
+      var cb = h('input', { type: 'checkbox', checked: self.show[t.id] !== false });
+      cb.addEventListener('change', function () { self.show[t.id] = cb.checked; UI.state.ui.refTools = self.show; UI.save(); self.draw(); });
+      return h('label.ref-toggle', null, [cb, ' ' + t.name]);
+    }));
+    this.list = h('div.ref-list');
+    this.host.appendChild(h('main.compare.reference', null, [
+      h('div.cmp-hero.ref-hero', null, [
+        h('button.back-btn.light', { onclick: function () { UI.go('home'); } }, '← Home'),
+        h('h1', { text: 'Interactive Cheat Sheet' }),
+        h('p', { text: 'One task, every tool. Find what you need to do, compare how Excel 365, Excel 2013, Google Sheets, SQL and CSV files handle it — then press ▶ Run to see the real result on the Peachtree data.' }),
+        this.search
+      ]),
+      h('div.ref-controls', null, [this.chips, toggles]),
+      this.list
+    ]));
+    this.drawChips(); this.draw();
+    setTimeout(function () { self.search.focus(); }, 50);
+  };
+  ReferenceView.prototype.drawChips = function () {
+    var self = this;
+    this.chips.innerHTML = '';
+    [-1].concat(REF.CATS.map(function (_, i) { return i; })).forEach(function (i) {
+      self.chips.appendChild(h('button.chip' + (self.cat === i ? '.on' : ''), { text: i < 0 ? 'All' : REF.CATS[i], onclick: function () {
+        self.cat = i; UI.state.ui.refCat = i; UI.save(); self.drawChips(); self.draw();
+      } }));
+    });
+  };
+  ReferenceView.prototype.draw = function () {
+    var self = this, q = this.search.value.trim().toLowerCase();
+    this.list.innerHTML = '';
+    var items = REF.LIST.filter(function (e) {
+      if (self.cat >= 0 && e.cat !== self.cat) return false;
+      if (!q) return true;
+      var hay = (e.task + ' ' + e.why + ' ' + REF.CATS[e.cat] + ' ' + (e.note || '') + ' ' + REF.TOOLS.map(function (t) { var c = REF.cell(e, t.id); return c ? (c.code || '') + ' ' + (c.note || '') + ' ' + (c.none || '') : ''; }).join(' ')).toLowerCase();
+      return q.split(/\s+/).every(function (w) { return hay.indexOf(w) >= 0; });
+    });
+    if (!items.length) { this.list.appendChild(h('div.empty-note', null, [h('div.big-emoji', { text: '🔎' }), h('p', { text: 'Nothing matches "' + q + '". Try a shorter word.' })])); return; }
+    items.forEach(function (e) { self.list.appendChild(self.card(e)); });
+  };
+  ReferenceView.prototype.card = function (e) {
+    var self = this;
+    var grid = h('div.ref-tools');
+    REF.TOOLS.forEach(function (t) {
+      if (self.show[t.id] === false) return;
+      var c = REF.cell(e, t.id);
+      var out = h('div.ref-out');
+      var block = h('div.ref-tool.rt-' + t.id, null, [h('div.ref-tool-head', null, [UI.platIcon(PL[t.id]), h('b', { text: t.name })])]);
+      if (!c) block.appendChild(h('div.small.muted', { text: '—' }));
+      else if (c.none) block.appendChild(h('div.ref-none', { text: '✗ ' + c.none }));
+      else {
+        if (c.code) {
+          block.appendChild(h('pre.ref-code', { text: c.code }));
+          var btns = h('div.ref-btns');
+          if (c.run) btns.appendChild(h('button.btn.btn-xs.btn-primary', { text: '▶ Run', onclick: function () { self.showResult(e, t.id, out); } }));
+          btns.appendChild(h('button.btn.btn-xs', { text: 'Copy', onclick: function () { UI.copyText(c.code.replace(/^\{(.*)\}$/, '$1')); UI.toast('Copied', c.code); } }));
+          block.appendChild(btns);
+        }
+        if (c.note) block.appendChild(h('div.ref-note', { text: c.note }));
+        block.appendChild(out);
+      }
+      grid.appendChild(block);
+    });
+    return h('section.ref-card', null, [
+      h('div.ref-card-head', null, [h('span.ref-cat', { text: REF.CATS[e.cat] }), h('h3', { text: e.task })]),
+      h('p.ref-why', { text: e.why }),
+      e.note ? h('p.ref-tip', { text: '💡 ' + e.note }) : null,
+      grid
+    ]);
+  };
+  ReferenceView.prototype.showResult = function (e, tool, out) {
+    var r = REF.run(e, tool);
+    out.innerHTML = '';
+    if (!r) return;
+    if (r.error) {
+      out.appendChild(h('div.ref-err', { text: r.error }));
+      if (r.code) UI.discoverError(r.code);
+      return;
+    }
+    if (r.text !== undefined) { out.appendChild(h('div.ref-val', null, [h('span.small.muted', { text: 'Result: ' }), h('b', { text: r.text })])); return; }
+    var t = h('table.ref-table');
+    r.rows.forEach(function (row, i) {
+      t.appendChild(h('tr', null, row.map(function (v) { return h(i === 0 && tool === 'sql' ? 'th' : 'td', { text: v === null ? 'NULL' : String(v) }); })));
+    });
+    out.appendChild(t);
+    if (r.more) out.appendChild(h('div.small.muted', { text: '…and ' + r.more + ' more rows' }));
+    UI.state.stats.refRuns = (UI.state.stats.refRuns || 0) + 1;
+    if (UI.state.stats.refRuns >= 10) UI.badge('researcher');
+    UI.save();
   };
 })(globalThis.SX = globalThis.SX || {});
 

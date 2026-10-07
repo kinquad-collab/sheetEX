@@ -135,7 +135,9 @@
       'sales.csv': stringify(rowsOf(D.SALES_HEADERS, D.SALES), ','),
       'stores.csv': stringify(rowsOf(D.STORE_HEADERS, D.STORES), ','),
       'suppliers.csv': stringify(rowsOf(D.SUPPLIER_HEADERS, D.SUPPLIERS), ','),
-      'broken_products.csv': broken
+      'broken_products.csv': broken,
+      'messy_orders.csv': SX.wrangle.files()['messy_orders.csv'],
+      'item_codes.csv': SX.wrangle.files()['item_codes.csv']
     };
   }
 

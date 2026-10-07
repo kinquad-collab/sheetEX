@@ -143,6 +143,8 @@
     var ip = s.split('.')[0], fp = s.split('.')[1];
     var intPart = core.slice(0, dot >= 0 ? dot : core.length);
     if (ip === '0' && intPart.indexOf('0') < 0) ip = '';
+    var minInt = intPart.replace(/[^0]/g, '').length; // "0000" pads 101 -> 0101
+    while (ip.length < minInt) ip = '0' + ip;
     if (commas) ip = addCommas(ip);
     s = ip + (fp !== undefined ? '.' + fp : '');
     return (neg && r !== 0 ? '-' : '') + prefix + s + suffix;
@@ -1286,6 +1288,33 @@
       return new XErr('#NUM!', 'unit must be "Y", "M", "D", "YM", "MD" or "YD".');
     } });
 
+  // Text -> date serial, for the formats US-English spreadsheets accept
+  var MON3 = MONTHS.map(function (m) { return m.slice(0, 3).toLowerCase(); });
+  function parseDateText(t) {
+    t = String(t).trim();
+    var m;
+    if ((m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(t))) return valid(+m[1], +m[2], +m[3]);
+    if ((m = /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/.exec(t))) { var y = +m[3]; if (y < 100) y += y < 30 ? 2000 : 1900; return valid(y, +m[1], +m[2]); }
+    if ((m = /^([A-Za-z]{3,9})\.?\s+(\d{1,2}),?\s+(\d{4})$/.exec(t))) { var mi = MON3.indexOf(m[1].slice(0, 3).toLowerCase()); return mi < 0 ? null : valid(+m[3], mi + 1, +m[2]); }
+    if ((m = /^(\d{1,2})[\s-]([A-Za-z]{3,9})[\s-](\d{4})$/.exec(t))) { var mj = MON3.indexOf(m[2].slice(0, 3).toLowerCase()); return mj < 0 ? null : valid(+m[3], mj + 1, +m[1]); }
+    return null;
+    function valid(y, mo, d) {
+      if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+      var sv = serial(y, mo, d), back = fromSerial(sv);
+      return back.m === mo && back.d === d ? sv : null;
+    }
+  }
+  def('DATEVALUE', { min: 1, max: 1, args: 'v', cat: 'Date', sig: 'DATEVALUE(date_text)', desc: 'Turns a date written as TEXT ("2026-09-03", "9/3/2026", "Sep 3, 2026") into a real date number.', fmt: 'date',
+    fn: function (v) {
+      if (typeof v[0] === 'number') return new XErr('#VALUE!', 'DATEVALUE needs TEXT. This value is already a number/real date — use it as it is.');
+      var d = parseDateText(toStr(v[0]));
+      return d === null ? new XErr('#VALUE!', '"' + toStr(v[0]) + '" is not a date format this spreadsheet understands (US English). Try rebuilding it with DATE(year, month, day).') : d;
+    } });
+  def('CLEAN', { min: 1, max: 1, args: 'v', cat: 'Text', sig: 'CLEAN(text)', desc: 'Removes invisible non-printing characters (like line breaks pasted from other systems).',
+    fn: function (v) { return toStr(v[0]).replace(/[\x00-\x1f]/g, ''); } });
+  def('CHAR', { min: 1, max: 1, args: 'v', cat: 'Text', sig: 'CHAR(number)', desc: 'The character with this code. CHAR(10) is a line break, CHAR(9) is a TAB.',
+    fn: function (v) { var n = num(v[0]); if (isErr(n)) return n; if (n < 1 || n > 255) return new XErr('#VALUE!'); return String.fromCharCode(n); } });
+
   // --- Info ---
   function info(name, f, desc) {
     def(name, { min: 1, max: 1, args: 'v', passErr: true, cat: 'Info', sig: name + '(value)', desc: desc, fn: function (v) { return f(v[0]); } });
@@ -1351,6 +1380,6 @@
     toNum: toNum, toStr: toStr, toBool: toBool, cmp: cmp, sortCmp: sortCmp,
     parseNumberText: parseNumberText, displayValue: displayValue, formatWithCode: formatWithCode,
     generalDisplay: generalDisplay, serial: serial, fromSerial: fromSerial, toMat: toMat,
-    makeCriterion: makeCriterion, wildcardRe: wildcardRe, FORMATS: FORMATS, MONTHS: MONTHS
+    makeCriterion: makeCriterion, parseDateText: parseDateText, wildcardRe: wildcardRe, FORMATS: FORMATS, MONTHS: MONTHS
   };
 })(globalThis.SX = globalThis.SX || {});

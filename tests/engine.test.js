@@ -1,7 +1,7 @@
 // The point of SheetEX is that each platform behaves like the real app. These tests lock that in.
 const test = require('node:test');
 const assert = require('node:assert');
-const SX = require('./load.js')(['platforms.js', 'csv.js']);
+const SX = require('./load.js')(['platforms.js']);
 
 function run(plat, formula, opts = {}) {
   const wb = SX.makeStoreWorkbook(plat);

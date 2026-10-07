@@ -581,6 +581,24 @@
       case 'LOWER': need(1); return a[0] === null ? null : toText(a[0]).toLowerCase();
       case 'LENGTH': case 'LEN': need(1); return a[0] === null ? null : toText(a[0]).length;
       case 'TRIM': need(1); return a[0] === null ? null : toText(a[0]).trim();
+      case 'LTRIM': need(1); return a[0] === null ? null : toText(a[0]).replace(/^\s+/, '');
+      case 'RTRIM': need(1); return a[0] === null ? null : toText(a[0]).replace(/\s+$/, '');
+      case 'PRINTF': case 'FORMAT': {
+        if (!a.length) throw new SqlError('wrong number of arguments to function ' + name + '()');
+        var k = 1;
+        return toText(a[0]).replace(/%(0?)(\d*)(?:\.(\d+))?([dsf%])/g, function (m0, zero, width, prec, kind) {
+          if (kind === '%') return '%';
+          var v = a[k++], out;
+          if (v === null || v === undefined) out = kind === 's' ? '' : '0';
+          else if (kind === 'd') out = String(Math.trunc(sqlNumify(v)));
+          else if (kind === 'f') out = sqlNumify(v).toFixed(prec === undefined ? 6 : +prec);
+          else out = toText(v);
+          var w = +width || 0;
+          while (out.length < w) out = (zero && kind !== 's' ? '0' : ' ') + out;
+          if (zero && kind !== 's' && out.indexOf('-') > 0) out = '-' + out.replace('-', '0');
+          return out;
+        });
+      }
       case 'ABS': need(1); return a[0] === null ? null : Math.abs(sqlNumify(a[0]));
       case 'ROUND': {
         need(1, 2); if (a[0] === null) return null;
@@ -833,6 +851,20 @@
     db.create('stores', [
       { name: 'store_id', type: 'TEXT' }, { name: 'city', type: 'TEXT' }, { name: 'state', type: 'TEXT' },
       { name: 'zip', type: 'INTEGER' }, { name: 'manager', type: 'TEXT' }, { name: 'opened', type: 'TEXT' }], D.STORES.map(function (r) { return r.slice(); }));
+    // v2: the messy order feed, imported "as is" (everything TEXT, blanks become NULL)
+    if (SX.wrangle) {
+      var W = SX.wrangle;
+      db.create('raw_orders', [
+        { name: 'order_id', type: 'INTEGER' }, { name: 'store', type: 'TEXT' }, { name: 'item_code', type: 'TEXT' }, { name: 'order_date', type: 'TEXT' },
+        { name: 'qty', type: 'TEXT' }, { name: 'unit_price', type: 'TEXT' }, { name: 'customer', type: 'TEXT' }, { name: 'channel', type: 'TEXT' }],
+        W.MESSY.map(function (m, i) {
+          var t = W.TRUTH[i];
+          var date = m.dateKind === 'real' ? t.m + '/' + t.d + '/' + t.y : m.date;
+          return [t.id, m.store, String(m.code), date, m.qty === '' ? null : String(m.qty), String(m.price), m.customer, m.channel];
+        }));
+      db.create('item_codes', [{ name: 'code', type: 'TEXT' }, { name: 'product', type: 'TEXT' }, { name: 'category', type: 'TEXT' }, { name: 'price', type: 'REAL' }],
+        W.ITEMS.map(function (it) { return [it.code, it.product, it.category, it.price]; }));
+    }
     return db;
   }
 

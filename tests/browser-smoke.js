@@ -8,6 +8,7 @@ try { ({ chromium } = require('playwright')); } catch (e) { ({ chromium } = requ
 
 const DIST = 'file://' + path.join(__dirname, '..', 'dist', 'index.html');
 const cell = (r, c) => `td[data-r="${r}"][data-c="${c}"]`;
+const SXread = (code) => require('./load.js')(['lessons.js']).lessons.readCert(code);
 
 async function main() {
   const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
@@ -19,7 +20,7 @@ async function main() {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(DIST);
-  await page.fill('.modal input', 'Tester'); await page.keyboard.press('Enter');
+  await page.fill('.modal input', 'Tester Person'); await page.keyboard.press('Enter');
   for (const [card, plat] of [['.pc-xl365', 'xl365'], ['.pc-xl2013', 'xl2013'], ['.pc-gs', 'gs']]) {
     await page.click('.brand'); await page.click(card); await page.waitForSelector('.grid');
     await page.click('.sheet-tab:has-text("Scratch")');
@@ -37,6 +38,22 @@ async function main() {
   check((await page.textContent('.res-table')).includes('60'), 'sql: COUNT(*) FROM sales = 60');
   await page.click('.brand'); await page.click('.cmp-card'); await page.waitForSelector('.cmp-cards');
   check((await page.$$('.ew-card')).length === 3, 'compare: three result cards');
+  // v2: Data Wrangling Lab, interactive cheat sheet, certificates
+  const clearModals = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
+  await clearModals();
+  await page.click('.brand'); await page.click('.pc-wrangle'); await page.waitForSelector('.grid');
+  await page.waitForTimeout(400); await clearModals();
+  await page.click(cell(1, 8)); await page.keyboard.type('=TEXT(C2,"0000")'); await page.keyboard.press('Enter');
+  check((await page.textContent(cell(1, 8))) === '0104', 'wrangle: TEXT(C2,"0000") restores 0104');
+  await page.waitForTimeout(700); await clearModals();
+  await page.click('.brand'); await page.click('.pc-reference'); await page.waitForSelector('.ref-card');
+  await page.fill('.ref-search', 'fake nulls');
+  await page.click('.ref-card >> nth=0 >> .rt-gs >> text=▶ Run');
+  check((await page.textContent('.ref-card >> nth=0 >> .rt-gs .ref-out')).includes('3'), 'cheat sheet: Sheets example runs');
+  await page.evaluate(() => { SX.challenges.forPlat('compare').forEach((c) => { SX.ui.state.done[c.id] = { xp: c.xp, at: Date.now(), hints: 0 }; }); SX.ui.showCert('compare'); });
+  await page.waitForSelector('.cert-paper');
+  check((await page.textContent('.cert-name')) === 'Tester Person', 'certificate shows the student name');
+  check(!!SXread(await page.inputValue('.cert-howto textarea')), 'certificate code is valid');
   check(errors.length === 0, 'no page errors (' + errors.join(' | ') + ')');
 
   // ---- 2. Locked-down iframe: scripts only, no same-origin -> localStorage throws ----
