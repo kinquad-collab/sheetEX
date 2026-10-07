@@ -215,3 +215,51 @@ test('AI readiness: raw model is wrong, cleaned model is exact, score reaches 10
   assert.strictEqual(r1.matchClean, 30);
   assert.ok(r1.matchRaw < 30);
 });
+
+// ---- The teacher answer key (src/teacher/solutions.js) must be correct for every non-quiz challenge ----
+const KEY = require('../src/teacher/solutions.js');
+function applySteps(wb, steps) {
+  for (const [addr, input, how] of steps) {
+    const m = /^(.+)!([A-Z]+)(\d+)(?::([A-Z]+)(\d+))?$/.exec(addr);
+    const c = SX.f.colToIdx(m[2]), r1 = +m[3] - 1, r2 = m[5] ? +m[5] - 1 : r1;
+    const p = wb.prepare(input, { cse: how === 'cse' });
+    assert.ok(!p.dialog, addr + ': ' + p.dialog);
+    wb.applyEdits([{ sheet: m[1], r: r1, c, cell: p.cell }]);
+    if (r2 > r1) wb.applyEdits(wb.pasteEdits(wb.copy(m[1], r1, c, r1, c), m[1], r1 + 1, c, r2 - r1, 1));
+  }
+}
+for (const ch of SX.challenges.LIST.filter((c) => c.type !== 'quiz')) {
+  test('teacher answer key is correct: ' + ch.id, () => {
+    const k = KEY[ch.id];
+    assert.ok(k, 'missing answer key for ' + ch.id);
+    const plats = k.wr ? ['xl365', 'gs'] : [ch.plat];
+    for (const plat of plats) {
+      let h;
+      if (k.sheet) { const wb = SX.makeStoreWorkbook(plat); applySteps(wb, k.sheet); h = SX.challenges.sheetHelpers(wb); }
+      else if (k.wr) {
+        const wb = SX.wrangle.makeWorkbook(plat);
+        (k.needs || []).forEach((id) => applySteps(wb, KEY[id].wr));
+        applySteps(wb, k.wr); h = SX.challenges.sheetHelpers(wb);
+      } else if (k.sql) h = sqlHelpers(k.sql);
+      else if (k.csv) h = csvHelpers(CSV[ch.id]);
+      const r = ch.check(h);
+      assert.ok(r.ok, plat + ': ' + r.msg);
+    }
+  });
+}
+
+test('teacher exit-ticket answers are correct', () => {
+  const T = require('../src/teacher/discussion.js');
+  const run = (plat, f, wbMaker) => { const wb = (wbMaker || SX.makeStoreWorkbook)(plat); wb.applyEdits([{ sheet: 'Scratch', r: 1, c: 1, cell: { input: 'red|green|blue' } }]);
+    wb.applyEdits([{ sheet: 'Scratch', r: 1, c: 2, cell: wb.prepare(f.replace(/A2/g, 'B2')).cell }]); return wb.display('Scratch', 1, 2); };
+  assert.strictEqual(run('xl365', T.xl365.exitAnswer).text, String(SX.data.PRODUCTS.filter((p) => p[3] > 10).length));
+  { const wb = SX.makeStoreWorkbook('xl2013');
+    wb.applyEdits([{ sheet: 'Products', r: 1, c: 9, cell: wb.prepare(T.xl2013.exitAnswer).cell }]);
+    assert.strictEqual(wb.display('Products', 1, 9).text, 'Bottled Water'); }
+  assert.strictEqual(run('xl365', T.wr2.exitAnswer).text, '3');
+  const s = run('gs', T.gs.exitAnswer.replace(', 3, TRUE', ',3,TRUE'));
+  assert.ok(!s.err);
+  const p = SX.csv.parse(T.csv.exitAnswer + '\n', ',');
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(p.rows[0].cells.map((c) => c.v))), ['Smith, Jo', '05401', 'said "hi"']);
+  assert.ok(SX.sql.execute(SX.sql.makeStoreDb(), T.sql.exitAnswer).pop().rows.length === 5);
+});

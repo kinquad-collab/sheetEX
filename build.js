@@ -21,3 +21,8 @@ fs.mkdirSync(path.join(__dirname, 'dist'), { recursive: true });
 fs.writeFileSync(path.join(__dirname, 'dist', 'index.html'), html);
 fs.writeFileSync(path.join(__dirname, 'apps-script', 'Index.html'), html);
 console.log('Built dist/index.html and apps-script/Index.html (' + Math.round(html.length / 1024) + ' KB)');
+
+// Teacher-only guide with the verified answer key (never shipped inside the student app)
+const g = require('./src/teacher/guide.js')(__dirname);
+console.log('Built dist/teacher-guide.html (' + g.lessons + ' lessons, ' + g.challenges + ' challenges, ' + Math.round(g.bytes / 1024) + ' KB)');
+if (html.indexOf('Teacher-only answer key') >= 0 || /\{ wr: \[\[/.test(html)) throw new Error('Answer key leaked into the student app!');
