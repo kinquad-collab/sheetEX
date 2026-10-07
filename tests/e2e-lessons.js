@@ -40,7 +40,7 @@ async function main() {
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Avery Johnson'); await page.keyboard.press('Enter');
+    await page.fill('.modal input', 'Avery Johnson'); await page.keyboard.press('Enter'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
     await page.evaluate((p) => { SX.ui.state.ui.wrPlat = p; SX.ui.state.ui.wrIntro = true; }, plat);
     await page.click('.pc-wrangle'); await page.waitForSelector('.grid');
     const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
@@ -116,7 +116,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
     const errors = []; page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Riley Brooks'); await page.keyboard.press('Enter');
+    await page.fill('.modal input', 'Riley Brooks'); await page.keyboard.press('Enter'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
     await page.click('.pc-' + plat); await page.waitForSelector('.grid');
     const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
     for (const [addr, formula, how] of STORE[plat]) {
@@ -153,7 +153,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
     const errors = []; page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Sam Patel'); await page.keyboard.press('Enter');
+    await page.fill('.modal input', 'Sam Patel'); await page.keyboard.press('Enter'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
     await page.click('.pc-sql'); await page.waitForSelector('.sql-editor');
     const SQL = {
       'sql-star': 'SELECT * FROM products;',
@@ -186,7 +186,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
     const errors = []; page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(DIST);
-    await page.fill('.modal input', 'Casey Wright'); await page.keyboard.press('Enter');
+    await page.fill('.modal input', 'Casey Wright'); await page.keyboard.press('Enter'); await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
     await page.click('.pc-csv'); await page.waitForSelector('.csv-editor');
     const clear = () => page.evaluate(() => document.querySelectorAll('.modal-overlay').forEach((m) => m.remove()));
     const checkCh = async (id) => {

@@ -58,6 +58,28 @@
     ], [{ text: 'Later' }, { text: 'Get my certificate', primary: true, onclick: function () { setTimeout(function () { UI.showCert(id); }, 50); } }]);
   };
 
+  // ---------- Lesson guide ----------
+  UI.showGuide = function (id) {
+    var lesson = L.byId(id); if (!lesson || !lesson.guide) return;
+    var g = lesson.guide;
+    UI.state.ui.guideSeen = UI.state.ui.guideSeen || {}; UI.state.ui.guideSeen[id] = true; UI.save();
+    UI.modal('📖 Lesson ' + lesson.n + ': ' + lesson.title, [
+      h('p.guide-why', { text: g.why }),
+      h('h3', { text: 'Key ideas' }),
+      h('table.cs-keys.guide-terms', null, g.terms.map(function (t) { return h('tr', null, [h('td', null, h('b', { text: t[0] })), h('td', null, [t[1], h('div', null, h('code', { text: t[2] }))])]); })),
+      h('h3', { text: 'Watch out for' }),
+      h('ul.guide-traps', null, g.traps.map(function (t) { return h('li', { text: t }); })),
+      h('h3', { text: 'You will practice' }),
+      h('ul.cert-skills.guide-skills', null, lesson.skills.map(function (s) { return h('li', { text: s }); })),
+      h('p.small.muted', { text: 'Finish every challenge in this lesson to earn its certificate. Hints are always there if you get stuck.' })
+    ], [{ text: 'Start the challenges', primary: true }], { cls: 'wide' });
+  };
+  UI.maybeGuide = function (ids) {
+    var seen = UI.state.ui.guideSeen || {};
+    var next = ids.filter(function (id) { return !seen[id] && !UI.lessonComplete(id); })[0];
+    if (next && !document.querySelector('.modal-overlay')) setTimeout(function () { if (!document.querySelector('.modal-overlay')) UI.showGuide(next); }, 300);
+  };
+
   UI.showCert = function (id) {
     if (!UI.lessonComplete(id)) { UI.toast('Not yet!', 'Finish every challenge in this lesson to earn its certificate.'); return; }
     needRealName(function () {

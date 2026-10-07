@@ -224,7 +224,7 @@
     overlay.addEventListener('mousedown', function (e) { if (e.target === overlay && !opts.sticky) close(); });
     overlay.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !opts.sticky) { e.stopPropagation(); close(); } });
     root.appendChild(overlay);
-    var focusEl = box.querySelector('input, textarea, .btn-primary, button');
+    var focusEl = box.querySelector('input, textarea') || box.querySelector('.btn-primary') || box.querySelector('.modal-foot button, button');
     if (focusEl) setTimeout(function () { focusEl.focus(); }, 30);
     return { close: close, el: box };
   };
@@ -474,7 +474,7 @@
     var pr = UI.platProgress(L.id), done = pr.total && pr.done === pr.total;
     var has = UI.state.certs && UI.state.certs[L.id];
     return h('div.lesson-tile' + (done ? '.done' : ''), null, [
-      h('div.lt-top', null, [h('span.lt-n', { text: L.n }), h('div', null, [h('div.lt-title', { text: L.title }), h('div.lt-tool', { text: L.tool })])]),
+      h('div.lt-top', null, [h('span.lt-n', { text: L.n }), h('div', null, [h('div.lt-title', { text: L.title }), h('div.lt-tool', null, [L.tool, ' · ', h('button.linkish', { text: '📖 Guide', onclick: function () { UI.showGuide(L.id); } })])])]),
       h('div.pbar', null, h('div.pfill', { style: { width: (100 * pr.done / Math.max(1, pr.total)) + '%' } })),
       h('div.lt-foot', null, [
         h('span.small', { text: pr.done + '/' + pr.total + ' challenges' }),
@@ -509,6 +509,8 @@
     else if (view === 'sql') UI.activeView = new UI.SqlView(host);
     else if (view === 'compare') UI.activeView = new UI.CompareView(host);
     else if (view === 'wrangle') UI.activeView = UI.wrangleView(host);
+    var lessonsHere = SX.lessons.LIST.filter(function (l) { return l.workspace === view; }).map(function (l) { return l.id; });
+    if (lessonsHere.length && UI.maybeGuide && !(view === 'wrangle' && !UI.state.ui.wrIntroDone)) UI.maybeGuide(lessonsHere);
     else if (view === 'reference') UI.activeView = new UI.ReferenceView(host);
   };
 
@@ -593,7 +595,8 @@
         if (!firstOpen) firstOpen = list.filter(function (c) { return !UI.state.done[c.id]; })[0];
         var complete = pr.total && pr.done === pr.total;
         wrap.appendChild(h('div.ch-summary' + (complete ? '.complete' : ''), null, [
-          lesson ? h('div.ch-lesson', null, [h('span.ch-lesson-n', { text: 'Lesson ' + lesson.n }), h('b', { text: lesson.title })]) : null,
+          lesson ? h('div.ch-lesson', null, [h('span.ch-lesson-n', { text: 'Lesson ' + lesson.n }), h('b', { text: lesson.title }),
+            lesson.guide ? h('button.linkish.guide-link', { text: '📖 Guide', onclick: function () { UI.showGuide(lp); } }) : null]) : null,
           h('div', { text: pr.done + ' of ' + pr.total + ' complete · ' + pr.xp + ' XP earned' }),
           h('div.pbar', null, h('div.pfill', { style: { width: (100 * pr.done / Math.max(1, pr.total)) + '%' } })),
           lesson ? h('button.btn.btn-sm.cert-btn' + (complete ? '.btn-primary' : ''), { disabled: !complete, title: complete ? 'Open your certificate' : 'Finish every challenge in this lesson to unlock it',

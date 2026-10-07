@@ -21,6 +21,12 @@ async function main() {
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(DIST);
   await page.fill('.modal input', 'Tester Person'); await page.keyboard.press('Enter');
+  // first visit to a workspace opens its lesson guide
+  await page.click('.pc-xl365'); await page.waitForSelector('.grid');
+  await page.waitForSelector('.modal-title:has-text("Lesson 1")', { timeout: 3000 }).catch(() => {});
+  check(await page.isVisible('.modal-title:has-text("Lesson 1")'), 'lesson guide opens on first visit');
+  await page.click('.modal .btn-primary');
+  await page.evaluate(() => { SX.ui.state.ui.guideSeen = {}; SX.lessons.LIST.forEach((l) => { SX.ui.state.ui.guideSeen[l.id] = true; }); SX.ui.state.ui.wrIntro = true; SX.ui.state.ui.wrIntroDone = true; });
   for (const [card, plat] of [['.pc-xl365', 'xl365'], ['.pc-xl2013', 'xl2013'], ['.pc-gs', 'gs']]) {
     await page.click('.brand'); await page.click(card); await page.waitForSelector('.grid');
     await page.click('.sheet-tab:has-text("Scratch")');

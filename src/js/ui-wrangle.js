@@ -31,7 +31,7 @@
       ]),
       h('p', { html: '<b>Garbage in, garbage out:</b> a model trained on dirty data learns the dirt. Clean it column by column, then join it to the lookup tables. Two lessons, two certificates.' }),
       h('p.small', { text: 'Tip: you can switch between Excel 365 and Google Sheets at the top — each one has its own copy of the data.' })
-    ], [{ text: "Let's clean it", primary: true }], { cls: 'wide' });
+    ], [{ text: "Let's clean it", primary: true }], { cls: 'wide', onClose: function () { UI.state.ui.wrIntroDone = true; UI.save(); if (UI.maybeGuide) UI.maybeGuide(['wr1', 'wr2']); } });
   }
 
   // ---------- 🤖 AI Readiness Check ----------

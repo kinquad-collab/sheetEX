@@ -596,3 +596,13 @@ table.grid { border-collapse: separate; border-spacing: 0; table-layout: fixed; 
 .ai-verdict { margin: 6px 0 4px; font-weight: 600; }
 .ai-phantom { background: #fff4ed; color: #9a3412; white-space: pre; }
 .sp-tab { font-size: 12.5px; white-space: nowrap; padding: 10px 2px; }
+
+/* ---------- v2: lesson guides ---------- */
+.guide-why { font-size: 14.5px; background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 10px 12px; border-radius: 0 10px 10px 0; }
+.guide-terms td:first-child { width: 34%; }
+.guide-terms code { display: inline-block; margin-top: 3px; font-size: 12px; }
+.guide-traps li { margin-bottom: 4px; }
+.guide-traps li::marker { content: "⚠ "; }
+.guide-skills { justify-content: flex-start; }
+.guide-link { margin-left: auto; }
+.ch-lesson { flex-wrap: wrap; }
